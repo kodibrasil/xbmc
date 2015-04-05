@@ -3939,6 +3939,7 @@ PlayBackRet CApplication::PlayFile(const CFileItem& item, bool bRestart)
     CMediaSettings::Get().GetCurrentVideoSettings() = CMediaSettings::Get().GetDefaultVideoSettings();
 #ifdef HAS_DS_PLAYER
     CMediaSettings::Get().GetCurrentMadvrSettings() = CMediaSettings::Get().GetDefaultMadvrSettings();
+    CMediaSettings::Get().GetAtStartMadvrSettings() = CMediaSettings::Get().GetCurrentMadvrSettings();
 #endif
     // see if we have saved options in the database
 
@@ -4587,6 +4588,8 @@ void CApplication::LoadVideoSettings(const std::string &path)
     if (!dsdbs.GetVideoSettings(path, CMediaSettings::Get().GetCurrentMadvrSettings()))
       if (!dsdbs.GetDefResMadvrSettings(res, CMediaSettings::Get().GetCurrentMadvrSettings())) 
         CMediaSettings::Get().GetCurrentMadvrSettings() = CMediaSettings::Get().GetDefaultMadvrSettings();
+
+    CMediaSettings::Get().GetAtStartMadvrSettings() = CMediaSettings::Get().GetCurrentMadvrSettings();
 
     dsdbs.Close();
   }

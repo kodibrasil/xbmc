@@ -756,6 +756,8 @@ void CDSPlayer::Stop()
 
 void CDSPlayer::Pause()
 {
+  g_dsGraph->UpdateState();
+
   if (PlayerState == DSPLAYER_LOADING || PlayerState == DSPLAYER_LOADED)
     return;
 

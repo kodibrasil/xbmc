@@ -2249,6 +2249,11 @@ void CApplication::RenderMadvr()
 
   m_renderMadvrEvent.Set();
 }
+
+void CApplication::SetStartMadvr()
+{
+  m_startMadvrEvent.Set();
+}
 #endif
 
 void CApplication::Render()
@@ -2260,6 +2265,17 @@ void CApplication::Render()
   MEASURE_FUNCTION;
 
 #ifdef HAS_DS_PLAYER
+  if (CGraphFilters::Get()->UsingMadVr())
+  {
+    // Wait that madVR do all his stuff before return to render
+    if (CGraphFilters::Get()->GetSwappingDevice())
+    {
+      CGraphFilters::Get()->GetMadvrCallback()->SetStartMadvr();
+      m_startMadvrEvent.Reset();
+      m_startMadvrEvent.Wait();
+    }
+  }
+
   if (CGraphFilters::Get()->ReadyMadVr())
   {
     if (m_pPlayer->IsPausedPlayback())
@@ -3029,7 +3045,12 @@ void CApplication::FrameMove(bool processEvents, bool processGUI)
       m_seekHandler->Process();
     }
   }
-  if (processGUI && m_renderGUI)
+
+  if (processGUI && m_renderGUI
+#ifdef HAS_DS_PLAYER
+      && !CGraphFilters::Get()->IsEnteringExclusiveMadVr()
+#endif
+   )
   {
     if (!m_bStop)
       g_windowManager.Process(CTimeUtils::GetFrameTime());
@@ -5308,10 +5329,17 @@ void CApplication::ProcessSlow()
     m_pKaraokeMgr->ProcessSlow();
 #endif
 
+#ifdef HAS_DS_PLAYER
+  if (!CGraphFilters::Get()->IsEnteringExclusiveMadVr())
+   { 
+#endif
   if (!m_pPlayer->IsPlayingVideo())
     g_largeTextureManager.CleanupUnusedImages();
 
   g_TextureManager.FreeUnusedTextures(5000);
+#ifdef HAS_DS_PLAYER
+  }
+#endif
 
 #ifdef HAS_DVD_DRIVE
   // checks whats in the DVD drive and tries to autostart the content (xbox games, dvd, cdda, avi files...)
@@ -5953,7 +5981,7 @@ bool CApplication::AlwaysProcess(const CAction& action)
 bool CApplication::IsCurrentThread() const
 {
 #ifdef HAS_DS_PLAYER
-  if (CGraphFilters::Get()->ReadyMadVr())
+  if (CGraphFilters::Get()->UsingMadVr())
     return true;
   else
     return CThread::IsCurrentThread(m_threadID);

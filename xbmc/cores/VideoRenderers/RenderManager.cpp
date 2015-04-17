@@ -906,11 +906,7 @@ void CXBMCRenderManager::UpdateResolution()
   if (m_bReconfigured)
   {
     CRetakeLock<CExclusiveLock> lock(m_sharedSection);
-    if (g_graphicsContext.IsFullScreenVideo() && g_graphicsContext.IsFullScreenRoot()
-#ifdef HAS_DS_PLAYER
-      && !CGraphFilters::Get()->UsingMadVr()
-#endif
-      )
+    if (g_graphicsContext.IsFullScreenVideo() && g_graphicsContext.IsFullScreenRoot())
     {
       RESOLUTION res = GetResolution();
       g_graphicsContext.SetVideoResolution(res);

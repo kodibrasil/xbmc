@@ -50,7 +50,7 @@
 #include "peripherals/Peripherals.h"
 #include "powermanagement/PowerManager.h"
 #ifdef HAS_DS_PLAYER
-#include "cores/DSPlayer/GraphFilters.h"
+#include "MadvrCallback.h"
 #endif
 
 #ifdef TARGET_WINDOWS
@@ -542,7 +542,7 @@ void CApplicationMessenger::ProcessMessage(ThreadMessage *pMsg)
 #ifdef HAS_DS_PLAYER
     case TMSG_SWAP_DEVICE_FOR_MADVR:
       {
-        CGraphFilters::Get()->GetMadvrCallback()->SwapDevice();
+        CMadvrCallback::Get()->GetCallback()->SwapDevice();
       }
       break;
 #endif

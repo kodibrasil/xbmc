@@ -80,6 +80,7 @@ CmadVRAllocatorPresenter::~CmadVRAllocatorPresenter()
   RestoreKodiDevice();
 
   // the order is important here
+  CMadvrCallback::Destroy();
   m_threadID = 0;
   m_pSubPicQueue = nullptr;
   m_pAllocator = nullptr;
@@ -192,7 +193,7 @@ void CmadVRAllocatorPresenter::SwapDevice()
 {
   m_isDeviceSet = true;
   g_Windowing.ResetForMadvr();
-  CGraphFilters::Get()->SetRenderOnMadvr(true);
+  CMadvrCallback::Get()->SetRenderOnMadvr(true);
   CLog::Log(LOGDEBUG, "%s Swapped device from Kodi to madVR", __FUNCTION__);
 }
 
@@ -282,7 +283,7 @@ HRESULT CmadVRAllocatorPresenter::Render( REFERENCE_TIME rtStart, REFERENCE_TIME
 
   AlphaBltSubPic(Com::SmartSize(width, height));
 
-  if (m_isDeviceSet && !m_isEnteringExclusive && CGraphFilters::Get()->GetRenderOnMadvr())
+  if (m_isDeviceSet && !m_isEnteringExclusive && CMadvrCallback::Get()->GetRenderOnMadvr())
   {
     m_isRendering = true;
 
@@ -338,7 +339,7 @@ STDMETHODIMP CmadVRAllocatorPresenter::CreateRenderer(IUnknown** ppRenderer)
   // Configure initial Madvr Settings
   ConfigureMadvr();
 
-  CGraphFilters::Get()->SetMadVrCallback(this);
+  CMadvrCallback::Get()->SetCallback(this);
 
   (*ppRenderer = (IUnknown*)(INonDelegatingUnknown*)(this))->AddRef();
 

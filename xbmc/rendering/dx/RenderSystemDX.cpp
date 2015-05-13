@@ -21,7 +21,6 @@
 
 #ifdef HAS_DX
 
-#include "cores/DSPlayer/GraphFilters.h"
 #include "threads/SystemClock.h"
 #include "RenderSystemDX.h"
 #include "utils/log.h"
@@ -34,9 +33,10 @@
 #include "settings/Settings.h"
 #include "utils/SystemInfo.h"
 #ifdef HAS_DS_PLAYER
-#include "Filters\RendererSettings.h"
+#include "Filters/RendererSettings.h"
 #include "cores/VideoRenderers/RenderManager.h"
-#include "guilib\GUIFontManager.h"
+#include "guilib/GUIFontManager.h"
+#include "MadvrCallback.h"
 #endif
 #include "Application.h"
 #include "Util.h"
@@ -846,7 +846,7 @@ bool CRenderSystemDX::ClearBuffers(color_t color)
   }
 
 #ifdef HAS_DS_PLAYER
-  if (CGraphFilters::Get()->ReadyMadVr())
+  if (CMadvrCallback::Get()->ReadyMadvr())
     return true;
 
   return SUCCEEDED(Get3DDevice()->Clear(
@@ -1250,10 +1250,10 @@ void CRenderSystemDX::FlushGPU()
 #ifdef HAS_DS_PLAYER
 LPDIRECT3DDEVICE9 CRenderSystemDX::Get3DDevice()
 { 
-  if (CGraphFilters::Get()->UsingMadVr())
+  if (CMadvrCallback::Get()->UsingMadvr())
     try
     {
-      return CGraphFilters::Get()->GetMadvrCallback()->GetDevice();
+    return CMadvrCallback::Get()->GetCallback()->GetDevice();
     }
     catch (...)
     {
@@ -1270,7 +1270,7 @@ LPDIRECT3DDEVICE9 CRenderSystemDX::GetKodi3DDevice()
 
 void CRenderSystemDX::ResetForMadvr()
 {
-  CGraphFilters::Get()->SetInitMadVr(true);
+  CMadvrCallback::Get()->SetInitMadvr(true);
 
   g_windowManager.SendMessage(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_RENDERER_LOST);
 
@@ -1282,7 +1282,7 @@ void CRenderSystemDX::ResetForMadvr()
 
   g_windowManager.SendMessage(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_RENDERER_RESET);
 
-  CGraphFilters::Get()->SetInitMadVr(false);
+  CMadvrCallback::Get()->SetInitMadvr(false);
 }
 
 #endif 

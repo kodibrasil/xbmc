@@ -38,7 +38,7 @@
 #include "URL.h"
 #include "Util.h"
 #ifdef HAS_DS_PLAYER
-#include "cores/DSPlayer/GraphFilters.h"
+#include "MadvrCallback.h"
 #endif
 
 using namespace std;
@@ -225,7 +225,7 @@ void GUIFontManager::ReloadTTFFonts(void)
     std::string TTFfontName = StringUtils::Format("%s_%f_%f%s", strFilename.c_str(), newSize, aspect, fontInfo.border ? "_border" : "");
     CGUIFontTTFBase* pFontFile = GetFontFile(TTFfontName);
 #ifdef HAS_DS_PLAYER
-    if (!pFontFile || CGraphFilters::Get()->IsInitMadVr())
+    if (!pFontFile || CMadvrCallback::Get()->IsInitMadvr())
 #else
     if (!pFontFile)
 #endif

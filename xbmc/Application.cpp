@@ -173,7 +173,7 @@
 #include "dialogs/GUIDialogSimpleMenu.h"
 #include "addons/GUIDialogAddonSettings.h"
 #ifdef HAS_DS_PLAYER
-#include "cores/DSPlayer/GraphFilters.h"
+#include "MadvrCallback.h"
 #include "DSPlayerDatabase.h"
 #endif
 
@@ -1918,11 +1918,11 @@ void CApplication::Render()
   MEASURE_FUNCTION;
 
 #ifdef HAS_DS_PLAYER
-  if (CGraphFilters::Get()->ReadyMadVr())
+  if (CMadvrCallback::Get()->ReadyMadvr())
   {
     if (m_pPlayer->IsPausedPlayback())
     {
-      CGraphFilters::Get()->GetMadvrCallback()->OsdRedrawFrame();
+      CMadvrCallback::Get()->GetCallback()->OsdRedrawFrame();
       Sleep(40);
     } 
     else
@@ -2560,7 +2560,7 @@ void CApplication::FrameMove(bool processEvents, bool processGUI)
 
   if (processGUI && m_renderGUI
 #ifdef HAS_DS_PLAYER
-      && !CGraphFilters::Get()->IsEnteringExclusiveMadVr()
+    && !CMadvrCallback::Get()->IsEnteringExclusiveMadvr()
 #endif
    )
   {
@@ -4392,7 +4392,7 @@ void CApplication::ProcessSlow()
 #endif
 
 #ifdef HAS_DS_PLAYER
-  if (!CGraphFilters::Get()->IsEnteringExclusiveMadVr())
+  if (!CMadvrCallback::Get()->IsEnteringExclusiveMadvr())
    { 
 #endif
   if (!m_pPlayer->IsPlayingVideo())
@@ -5002,9 +5002,9 @@ bool CApplication::IsCurrentThread() const
 #endif
 {
 #ifdef HAS_DS_PLAYER
-  if (CGraphFilters::Get()->UsingMadVr() && checkForMadvr)
+  if (CMadvrCallback::Get()->UsingMadvr() && checkForMadvr)
   {
-    bool isMadvrThread = CGraphFilters::Get()->GetMadvrCallback()->IsCurrentThreadId();
+    bool isMadvrThread = CMadvrCallback::Get()->GetCallback()->IsCurrentThreadId();
     bool isApplicationThread = CThread::IsCurrentThread(m_threadID);
     return (isMadvrThread || isApplicationThread);
   }

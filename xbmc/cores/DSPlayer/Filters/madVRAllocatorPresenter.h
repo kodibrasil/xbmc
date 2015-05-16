@@ -76,7 +76,6 @@ class CmadVRAllocatorPresenter
     }
   };
 
-  void SetResolution();
   void ConfigureMadvr();
   void RestoreKodiDevice();
   Com::SmartPtr<IUnknown> m_pDXR;
@@ -122,6 +121,7 @@ public:
   virtual bool IsCurrentThreadId();
   virtual bool ParentWindowProc(HWND hWnd, UINT uMsg, WPARAM *wParam, LPARAM *lParam, LRESULT *ret);
   virtual void SwapDevice();
+  virtual void SetResolution();
   virtual void SetMadvrPosition(CRect wndRect, CRect videoRect);
   virtual void SettingSetScaling(CStdStringW path, int scaling);
   virtual void SettingSetDoubling(CStdStringW path, int iValue);

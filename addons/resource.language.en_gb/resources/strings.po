@@ -16761,6 +16761,10 @@ msgctxt "#55072"
 msgid "DVDPlayer"
 msgstr ""
 
+msgctxt "#55073"
+msgid "Change refresh before playback start"
+msgstr ""
+
 msgctxt "#60001"
 msgid "Media rules"
 msgstr ""

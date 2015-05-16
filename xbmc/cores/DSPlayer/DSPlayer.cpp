@@ -613,12 +613,14 @@ void CDSPlayer::HandleMessages()
 {
   MSG msg;
   while (GetMessage(&msg, NULL, 0, 0) != 0)
-  {    
-    if (m_bStop || PlayerState == DSPLAYER_CLOSED || PlayerState == DSPLAYER_LOADING)
-      break;
-
+  {   
     if (msg.message != WM_GRAPHMESSAGE)
+    { 
+      if (m_bStop || PlayerState == DSPLAYER_CLOSED || PlayerState == DSPLAYER_LOADING)
+        break;
+
       DispatchMessage(&msg);
+    }
     else
     {
       CDSMsg* pMsg = reinterpret_cast<CDSMsg *>(msg.lParam);

@@ -105,6 +105,10 @@ void CmadVRAllocatorPresenter::SetResolution()
 {
   ULONGLONG frameRate;
   float fps;
+
+  // Set the context in FullScreenVideo
+  g_graphicsContext.SetFullScreenVideo(true);
+
   if (Com::SmartQIPtr<IMadVRInfo> pInfo = m_pDXR)
   {
     pInfo->GetUlonglong("frameRate", &frameRate);
@@ -218,12 +222,10 @@ HRESULT CmadVRAllocatorPresenter::SetDevice(IDirect3DDevice9* pD3DDev)
 
     // SendMessage to Kodi MainThread to SwapDevice From Kodi To madVR
     CApplicationMessenger::Get().SwapDeviceForMadvr();
-    
-    // Set the context in FullScreenVideo
-    g_graphicsContext.SetFullScreenVideo(true);
 
-    // Change Resolution to match fps
-    SetResolution();
+    //Set Resolution
+    if (!CSettings::Get().GetBool("videoplayer.changerefreshbefore"))
+      SetResolution();
   }
 
   Com::SmartSize size;

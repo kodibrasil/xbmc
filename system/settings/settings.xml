@@ -578,6 +578,16 @@
           </dependencies>
           <control type="list" format="string" />
         </setting>
+        <setting id="videoplayer.changerefreshbefore" type="integer" parent="videoplayer.adjustrefreshrate" label="55073" help="">
+          <level>2</level>
+          <default>false</default>
+          <control type="toggle" />
+          <dependencies>
+            <dependency type="enable" setting="videoplayer.adjustrefreshrate" operator="!is">0</dependency> <!-- ADJUST_REFRESHRATE_OFF -->
+	    <dependency type="visible" setting="dsplayer.videorenderer" operator="is">madVR</dependency> <!-- VIDEORENDERER MADVR -->
+          </dependencies>
+          <control type="list" format="string" />
+        </setting>
         <setting id="videoplayer.pauseafterrefreshchange" type="integer" parent="videoplayer.adjustrefreshrate" label="13550" help="36165">
           <level>2</level>
           <default>0</default>

@@ -40,7 +40,6 @@ public:
   virtual LPDIRECT3DDEVICE9 GetDevice() { return NULL; };
   virtual bool IsDeviceSet(){ return false; }
   virtual bool IsEnteringExclusive(){ return false; }
-  virtual void OsdRedrawFrame() {};
   virtual void SetMadvrPixelShader(){};
   virtual void RestoreMadvrSettings(){};
   virtual void SetStartMadvr(){};

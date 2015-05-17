@@ -78,6 +78,7 @@ class CmadVRAllocatorPresenter
 
   void ConfigureMadvr();
   void RestoreKodiDevice();
+  void OsdRedrawFrame();
   Com::SmartPtr<IUnknown> m_pDXR;
   LPDIRECT3DDEVICE9 m_pD3DDeviceMadVR;
   Com::SmartPtr<ISubRenderCallback2> m_pSRCB;
@@ -115,7 +116,6 @@ public:
   virtual LPDIRECT3DDEVICE9 GetDevice();
   virtual bool IsDeviceSet(){ return m_isDeviceSet; }
   virtual bool IsEnteringExclusive(){ return m_isEnteringExclusive; }
-  virtual void OsdRedrawFrame();
   virtual void SetMadvrPixelShader();
   virtual void RestoreMadvrSettings();
   virtual bool IsCurrentThreadId();

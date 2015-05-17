@@ -306,6 +306,10 @@ HRESULT CmadVRAllocatorPresenter::Render( REFERENCE_TIME rtStart, REFERENCE_TIME
     // set false for pixelshader
     m_pD3DDeviceMadVR->SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
     
+    // quickfix for high gpu load while paused
+    if (g_application.m_pPlayer->IsPausedPlayback())
+      Sleep(25);
+    
     m_isRendering = false;
   }
 

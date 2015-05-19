@@ -1268,6 +1268,16 @@ LPDIRECT3DDEVICE9 CRenderSystemDX::GetKodi3DDevice()
   return m_pD3DDevice;
 }
 
+void CRenderSystemDX::ResetForKodi()
+{
+  CMadvrCallback::Get()->SetInitMadvr(true);
+  SetRenderParams(m_nBackBufferWidth, m_nBackBufferHeight, m_bFullScreenDevice, m_refreshRate);
+  BuildPresentParameters();
+  OnDeviceLost();
+  OnDeviceReset();
+  CMadvrCallback::Get()->SetInitMadvr(false);
+}
+
 void CRenderSystemDX::ResetForMadvr()
 {
   CMadvrCallback::Get()->SetInitMadvr(true);

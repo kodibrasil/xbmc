@@ -86,6 +86,7 @@ public:
   void FlushGPU();
 
 #ifdef HAS_DS_PLAYER
+  void ResetForKodi();
   void ResetForMadvr();
   LPDIRECT3DDEVICE9 Get3DDevice();
   LPDIRECT3DDEVICE9 GetKodi3DDevice();

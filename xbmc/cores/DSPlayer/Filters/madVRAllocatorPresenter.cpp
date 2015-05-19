@@ -192,7 +192,7 @@ void CmadVRAllocatorPresenter::RestoreKodiDevice()
 
   m_isDeviceSet = false;
   g_Windowing.GetKodi3DDevice()->SetPixelShader(NULL);
-  g_Windowing.ResetForMadvr();
+  g_Windowing.ResetForKodi();
   CLog::Log(LOGDEBUG, "%s Restored Kodi device", __FUNCTION__);
 }
 

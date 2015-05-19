@@ -107,6 +107,7 @@ void CmadVRAllocatorPresenter::SetResolution()
   float fps;
 
   // Set the context in FullScreenVideo
+  CMadvrCallback::Get()->SetInitMadvr(true);
   g_graphicsContext.SetFullScreenVideo(true);
 
   if (Com::SmartQIPtr<IMadVRInfo> pInfo = m_pDXR)
@@ -122,6 +123,7 @@ void CmadVRAllocatorPresenter::SetResolution()
     RESOLUTION bestRes = g_renderManager.m_pRenderer->ChooseBestMadvrResolution(fps);
     g_graphicsContext.SetVideoResolution(bestRes);
   }
+  CMadvrCallback::Get()->SetInitMadvr(false);
 }
 
 void CmadVRAllocatorPresenter::ExclusiveCallback(LPVOID context, int event)

@@ -578,7 +578,7 @@
           </dependencies>
           <control type="list" format="string" />
         </setting>
-        <setting id="videoplayer.changerefreshbefore" type="integer" parent="videoplayer.adjustrefreshrate" label="55073" help="">
+        <setting id="videoplayer.changerefreshbefore" type="boolean" parent="videoplayer.adjustrefreshrate" label="55073" help="">
           <level>2</level>
           <default>false</default>
           <control type="toggle" />

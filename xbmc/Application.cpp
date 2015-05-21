@@ -1920,8 +1920,16 @@ void CApplication::Render()
 #ifdef HAS_DS_PLAYER
   if (CMadvrCallback::Get()->ReadyMadvr())
   {
-    m_renderMadvrEvent.Reset();
-    m_renderMadvrEvent.WaitMSec(100);
+    if (m_pPlayer->IsPausedPlayback())
+    {
+      CMadvrCallback::Get()->GetCallback()->OsdRedrawFrame();
+      Sleep(25);
+    } 
+    else
+    {
+      m_renderMadvrEvent.Reset();
+      m_renderMadvrEvent.WaitMSec(100);
+    } 
     
     g_windowManager.AfterRender();
 

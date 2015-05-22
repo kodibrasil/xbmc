@@ -1228,6 +1228,16 @@
           </dependencies>
           <control type="toggle" />
         </setting>
+        <setting id="dsplayer.exitmadvrfullscreen" type="boolean" label="55074" help="">
+          <level>0</level>
+          <default>false</default>
+          <dependencies>
+            <dependency type="visible" setting="dsplayer.videorenderer" operator="is">madVR</dependency>
+          </dependencies>
+          <control type="toggle" />
+        </setting>
+      </group>
+      <group id="3">
         <setting id="dsplayer.audiorenderer" type="string" label="55003" help="">
           <level>0</level>
           <default>System Default</default>

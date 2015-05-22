@@ -16855,6 +16855,11 @@ msgctxt "#55073"
 msgid "Change refresh before playback start"
 msgstr ""
 
+msgctxt "#55074"
+msgid "- Force madVR to exit from fullscreen before stop"
+msgstr ""
+
+
 msgctxt "#60001"
 msgid "Media rules"
 msgstr ""

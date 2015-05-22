@@ -1236,8 +1236,6 @@
           </dependencies>
           <control type="toggle" />
         </setting>
-      </group>
-      <group id="3">
         <setting id="dsplayer.audiorenderer" type="string" label="55003" help="">
           <level>0</level>
           <default>System Default</default>

@@ -79,8 +79,11 @@ public:
   bool UsingMadvr();
   bool ReadyMadvr();
   bool IsEnteringExclusiveMadvr();
+  void SetDsWndVisible(bool bVisible);
   bool IsInitMadvr() { return m_isInitMadvr; };
   void SetInitMadvr(bool b) { m_isInitMadvr = b; }
+  HWND GetHwnd(){ return m_hWnd; }
+  void SetHwnd(HWND hWnd){ m_hWnd = hWnd; }
   bool GetRenderOnMadvr() { return m_renderOnMadvr; }
   void SetRenderOnMadvr(bool b) { m_renderOnMadvr = b; }
 
@@ -89,8 +92,8 @@ private:
   ~CMadvrCallback();
 
   static CMadvrCallback* m_pSingleton;
+  IPaintCallbackMadvr* m_pMadvr;
+  HWND m_hWnd;
   bool m_isInitMadvr;
   bool m_renderOnMadvr;
-
-  IPaintCallbackMadvr* m_pMadvr;
 };

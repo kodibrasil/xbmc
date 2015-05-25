@@ -78,7 +78,8 @@ CmadVRAllocatorPresenter::~CmadVRAllocatorPresenter()
 
   //Restore Kodi Device
   RestoreKodiDevice();
-
+  g_renderManager.UnInit();
+  
   // the order is important here
   CMadvrCallback::Destroy();
   m_threadID = 0;

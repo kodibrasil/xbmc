@@ -115,6 +115,7 @@ public:
   virtual LPDIRECT3DDEVICE9 GetDevice();
   virtual bool IsDeviceSet(){ return m_isDeviceSet; }
   virtual bool IsEnteringExclusive(){ return m_isEnteringExclusive; }
+  virtual void EnableExclusive(bool bEnable);
   virtual void OsdRedrawFrame();
   virtual void SetMadvrPixelShader();
   virtual void RestoreMadvrSettings();

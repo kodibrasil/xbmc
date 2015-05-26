@@ -40,7 +40,8 @@ public:
   virtual LPDIRECT3DDEVICE9 GetDevice() { return NULL; };
   virtual bool IsDeviceSet(){ return false; }
   virtual bool IsEnteringExclusive(){ return false; }
-  virtual void OsdRedrawFrame() {};
+  virtual void EnableExclusive(bool bEnable){};
+  virtual void OsdRedrawFrame(){};
   virtual void SetMadvrPixelShader(){};
   virtual void RestoreMadvrSettings(){};
   virtual void SetStartMadvr(){};
@@ -62,7 +63,7 @@ public:
   virtual CStdString GetDXVADecoderDescription() { return ""; };
 };
 
-class CMadvrCallback
+class CMadvrCallback: public IPaintCallbackMadvr
 {
 public:
   /// Retrieve singleton instance
@@ -74,7 +75,7 @@ public:
     m_pSingleton = NULL;
   }
 
-  IPaintCallbackMadvr* GetCallback() { return m_pMadvr; }
+  IPaintCallbackMadvr* GetCallback() { return m_pMadvr != NULL ? m_pMadvr : this; }
   void SetCallback(IPaintCallbackMadvr* pMadvr) { m_pMadvr = pMadvr; }
   bool UsingMadvr();
   bool ReadyMadvr();

@@ -131,17 +131,15 @@ void CmadVRAllocatorPresenter::ExclusiveCallback(LPVOID context, int event)
 {
   CmadVRAllocatorPresenter *pThis = (CmadVRAllocatorPresenter*)context;
 
+  std::vector<std::string> strEvent = {"IsAboutToBeEntered", "WasJustEntered", "IsAboutToBeLeft", "WasJustLeft" };
+
   if (event == ExclusiveModeIsAboutToBeEntered || event == ExclusiveModeIsAboutToBeLeft)
-  { 
     pThis->m_isEnteringExclusive = true;
-    CLog::Log(LOGDEBUG, "%s madVR IsAboutToBeEntered/IsAboutToBeLeft in Fullscreen Exclusive-Mode", __FUNCTION__);
-  }
 
   if (event == ExclusiveModeWasJustEntered || event == ExclusiveModeWasJustLeft)
-  {
     pThis->m_isEnteringExclusive = false;
-    CLog::Log(LOGDEBUG, "%s madVR WasJustEntered in Fullscreen Exclusive-Mode", __FUNCTION__);
-  }
+
+  CLog::Log(LOGDEBUG, "%s madVR %s in Fullscreen Exclusive-Mode", __FUNCTION__, strEvent[event-1].c_str());
 }
 
 void CmadVRAllocatorPresenter::ConfigureMadvr()
@@ -170,6 +168,12 @@ void CmadVRAllocatorPresenter::ConfigureMadvr()
       pMadVrEx->DisableExclusiveMode(true);
   }
 }
+
+void CmadVRAllocatorPresenter::EnableExclusive(bool bEnable)
+{
+  if (Com::SmartQIPtr<IMadVRExclusiveModeControl> pMadVrEx = m_pDXR)
+    pMadVrEx->DisableExclusiveMode(!bEnable);
+};
 
 bool CmadVRAllocatorPresenter::IsCurrentThreadId()
 {

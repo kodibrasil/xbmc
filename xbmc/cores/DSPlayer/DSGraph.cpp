@@ -213,8 +213,9 @@ void CDSGraph::CloseFile()
     CLog::Log(LOGDEBUG, "%s ... done!", __FUNCTION__);
 
     CGraphFilters::Get()->DVD.Clear();
+
     if (CSettings::Get().GetBool("dsplayer.exitmadvrfullscreen"))
-      m_pVideoWindow->SetWindowPosition(0, 0, 1, 1);
+      CMadvrCallback::Get()->GetCallback()->EnableExclusive(false);
 
     pFilterGraph.Release();
     m_pVideoWindow.Release();

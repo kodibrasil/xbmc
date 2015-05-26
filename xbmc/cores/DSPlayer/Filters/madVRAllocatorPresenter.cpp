@@ -32,6 +32,7 @@
 #include "settings/MediaSettings.h"
 #include "settings/DisplaySettings.h"
 #include "PixelShaderList.h"
+#include "DSPlayer.h"
 
 #define ShaderStage_PreScale 0
 #define ShaderStage_PostScale 1
@@ -291,7 +292,7 @@ HRESULT CmadVRAllocatorPresenter::Render( REFERENCE_TIME rtStart, REFERENCE_TIME
     CLog::Log(LOGDEBUG, "%s Render manager configured (FPS: %f) %i %i %i %i", __FUNCTION__, m_fps, m_NativeVideoSize.cx, m_NativeVideoSize.cy, m_AspectRatio.cx, m_AspectRatio.cy);
 
     // Set DSPlayer Window Visible
-    CMadvrCallback::Get()->SetDsWndVisible(true);
+    CDSPlayer::SetDsWndVisible(true);
   }
 
   AlphaBltSubPic(Com::SmartSize(width, height));

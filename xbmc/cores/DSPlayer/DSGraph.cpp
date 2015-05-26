@@ -130,7 +130,7 @@ HRESULT CDSGraph::SetFile(const CFileItem& file, const CPlayerOptions &options)
     m_pVideoWindow->put_AutoShow(OATRUE);
     m_pVideoWindow->put_WindowState(SW_SHOW);
     m_pVideoWindow->SetWindowForeground(OATRUE);
-    m_pVideoWindow->put_MessageDrain((OAHWND)CMadvrCallback::Get()->GetHwnd());
+    m_pVideoWindow->put_MessageDrain((OAHWND)CDSPlayer::GetDShWnd());
   }
 
   // set pixelshader & settings for madVR

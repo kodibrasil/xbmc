@@ -29,7 +29,6 @@ CMadvrCallback *CMadvrCallback::m_pSingleton = NULL;
 CMadvrCallback::CMadvrCallback()
 {
   m_pMadvr = NULL;  
-  m_hWnd = NULL;
   m_isInitMadvr = false;
   m_renderOnMadvr = false;
 }
@@ -63,14 +62,6 @@ bool CMadvrCallback::ReadyMadvr()
 bool CMadvrCallback::IsEnteringExclusiveMadvr()
 {
   return ((m_pMadvr != NULL) && CMadvrCallback::Get()->GetCallback()->IsEnteringExclusive());
-}
-
-void CMadvrCallback::SetDsWndVisible(bool bVisible)
-{
-  int cmd;
-  bVisible ? cmd = SW_SHOW : cmd = SW_HIDE;
-  ShowWindow(m_hWnd, cmd);
-  UpdateWindow(m_hWnd);
 }
 
 #endif

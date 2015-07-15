@@ -73,8 +73,13 @@ CmadVRAllocatorPresenter::~CmadVRAllocatorPresenter()
     ((CSubRenderCallback*)(ISubRenderCallback2*)m_pSRCB)->SetDXRAP(nullptr);
   }
 
+  // Unregister madVR Exclusive Callback
   if (Com::SmartQIPtr<IMadVRExclusiveModeCallback> pEXL = m_pDXR)
     pEXL->Unregister(m_exclusiveCallback, this);
+
+  // Let's madVR restore original display mode (when adjust refresh it's handled by madVR)
+  if (Com::SmartQIPtr<IMadVRCommand> pMadVrCmd = m_pDXR)
+    pMadVrCmd->SendCommand("restoreDisplayModeNow");
 
   //Restore Kodi Device
   RestoreKodiDevice();
@@ -147,8 +152,8 @@ void CmadVRAllocatorPresenter::ExclusiveCallback(LPVOID context, int event)
 void CmadVRAllocatorPresenter::ConfigureMadvr()
 {
 
-  if (Com::SmartQIPtr<IMadVRSeekbarControl> pMadVrSeek = m_pDXR)
-    pMadVrSeek->DisableSeekbar(true);
+  if (Com::SmartQIPtr<IMadVRCommand> pMadVrCmd = m_pDXR)
+    pMadVrCmd->SendCommandBool("disableSeekbar", true);
 
   if (Com::SmartQIPtr<IMadVRSettings> pMadvrSettings = m_pDXR)
     pMadvrSettings->SettingsSetBoolean(L"delayPlaybackStart2", CSettings::Get().GetBool("dsplayer.delaymadvrplayback"));
@@ -166,15 +171,15 @@ void CmadVRAllocatorPresenter::ConfigureMadvr()
   }
   else
   {
-    if (Com::SmartQIPtr<IMadVRExclusiveModeControl> pMadVrEx = m_pDXR)
-      pMadVrEx->DisableExclusiveMode(true);
+    if (Com::SmartQIPtr<IMadVRCommand> pMadVrCmd = m_pDXR)
+      pMadVrCmd->SendCommandBool("disableExclusiveMode", true);
   }
 }
 
 void CmadVRAllocatorPresenter::EnableExclusive(bool bEnable)
 {
-  if (Com::SmartQIPtr<IMadVRExclusiveModeControl> pMadVrEx = m_pDXR)
-    pMadVrEx->DisableExclusiveMode(!bEnable);
+  if (Com::SmartQIPtr<IMadVRCommand> pMadVrCmd = m_pDXR)
+    pMadVrCmd->SendCommandBool("disableExclusiveMode", !bEnable);
 };
 
 bool CmadVRAllocatorPresenter::IsCurrentThreadId()
@@ -208,15 +213,12 @@ void CmadVRAllocatorPresenter::SwapDevice()
 
 STDMETHODIMP CmadVRAllocatorPresenter::ClearBackground(LPCSTR name, REFERENCE_TIME frameStart, RECT *fullOutputRect, RECT *activeVideoRect)
 {
-  if (!g_graphicsContext.IsFullScreenVideo())
-    RenderMadvr(RENDER_LAYER_UNDER);
-
-  return S_OK;
+  return (!g_graphicsContext.IsFullScreenVideo()) ? RenderMadvr(RENDER_LAYER_UNDER) : CALLBACK_EMPTY;
 }
 
 STDMETHODIMP CmadVRAllocatorPresenter::RenderOsd(LPCSTR name, REFERENCE_TIME frameStart, RECT *fullOutputRect, RECT *activeVideoRect)
 {
-  return S_OK;
+  return RenderMadvr(RENDER_LAYER_OVER);
 }
 
 STDMETHODIMP CmadVRAllocatorPresenter::SetDeviceOsd(IDirect3DDevice9* pD3DDev)
@@ -318,13 +320,14 @@ HRESULT CmadVRAllocatorPresenter::Render( REFERENCE_TIME rtStart, REFERENCE_TIME
 
   AlphaBltSubPic(Com::SmartSize(width, height));
 
-  RenderMadvr(RENDER_LAYER_OVER);
-
   return S_OK;
 }
 
-void CmadVRAllocatorPresenter::RenderMadvr(MADVR_RENDER_LAYER layer)
+HRESULT CmadVRAllocatorPresenter::RenderMadvr(MADVR_RENDER_LAYER layer)
 {
+  // Reset render count to notice when the GUI it's active or deactive
+  CMadvrCallback::Get()->ResetRenderCount();  
+  
   if (m_isDeviceSet && !m_isEnteringExclusive && CMadvrCallback::Get()->GetRenderOnMadvr())
   {
     // if the context it's kodi menu manage the layer
@@ -350,10 +353,7 @@ void CmadVRAllocatorPresenter::RenderMadvr(MADVR_RENDER_LAYER layer)
     m_pD3DDeviceMadVR->SetPixelShader(NULL);
 
     // render kodi gui
-    if (layer == RENDER_LAYER_UNDER)
-      g_windowManager.Render();
-    else
-      g_application.RenderMadvr();
+    (layer == RENDER_LAYER_UNDER) ? g_windowManager.Render() : g_application.RenderMadvr();
 
     //restore stagestate for xysubfilter
     m_pD3DDeviceMadVR->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
@@ -365,11 +365,10 @@ void CmadVRAllocatorPresenter::RenderMadvr(MADVR_RENDER_LAYER layer)
 
     // set false for pixelshader
     m_pD3DDeviceMadVR->SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
-
-    // quickfix for high gpu load while paused
-    if (g_application.m_pPlayer->IsPausedPlayback() && (layer == RENDER_LAYER_OVER))
-      Sleep(25);
   }
+
+  // return an hresult for madVR renderOSD latency mode
+  return CMadvrCallback::Get()->IsGuiActive() ? CALLBACK_USER_INTERFACE : CALLBACK_EMPTY;
 }
 
 // ISubPicAllocatorPresenter
@@ -429,7 +428,6 @@ STDMETHODIMP CmadVRAllocatorPresenter::CreateRenderer(IUnknown** ppRenderer)
 
 void CmadVRAllocatorPresenter::SetMadvrPosition(CRect wndRect, CRect videoRect)
 {
-
   Com::SmartRect wndR(wndRect.x1, wndRect.y1, wndRect.x2, wndRect.y2);
   Com::SmartRect videoR(videoRect.x1, videoRect.y1, videoRect.x2, videoRect.y2);
   SetPosition(wndR, videoR);

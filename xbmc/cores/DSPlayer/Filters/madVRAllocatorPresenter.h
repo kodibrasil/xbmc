@@ -116,7 +116,7 @@ class CmadVRAllocatorPresenter
 
   void ConfigureMadvr();
   void RestoreKodiDevice();
-  void RenderMadvr(MADVR_RENDER_LAYER layer);
+  HRESULT RenderMadvr(MADVR_RENDER_LAYER layer);
   Com::SmartPtr<IUnknown> m_pDXR;
   LPDIRECT3DDEVICE9 m_pD3DDeviceMadVR;
   Com::SmartPtr<ISubRenderCallback2> m_pSRCB;

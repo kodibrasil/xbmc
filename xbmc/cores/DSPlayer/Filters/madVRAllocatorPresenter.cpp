@@ -522,12 +522,6 @@ STDMETHODIMP CmadVRAllocatorPresenter::SetPixelShader(LPCSTR pSrcData, LPCSTR pT
 
 //IPaintCallbackMadvr
 
-void CmadVRAllocatorPresenter::OsdRedrawFrame()
-{
-  if (Com::SmartQIPtr<IMadVROsdServices> pOR = m_pDXR)
-    pOR->OsdRedrawFrame();
-}
-
 void CmadVRAllocatorPresenter::SettingSetScaling(CStdStringW path, int scaling)
 {
   std::vector<std::wstring> vecMadvrScaling =

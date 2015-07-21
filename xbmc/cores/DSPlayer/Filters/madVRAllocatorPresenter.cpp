@@ -353,7 +353,8 @@ HRESULT CmadVRAllocatorPresenter::RenderMadvr(MADVR_RENDER_LAYER layer)
     m_pD3DDeviceMadVR->SetPixelShader(NULL);
 
     // render kodi gui
-    (layer == RENDER_LAYER_UNDER) ? g_windowManager.Render() : g_application.RenderMadvr();
+    (layer == RENDER_LAYER_UNDER) ? g_windowManager.Render() : g_application.RenderNoPresent();
+    g_renderManager.NewFrame();
 
     //restore stagestate for xysubfilter
     m_pD3DDeviceMadVR->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);

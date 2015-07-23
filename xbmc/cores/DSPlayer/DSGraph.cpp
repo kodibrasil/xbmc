@@ -674,9 +674,10 @@ void CDSGraph::Seek(uint64_t position, uint32_t flags /*= AM_SEEKING_AbsolutePos
   }
   CSingleLock lock(m_ObjectLock);
 
-  if (g_pPVRStream)    
-  {  
-    // If seek time is close to the end of the timeshift file.
+  if (g_pPVRStream || CGraphFilters::Get()->UsingMediaPortalTsReader())
+  {
+    // For live tv and in-progress recordings.
+    // When seek position is close to the end of the file.
     uint64_t endOfTimeShiftFile = (GetTotalTime() >= (uint64_t)MSEC_TO_DS_TIME(2000)) ? (GetTotalTime() - (uint64_t)MSEC_TO_DS_TIME(2000)) : 0;
     if (position > endOfTimeShiftFile)
       position = endOfTimeShiftFile;
@@ -774,7 +775,7 @@ uint64_t CDSGraph::GetTime(bool forcePlaybackTime)
     return m_State.time;
   else                                                                    // Used by GUI on PVR video
   {
-    if (g_windowManager.IsWindowActive(WINDOW_DIALOG_VIDEO_OSD))
+    if (g_PVRManager.IsPlayingTV() && g_windowManager.IsWindowActive(WINDOW_DIALOG_VIDEO_OSD))
       return MSEC_TO_DS_TIME(g_pPVRStream->GetTime());  // LiveTV EPG time
     else
       return m_State.time;                              // Playback Time
@@ -788,9 +789,9 @@ uint64_t CDSGraph::GetTotalTime(bool forcePlaybackTime)
 
   if (!g_pPVRStream || CDSPlayer::IsCurrentThread() || forcePlaybackTime) // Used by seek or none PVR video
     return m_State.time_total;
-  else 												                      // Used by GUI on PVR video
+  else 												                                            // Used by GUI on PVR video
   {
-    if (g_windowManager.IsWindowActive(WINDOW_DIALOG_VIDEO_OSD))
+    if (g_PVRManager.IsPlayingTV() && g_windowManager.IsWindowActive(WINDOW_DIALOG_VIDEO_OSD))
       return MSEC_TO_DS_TIME(g_pPVRStream->GetTotalTime()); // LiveTV EPG time
     else
       return m_State.time_total;                            // Playback Time

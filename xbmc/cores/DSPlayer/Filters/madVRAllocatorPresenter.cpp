@@ -111,6 +111,7 @@ STDMETHODIMP CmadVRAllocatorPresenter::NonDelegatingQueryInterface(REFIID riid, 
 void CmadVRAllocatorPresenter::SetResolution()
 {
   ULONGLONG frameRate;
+  double refreshRate;
   float fps;
 
   CMadvrCallback::Get()->SetInitMadvr(true);
@@ -122,6 +123,7 @@ void CmadVRAllocatorPresenter::SetResolution()
   {
     pInfo->GetUlonglong("frameRate", &frameRate);
     fps = 10000000.0 / frameRate;
+    pInfo->GetDouble("refreshRate", &refreshRate);
   }
 
   if (CSettings::Get().GetInt("videoplayer.adjustrefreshrate") != ADJUST_REFRESHRATE_OFF 
@@ -132,7 +134,7 @@ void CmadVRAllocatorPresenter::SetResolution()
     g_graphicsContext.SetVideoResolution(bestRes);
   }
   else
-    g_renderManager.UpdateDisplayLatencyForMadvr(fps);
+    g_renderManager.UpdateDisplayLatencyForMadvr(refreshRate);
 
   CMadvrCallback::Get()->SetInitMadvr(false);
 }

@@ -131,6 +131,9 @@ void CmadVRAllocatorPresenter::SetResolution()
     RESOLUTION bestRes = g_renderManager.m_pRenderer->ChooseBestMadvrResolution(fps);
     g_graphicsContext.SetVideoResolution(bestRes);
   }
+  else
+    g_renderManager.UpdateDisplayLatencyForMadvr(fps);
+
   CMadvrCallback::Get()->SetInitMadvr(false);
 }
 

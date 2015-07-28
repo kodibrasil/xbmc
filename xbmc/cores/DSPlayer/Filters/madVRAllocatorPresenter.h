@@ -128,6 +128,7 @@ class CmadVRAllocatorPresenter
   bool m_isDeviceSet;
   bool m_firstBoot;
   bool m_isEnteringExclusive;
+  bool m_updateDisplayLatencyForMadvr;
   int m_shaderStage;
 
 public:

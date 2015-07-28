@@ -56,6 +56,7 @@ CmadVRAllocatorPresenter::CmadVRAllocatorPresenter(HWND hWnd, HRESULT& hr, CStdS
   m_isDeviceSet = false;
   m_firstBoot = true;
   m_isEnteringExclusive = false;
+  m_updateDisplayLatencyForMadvr = false;
   m_threadID = 0;
   
   if (FAILED(hr)) {
@@ -111,7 +112,6 @@ STDMETHODIMP CmadVRAllocatorPresenter::NonDelegatingQueryInterface(REFIID riid, 
 void CmadVRAllocatorPresenter::SetResolution()
 {
   ULONGLONG frameRate;
-  double refreshRate;
   float fps;
 
   CMadvrCallback::Get()->SetInitMadvr(true);
@@ -123,10 +123,9 @@ void CmadVRAllocatorPresenter::SetResolution()
   {
     pInfo->GetUlonglong("frameRate", &frameRate);
     fps = 10000000.0 / frameRate;
-    pInfo->GetDouble("refreshRate", &refreshRate);
   }
 
-  if (CSettings::Get().GetInt("videoplayer.adjustrefreshrate") != ADJUST_REFRESHRATE_OFF 
+  if (CSettings::Get().GetInt("videoplayer.adjustrefreshrate") != ADJUST_REFRESHRATE_OFF
     && (CSettings::Get().GetInt("videoplayer.changerefreshwith") == ADJUST_REFRESHRATE_WITH_BOTH || CSettings::Get().GetInt("videoplayer.changerefreshwith") == ADJUST_REFRESHRATE_WITH_DSPLAYER)
     && g_graphicsContext.IsFullScreenRoot())
   {
@@ -134,7 +133,7 @@ void CmadVRAllocatorPresenter::SetResolution()
     g_graphicsContext.SetVideoResolution(bestRes);
   }
   else
-    g_renderManager.UpdateDisplayLatencyForMadvr(refreshRate);
+    m_updateDisplayLatencyForMadvr = true;
 
   CMadvrCallback::Get()->SetInitMadvr(false);
 }
@@ -321,6 +320,17 @@ HRESULT CmadVRAllocatorPresenter::Render( REFERENCE_TIME rtStart, REFERENCE_TIME
 
     // Set DSPlayer Window Visible
     CDSPlayer::SetDsWndVisible(true);
+
+    // Update Display Latency for madVR (sets differents delay for each refresh as configured in advancedsettings)
+    if (m_updateDisplayLatencyForMadvr)
+    { 
+      if (Com::SmartQIPtr<IMadVRInfo> pInfo = m_pDXR)
+      { 
+        double refreshRate;
+        pInfo->GetDouble("refreshRate", &refreshRate);
+        g_renderManager.UpdateDisplayLatencyForMadvr(refreshRate);
+      }
+    }
   }
 
   AlphaBltSubPic(Com::SmartSize(width, height));

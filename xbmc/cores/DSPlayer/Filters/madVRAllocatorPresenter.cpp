@@ -217,7 +217,7 @@ void CmadVRAllocatorPresenter::SwapDevice()
 
 STDMETHODIMP CmadVRAllocatorPresenter::ClearBackground(LPCSTR name, REFERENCE_TIME frameStart, RECT *fullOutputRect, RECT *activeVideoRect)
 {
-  return (!g_graphicsContext.IsFullScreenVideo()) ? RenderMadvr(RENDER_LAYER_UNDER) : CALLBACK_EMPTY;
+  return (!g_graphicsContext.IsFullScreenVideo()) ? RenderMadvr(RENDER_LAYER_UNDER) : CALLBACK_INFO_DISPLAY;
 }
 
 STDMETHODIMP CmadVRAllocatorPresenter::RenderOsd(LPCSTR name, REFERENCE_TIME frameStart, RECT *fullOutputRect, RECT *activeVideoRect)
@@ -384,7 +384,7 @@ HRESULT CmadVRAllocatorPresenter::RenderMadvr(MADVR_RENDER_LAYER layer)
   }
 
   // return an hresult for madVR renderOSD latency mode
-  return CMadvrCallback::Get()->IsGuiActive() ? CALLBACK_USER_INTERFACE : CALLBACK_EMPTY;
+  return CMadvrCallback::Get()->IsGuiActive() ? CALLBACK_USER_INTERFACE : CALLBACK_INFO_DISPLAY;
 }
 
 // ISubPicAllocatorPresenter

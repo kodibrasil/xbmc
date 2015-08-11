@@ -3268,6 +3268,9 @@
     <ClCompile Include="..\..\xbmc\contrib\kissfft\kiss_fftr.c">
       <Filter>contrib\kissfft</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\xbmc\windows\GUIWindowSplash.cpp">
+      <Filter>windows</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\xbmc\cores\DSPlayer\Utils\DSFileUtils.cpp">
       <Filter>cores\DSPlayer\Utils</Filter>
     </ClCompile>
@@ -6360,6 +6363,9 @@
     </ClInclude>
     <ClInclude Include="..\..\xbmc\contrib\kissfft\kiss_fftr.h">
       <Filter>contrib\kissfft</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\windows\GUIWindowSplash.h">
+      <Filter>windows</Filter>
     </ClInclude>
     <ClInclude Include="..\..\xbmc\cores\DSPlayer\Utils\DSFileUtils.h">
       <Filter>cores\DSPlayer\Utils</Filter>

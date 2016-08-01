@@ -2003,7 +2003,8 @@ Com::SmartRect Rasterizer::Draw(SubPicDesc& spd, Com::SmartRect& clipRect, byte*
 #endif
   // Remember to EMMS!
   // Rendering fails in funny ways if we don't do this.
-  _mm_empty();
+  //todo win64
+  //_mm_empty();
 
   return bbox;
 }

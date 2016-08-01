@@ -664,7 +664,7 @@ void CDSPlayer::Process()
 void CDSPlayer::DeInitMadvrWindow()
 {
   // remove ourself as user data to ensure we're not called anymore
-  SetWindowLongPtr(m_hWnd, GWL_USERDATA, 0);
+  SetWindowLongPtr(m_hWnd, GWLP_USERDATA, 0);
 
   // destroy the hidden window
   DestroyWindow(m_hWnd);
@@ -718,7 +718,7 @@ bool CDSPlayer::InitMadvrWindow(HWND &hWnd)
   }
 
   if (hWnd)
-    SetWindowLongPtr(hWnd, GWL_USERDATA, NPT_POINTER_TO_LONG(this));
+    SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 
   return true;
 }

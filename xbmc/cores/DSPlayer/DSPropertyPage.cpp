@@ -95,7 +95,7 @@ static INT_PTR CALLBACK prop_sheet_proc(HWND hwnd, UINT msg, WPARAM wparam,
     if (result == S_OK) {
       result = opf->propPage->Show(SW_SHOW);
       if (result == S_OK) {
-        SetWindowLongPtr(hwnd, DWLP_USER, (LONG)opf);
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(opf));
       }
     }
     BringWindowToTop(hwnd);
@@ -103,17 +103,17 @@ static INT_PTR CALLBACK prop_sheet_proc(HWND hwnd, UINT msg, WPARAM wparam,
   }
   case WM_DESTROY:
   {
-    OLEPropertyFrame *opf = (OLEPropertyFrame *)GetWindowLongPtr(hwnd, DWLP_USER);
+    OLEPropertyFrame *opf = (OLEPropertyFrame *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     if (opf) {
       opf->propPage->Show(SW_HIDE);
       opf->propPage->Deactivate();
-      SetWindowLongPtr(hwnd, DWLP_USER, (LONG)NULL);
+      SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);
     }
     break;
   }
   case WM_NOTIFY:
   {
-    OLEPropertyFrame *opf = (OLEPropertyFrame *)GetWindowLongPtr(hwnd, DWLP_USER);
+    OLEPropertyFrame *opf = (OLEPropertyFrame *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     NMHDR *nmhdr = (NMHDR *)lparam;
     if (!opf)
       break;

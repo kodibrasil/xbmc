@@ -54,7 +54,7 @@
 #ifndef _DEBUG
 #pragma comment(lib, "libmicrohttpd.lib")
 #else  // _DEBUG
-#pragma comment(lib, "libmicrohttpd_d.lib")
+#pragma comment(lib, "libmicrohttpdd.lib")
 #endif // _DEBUG
 #endif // TARGET_WINDOWS
 

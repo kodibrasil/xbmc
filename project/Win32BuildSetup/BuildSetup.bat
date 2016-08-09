@@ -1,4 +1,4 @@
-@ECHO OFF
+﻿@ECHO OFF
 SETLOCAL ENABLEDELAYEDEXPANSION
 REM setup all paths
 SET cur_dir=%CD%
@@ -102,7 +102,7 @@ set WORKSPACE=%CD%\..\..\kodi-build
   MKDIR %WORKSPACE%
   PUSHD %WORKSPACE%
 
-  cmake.exe -G "Visual Studio 14" %base_dir%\project\cmake
+  cmake.exe -G "Visual Studio 14 2015 Win64" %base_dir%\project\cmake
   IF %errorlevel%==1 (
     set DIETEXT="%APP_NAME%.EXE failed to build!"
     goto DIE

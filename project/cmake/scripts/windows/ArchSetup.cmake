@@ -38,6 +38,8 @@ endif()
 # Google Test needs to use shared version of runtime libraries
 set(gtest_force_shared_crt ON CACHE STRING "" FORCE)
 
+# Temporary disable cdio fox x64 build
+set(ENABLE_OPTICAL OFF CACHE BOOL "" FORCE)
 
 # -------- Linker options ---------
 

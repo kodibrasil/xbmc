@@ -36,33 +36,6 @@ class CPlayerCoreConfig;
 class CPlayerSelectionRule;
 class IPlayer;
 
-<<<<<<< HEAD
-// do not remove mplayer - will break scripts
-enum EPLAYERCORES
-{
-  EPC_NONE,
-  EPC_DVDPLAYER,
-  EPC_MPLAYER,
-  EPC_PAPLAYER,
-#ifdef HAS_DS_PLAYER
-  EPC_DSPLAYER,
-#endif
-  EPC_EXTPLAYER,
-  EPC_UPNPPLAYER,
-};
-
-typedef unsigned int PLAYERCOREID;
-typedef std::vector<PLAYERCOREID> VECPLAYERCORES;
-const PLAYERCOREID PCID_NONE = EPC_NONE;
-const PLAYERCOREID PCID_DVDPLAYER = EPC_DVDPLAYER;
-const PLAYERCOREID PCID_MPLAYER = EPC_MPLAYER;
-const PLAYERCOREID PCID_PAPLAYER = EPC_PAPLAYER;
-#ifdef HAS_DS_PLAYER
-const PLAYERCOREID PCID_DSPLAYER = EPC_DSPLAYER;
-#endif
-
-=======
->>>>>>> upstream/master
 class CPlayerCoreFactory : public ISettingsHandler
 {
 public:

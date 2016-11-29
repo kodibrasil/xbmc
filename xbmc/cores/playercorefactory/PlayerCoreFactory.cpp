@@ -123,18 +123,14 @@ void CPlayerCoreFactory::GetPlayers(const CFileItem& item, std::vector<std::stri
   // Also push these players in case it is NOT audio either
   if (item.IsVideo() || !item.IsAudio())
   {
-<<<<<<< HEAD
 #ifdef HAS_DS_PLAYER
-    bool dsplayer = CSettings::GetInstance().GetBool(CSettings::SETTING_DSPLAYER_DEFAULTVIDEOPLAYER);
-    PLAYERCOREID eVideoDefault = dsplayer ? EPC_DSPLAYER : GetPlayerCore("videodefaultplayer");
-#else
-    PLAYERCOREID eVideoDefault = GetPlayerCore("videodefaultplayer");
+    if (CSettings::GetInstance().GetBool(CSettings::SETTING_DSPLAYER_DEFAULTVIDEOPLAYER))
+    {
+      players.push_back("DSPlayer");
+    }
 #endif
-    if (eVideoDefault != EPC_NONE)
-=======
     int idx = GetPlayerIndex("videodefaultplayer");
     if (idx > -1)
->>>>>>> upstream/master
     {
       std::string eVideoDefault = GetPlayerName(idx);
       CLog::Log(LOGDEBUG, "CPlayerCoreFactory::GetPlayers: adding videodefaultplayer (%s)", eVideoDefault.c_str());
@@ -323,19 +319,8 @@ bool CPlayerCoreFactory::LoadConfiguration(const std::string &file, bool clear)
       delete config;
     m_vecPlayerConfigs.clear();
 
-<<<<<<< HEAD
-#ifdef HAS_DS_PLAYER
-    CPlayerCoreConfig* dsplayer = new CPlayerCoreConfig("DSPlayer", EPC_DSPLAYER, NULL);
-    dsplayer->m_bPlaysAudio = dsplayer->m_bPlaysVideo = true;
-    m_vecCoreConfigs.push_back(dsplayer);
-#endif
-
-    for(std::vector<CPlayerSelectionRule *>::iterator it = m_vecCoreSelectionRules.begin(); it != m_vecCoreSelectionRules.end(); ++it)
-      delete *it;
-=======
     for (auto rule: m_vecCoreSelectionRules)
       delete rule;
->>>>>>> upstream/master
     m_vecCoreSelectionRules.clear();
 
     // Builtin players
@@ -347,6 +332,14 @@ bool CPlayerCoreFactory::LoadConfiguration(const std::string &file, bool clear)
     CPlayerCoreConfig* paplayer = new CPlayerCoreConfig("PAPlayer", "music", nullptr);
     paplayer->m_bPlaysAudio = true;
     m_vecPlayerConfigs.push_back(paplayer);
+
+#ifdef HAS_DS_PLAYER
+    // Builtin players
+    CPlayerCoreConfig* DSPlayer = new CPlayerCoreConfig("DSPlayer", "dsplayer", nullptr);
+    DSPlayer->m_bPlaysAudio = true;
+    DSPlayer->m_bPlaysVideo = true;
+    m_vecPlayerConfigs.push_back(DSPlayer);
+#endif
   }
 
   if (!pConfig || strcmpi(pConfig->Value(), "playercorefactory") != 0)
@@ -366,15 +359,6 @@ bool CPlayerCoreFactory::LoadConfiguration(const std::string &file, bool clear)
       if (type.empty()) type = name;
       StringUtils::ToLower(type);
 
-<<<<<<< HEAD
-      EPLAYERCORES eCore = EPC_NONE;
-      if (type == "dvdplayer" || type == "mplayer") eCore = EPC_DVDPLAYER;
-      if (type == "paplayer" ) eCore = EPC_PAPLAYER;
-      if (type == "externalplayer" ) eCore = EPC_EXTPLAYER;
-#ifdef HAS_DS_PLAYER
-      if (type == "dsplayer" ) eCore = EPC_DSPLAYER;
-#endif
-=======
       std::string internaltype;
       if (type == "videoplayer")
         internaltype = "video";
@@ -382,6 +366,10 @@ bool CPlayerCoreFactory::LoadConfiguration(const std::string &file, bool clear)
         internaltype = "music";
       else if (type == "externalplayer")
         internaltype = "external";
+#ifdef HAS_DS_PLAYER
+      else if (type == "dsplayer")
+        internaltype = "dsplayer";
+#endif
 
       int count = 0;
       std::string playername = name;
@@ -392,7 +380,6 @@ bool CPlayerCoreFactory::LoadConfiguration(const std::string &file, bool clear)
         itoa << count;
         playername = name + itoa.str();
       }
->>>>>>> upstream/master
 
       if (!internaltype.empty())
       {

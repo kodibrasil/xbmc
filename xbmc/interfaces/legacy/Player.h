@@ -645,26 +645,10 @@ namespace XBMCAddon
       ///
       getAvailableAudioStreams();
 #else
+      std::vector<String>* getAvailableAudioStreamsChannels();
       std::vector<String> getAvailableAudioStreams();
 #endif
 
-<<<<<<< HEAD
-      // Player_getAvailableAudioStreamsChannels
-      /**
-      * getAvailableAudioStreamsChannels() -- get Audio stream Channels Number
-      */
-      std::vector<String>* getAvailableAudioStreamsChannels();
-
-      /**
-       * setAudioStream(stream) -- set Audio Stream.
-       * 
-       * stream           : int
-       * 
-       * example:
-       * 
-       *    - setAudioStream(1)
-       */
-=======
 #ifdef DOXYGEN_SHOULD_USE_THIS
       ///
       /// \ingroup python_Player
@@ -686,7 +670,6 @@ namespace XBMCAddon
       ///
       setAudioStream(...);
 #else
->>>>>>> upstream/master
       void setAudioStream(int iStream);
 #endif
 

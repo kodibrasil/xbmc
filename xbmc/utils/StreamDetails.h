@@ -68,13 +68,10 @@ public:
   int m_iDuration;
   std::string m_strCodec;
   std::string m_strStereoMode;
-<<<<<<< HEAD
+  std::string m_strLanguage;
 #ifdef HAS_DS_PLAYER
   unsigned long m_iFourcc;
 #endif
-=======
-  std::string m_strLanguage;
->>>>>>> upstream/master
 };
 
 class CStreamDetailAudio : public CStreamDetail
@@ -140,13 +137,10 @@ public:
   int GetVideoDuration(int idx = 0) const;
   void SetVideoDuration(int idx, const int duration);
   std::string GetStereoMode(int idx = 0) const;
-<<<<<<< HEAD
+  std::string GetVideoLanguage(int idx = 0) const;
 #ifdef HAS_DS_PLAYER
   std::string GetVideoFourcc(int idx = 0) const;
 #endif
-=======
-  std::string GetVideoLanguage(int idx = 0) const;
->>>>>>> upstream/master
 
   std::string GetAudioCodec(int idx = 0) const;
   std::string GetAudioLanguage(int idx = 0) const;

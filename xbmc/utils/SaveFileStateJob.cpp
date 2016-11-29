@@ -34,17 +34,13 @@
 #include "guilib/GUIWindowManager.h"
 #include "GUIUserMessages.h"
 #include "music/MusicDatabase.h"
-<<<<<<< HEAD
-#include "cores/AudioEngine/DSPAddons/ActiveAEDSP.h"
+#include "cores/AudioEngine/Engines/ActiveAE/AudioDSPAddons/ActiveAEDSP.h"
+#include "xbmc/music/tags/MusicInfoTag.h"
 #ifdef HAS_DS_PLAYER
 #include "DSPlayerDatabase.h"
 #include "settings/Settings.h"
 #include "DSRendererCallback.h"
 #endif
-=======
-#include "cores/AudioEngine/Engines/ActiveAE/AudioDSPAddons/ActiveAEDSP.h"
-#include "xbmc/music/tags/MusicInfoTag.h"
->>>>>>> upstream/master
 
 bool CSaveFileStateJob::DoWork()
 {
@@ -87,9 +83,13 @@ bool CSaveFileStateJob::DoWork()
 	  {
 		  dspdb.AddEdition(progressTrackingFile, m_bookmark.edition);
 	  }
-      if (m_madvrSettings != CMediaSettings::GetInstance().GetAtStartMadvrSettings() && CSettings::GetInstance().GetInt(CSettings::SETTING_DSPLAYER_MANAGEMADVRWITHKODI) == KODIGUI_LOAD_DSPLAYER)
+      if (m_madvrSettings.SettingsChanged() && CSettings::GetInstance().GetInt(CSettings::SETTING_DSPLAYER_MANAGEMADVRWITHKODI) == KODIGUI_LOAD_DSPLAYER)
       {
           dspdb.SetVideoSettings(progressTrackingFile, m_madvrSettings);
+      }
+      if (m_videoSettings.m_SubtitleExtTrackName != CMediaSettings::GetInstance().GetAtStartVideoSettings().m_SubtitleExtTrackName)
+      {
+        dspdb.SetSubtitleExtTrackName(progressTrackingFile, m_videoSettings.m_SubtitleExtTrackName);
       }
 #endif
       CVideoDatabase videodatabase;
@@ -123,11 +123,24 @@ bool CSaveFileStateJob::DoWork()
               CVariant data;
               data["id"] = m_item.GetVideoInfoTag()->m_iDbId;
               data["type"] = m_item.GetVideoInfoTag()->m_type;
+#ifdef HAS_DS_PLAYER
+              if (m_item.GetVideoInfoTag()->m_type == MediaTypeEpisode)
+                dspdb.SetLastTvShowId(true, m_item.GetVideoInfoTag()->m_iIdShow);
+#endif
               ANNOUNCEMENT::CAnnouncementManager::GetInstance().Announce(ANNOUNCEMENT::VideoLibrary, "xbmc", "OnUpdate", data);
             }
           }
           else
+#ifdef HAS_DS_PLAYER
+          {
+            if (m_item.GetVideoInfoTag()->m_type == MediaTypeEpisode)
+              dspdb.SetLastTvShowId(false, m_item.GetVideoInfoTag()->m_iIdShow);
+
             videodatabase.UpdateLastPlayed(m_item);
+          }
+#else
+            videodatabase.UpdateLastPlayed(m_item);
+#endif
 
           if (!m_item.HasVideoInfoTag() || m_item.GetVideoInfoTag()->m_resumePoint.timeInSeconds != m_bookmark.timeInSeconds)
           {
@@ -198,6 +211,9 @@ bool CSaveFileStateJob::DoWork()
           g_windowManager.SendThreadMessage(message);
         }
       }
+#ifdef HAS_DS_PLAYER
+      dspdb.Close();
+#endif
     }
 
     if (m_item.IsAudio())

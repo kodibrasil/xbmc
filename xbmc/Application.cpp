@@ -646,14 +646,11 @@ bool CApplication::Create()
 
   update_emu_environ();//apply the GUI settings
 
-<<<<<<< HEAD
+  //! @todo - move to CPlatformXXX
 #ifdef HAS_DS_PLAYER // DSPlayer
   g_dsSettings.Initialize();
   g_dsSettings.LoadConfig();
 #endif
-=======
-  //! @todo - move to CPlatformXXX
->>>>>>> upstream/master
 #ifdef TARGET_WINDOWS
   CWIN32Util::SetThreadLocalLocale(true); // enable independent locale for each thread, see https://connect.microsoft.com/VisualStudio/feedback/details/794122
 #endif // TARGET_WINDOWS
@@ -1942,73 +1939,6 @@ void CApplication::Render()
 
   if (!extPlayerActive && g_graphicsContext.IsFullScreenVideo() && !m_pPlayer->IsPausedPlayback())
   {
-<<<<<<< HEAD
-    // Less fps in DPMS
-    bool lowfps = g_Windowing.EnableFrameLimiter();
-
-    m_bPresentFrame = false;
-    if (!extPlayerActive && g_graphicsContext.IsFullScreenVideo() && !m_pPlayer->IsPausedPlayback())
-    {
-      m_bPresentFrame = g_renderManager.HasFrame();
-      if (vsync_mode == VSYNC_DISABLED)
-        vsync = false;
-    }
-    else
-    {
-      // engage the frame limiter as needed
-      limitFrames = lowfps || extPlayerActive;
-      // DXMERGE - we checked for g_videoConfig.GetVSyncMode() before this
-      //           perhaps allowing it to be set differently than the UI option??
-      if (vsync_mode == VSYNC_DISABLED || vsync_mode == VSYNC_VIDEO)
-      {
-        limitFrames = true; // not using vsync.
-        vsync = false;
-      }
-      else if ((g_infoManager.GetFPS() > g_graphicsContext.GetFPS() + 10) && g_infoManager.GetFPS() > 1000.0f / singleFrameTime)
-      {
-        limitFrames = true; // using vsync, but it isn't working.
-        vsync = false;
-      }
-
-      if (limitFrames)
-      {
-        if (extPlayerActive)
-        {
-          ResetScreenSaver();  // Prevent screensaver dimming the screen
-          singleFrameTime = 1000;  // 1 fps, high wakeup latency but v.low CPU usage
-        }
-        else if (lowfps)
-          singleFrameTime = 200;  // 5 fps, <=200 ms latency to wake up
-      }
-
-    }
-  }
-
-  CSingleLock lock(g_graphicsContext);
-
-  if (g_graphicsContext.IsFullScreenVideo() && m_pPlayer->IsPlaying() && vsync_mode == VSYNC_VIDEO
-#ifdef HAS_DS_PLAYER
-    && !g_dsSettings.pRendererSettings->vSync
-#endif
-)
-    g_Windowing.SetVSync(true);
-  else if (vsync_mode == VSYNC_ALWAYS)
-#ifdef HAS_DS_PLAYER
-  {
-    if (m_pPlayer->IsPlaying() && g_dsSettings.pRendererSettings->vSync)
-      g_Windowing.SetVSync(false); // Disable XBMC vsync and use DSplayer one
-    else
-      g_Windowing.SetVSync(true);
-  }
-#else
-    g_Windowing.SetVSync(true);
-#endif
-  else if (vsync_mode != VSYNC_DRIVER)
-    g_Windowing.SetVSync(false);
-
-  if (m_bPresentFrame && m_pPlayer->IsPlaying() && !m_pPlayer->IsPaused())
-=======
->>>>>>> upstream/master
     ResetScreenSaver();
   }
 
@@ -2047,6 +1977,9 @@ void CApplication::Render()
   }
 
   // render video layer
+#ifdef HAS_DS_PLAYER   
+  if (!CDSRendererCallback::Get()->ReadyDS())
+#endif
   g_windowManager.RenderEx();
 
   g_Windowing.EndRender();
@@ -2064,31 +1997,12 @@ void CApplication::Render()
     g_infoManager.UpdateFPS();
   }
 
-<<<<<<< HEAD
 #ifdef HAS_DS_PLAYER   
   if (!CDSRendererCallback::Get()->ReadyDS())
 #endif
-  if (flip)
-    g_graphicsContext.Flip(dirtyRegions);
-
-#ifdef HAS_DS_PLAYER    
-  if (!CDSRendererCallback::Get()->UsingDS(DIRECTSHOW_RENDERER_MADVR))
-#endif
-  if (!extPlayerActive && g_graphicsContext.IsFullScreenVideo() && !m_pPlayer->IsPausedPlayback())
-  {
-      g_renderManager.FrameWait(100);
-  }
-
-  m_lastFrameTime = XbmcThreads::SystemClockMillis();
-  CTimeUtils::UpdateFrameTime(flip, vsync);
-
-  g_renderManager.UpdateResolution();
-  g_renderManager.ManageCaptures();
-=======
   g_graphicsContext.Flip(hasRendered, m_pPlayer->IsRenderingVideoLayer());
 
   CTimeUtils::UpdateFrameTime(hasRendered);
->>>>>>> upstream/master
 }
 
 void CApplication::SetStandAlone(bool value)
@@ -3361,8 +3275,8 @@ PlayBackRet CApplication::PlayFile(CFileItem item, const std::string& player, bo
 #ifdef HAS_DS_PLAYER
     CMediaSettings::GetInstance().GetAtStartVideoSettings() = CMediaSettings::GetInstance().GetCurrentVideoSettings();
 
-    CMediaSettings::GetInstance().GetCurrentMadvrSettings() = CMediaSettings::GetInstance().GetDefaultMadvrSettings();
-    CMediaSettings::GetInstance().GetAtStartMadvrSettings() = CMediaSettings::GetInstance().GetCurrentMadvrSettings();
+    CMediaSettings::GetInstance().GetCurrentMadvrSettings().RestoreDefaultSettings();
+    CMediaSettings::GetInstance().GetCurrentMadvrSettings().StoreSettingsAtStart();
 #endif
     // see if we have saved options in the database
 
@@ -3988,35 +3902,56 @@ void CApplication::LoadVideoSettings(const CFileItem& item)
   CMediaSettings::GetInstance().GetAtStartVideoSettings() = CMediaSettings::GetInstance().GetCurrentVideoSettings();
 
   CDSPlayerDatabase dsdbs;
-  if (dsdbs.Open())
+  if (!dsdbs.Open())
+    return;
+
+  CFileItem fileItem = item;
+
+  if (CSettings::GetInstance().GetBool(CSettings::SETTING_MYVIDEOS_EXTRACTFLAGS) 
+    && fileItem.HasVideoInfoTag() 
+    && !fileItem.GetVideoInfoTag()->HasStreamDetails())
   {
-    CFileItem item = CurrentFileItem();
-
-    if (CSettings::GetInstance().GetBool(CSettings::SETTING_MYVIDEOS_EXTRACTFLAGS) && item.HasVideoInfoTag() && !item.GetVideoInfoTag()->HasStreamDetails())
-    {
-      CLog::Log(LOGDEBUG, "%s - trying to extract filestream details from video file %s", __FUNCTION__, item.GetPath().c_str());
-      CDVDFileInfo::GetFileStreamDetails(&item);
-    }
-
-    CStreamDetails streamDetails = item.GetVideoInfoTag()->m_streamDetails;
-    int res = CDSRendererCallback::Get()->VideoDimsToResolution(streamDetails.GetVideoWidth(), streamDetails.GetVideoHeight());
-    std::string tvShowName = item.GetVideoInfoTag()->m_strShowTitle;
-
-    CLog::Log(LOGDEBUG, "Loading madvr settings for %s with resolution id: %i", item.GetPath().c_str(), res);
-
-    // Load stored files settings
-    if (!dsdbs.GetVideoSettings(item.GetPath().c_str(), CMediaSettings::GetInstance().GetCurrentMadvrSettings()))
-      // if not present Load stored TvShowName settings
-      if (!dsdbs.GetDefResMadvrSettings(-1, tvShowName, CMediaSettings::GetInstance().GetCurrentMadvrSettings()))
-        // if not present Load stored Resolution settings
-        if (!dsdbs.GetDefResMadvrSettings(res, "", CMediaSettings::GetInstance().GetCurrentMadvrSettings())) 
-          // if not present Load default setting
-          CMediaSettings::GetInstance().GetCurrentMadvrSettings() = CMediaSettings::GetInstance().GetDefaultMadvrSettings();
-
-    CMediaSettings::GetInstance().GetAtStartMadvrSettings() = CMediaSettings::GetInstance().GetCurrentMadvrSettings();
-
-    dsdbs.Close();
+    CLog::Log(LOGDEBUG, "%s - trying to extract filestream details from video file %s", __FUNCTION__, fileItem.GetPath().c_str());
+    CDVDFileInfo::GetFileStreamDetails(&fileItem);
   }
+
+  CStreamDetails streamDetails = fileItem.GetVideoInfoTag()->m_streamDetails;
+  CMadvrSettings &madvrSettings = CMediaSettings::GetInstance().GetCurrentMadvrSettings();
+
+  madvrSettings.m_Resolution = CDSRendererCallback::Get()->VideoDimsToResolution(streamDetails.GetVideoWidth(), streamDetails.GetVideoHeight());
+  madvrSettings.m_TvShowName = fileItem.GetVideoInfoTag()->m_strShowTitle;
+
+  // Load stored files settings
+  if (dsdbs.GetVideoSettings(fileItem.GetPath().c_str(), madvrSettings))
+  {
+    CLog::Log(LOGDEBUG, "Loaded madVR for file settings for %s", fileItem.GetPath().c_str());
+  }
+  // if not present Load stored TvShowName settings
+  else if (dsdbs.GetTvShowSettings(madvrSettings.m_TvShowName, madvrSettings))
+  {
+    CLog::Log(LOGDEBUG, "Loaded madVR for tvshow %s settings for %s", madvrSettings.m_TvShowName.c_str(), fileItem.GetPath().c_str());
+  }
+  // if not present Load stored Resolution settings
+  else if (dsdbs.GetResSettings(madvrSettings.m_Resolution, madvrSettings))
+  {
+    CLog::Log(LOGDEBUG, "Loaded madVR for resolution %ip settings for %s", madvrSettings.m_Resolution, fileItem.GetPath().c_str());
+  }
+  // if not present Load stored for all setting
+  else if (dsdbs.GetResSettings(MADVR_RES_ALL, madvrSettings))
+  {
+    CLog::Log(LOGDEBUG, "Loaded madVR for all settings for %s", fileItem.GetPath().c_str());
+  }
+  // restore default settings
+  else 
+  {
+    CLog::Log(LOGDEBUG, "Restored madVR default settings for %s", fileItem.GetPath().c_str());
+    madvrSettings.RestoreDefaultSettings();
+  }
+
+  madvrSettings.StoreSettingsAtStart();
+
+  dsdbs.Close();
+  
 #endif
 }
 
@@ -4024,7 +3959,7 @@ void CApplication::StopPlaying()
 {
   int iWin = g_windowManager.GetActiveWindow();
 #ifdef HAS_DS_PLAYER
-  if (m_pPlayer->GetCurrentPlayer() == PCID_DSPLAYER && m_pPlayer->IsPlaying() && !CDSRendererCallback::Get()->ReadyDS())
+  if (GetCurrentPlayer() == "dsplayer" && m_pPlayer->IsPlaying() && !CDSRendererCallback::Get()->ReadyDS())
   {
     CDSRendererCallback::Get()->SetStop(true);
     return;

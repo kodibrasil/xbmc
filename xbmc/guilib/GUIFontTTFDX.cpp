@@ -68,11 +68,6 @@ bool CGUIFontTTFDX::FirstBegin()
   if (!pContext)
     return false;
 
-#ifdef HAS_DS_PLAYER
-  // Render count to detect when the GUI it's active or deactive (useful for madVR latency mode)
-    CDSRendererCallback::Get()->IncRenderCount();
-#endif
-
   CGUIShaderDX* pGUIShader = g_Windowing.GetGUIShader();
   pGUIShader->Begin(SHADER_METHOD_RENDER_FONT);
 
@@ -91,6 +86,11 @@ void CGUIFontTTFDX::LastEnd()
   // no chars to render
   if (m_vertex.empty() && transIsEmpty)
     return;
+
+#ifdef HAS_DS_PLAYER
+  // Render count to detect when the GUI it's active or deactive (useful for madVR latency mode)
+  CDSRendererCallback::Get()->IncRenderCount();
+#endif
 
   CreateStaticIndexBuffer();
 

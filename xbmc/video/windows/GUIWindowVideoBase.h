@@ -44,14 +44,10 @@ public:
   virtual bool OnMessage(CGUIMessage& message) override;
   virtual bool OnAction(const CAction &action) override;
 
-<<<<<<< HEAD
-  void PlayMovie(const CFileItem *item);
+  void PlayMovie(const CFileItem *item, const std::string &player = "");
 #ifdef HAS_DS_PLAYER
   static void GetResumeItemOffset(const CFileItem *item, int& startoffset, int& partNumber, std::string& strEdition);
 #else
-=======
-  void PlayMovie(const CFileItem *item, const std::string &player = "");
->>>>>>> upstream/master
   static void GetResumeItemOffset(const CFileItem *item, int& startoffset, int& partNumber);
 #endif
   static bool HasResumeItemOffset(const CFileItem *item);

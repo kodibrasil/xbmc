@@ -35,13 +35,14 @@
 #include <initguid.h>
 #include <dvdmedia.h>
 #include "util.h"
-#include "DVDClock.h"
 #include "fgmanager.h"
 #include "DSUtil/DSUtil.h"
 #include "DSUtil/SmartPtr.h"
 #include "windowing/windows/winsystemwin32.h"
 #include "cores/IPlayer.h"
 #include "filesystem/File.h"
+#include "VideoRenderers/RenderDSManager.h"
+#include "cores/VideoPlayer/Process/ProcessInfo.h"
 
 #include "DSMessage.h"
 
@@ -68,7 +69,7 @@ class CFGManager;
 class CDSGraph
 {
 public:
-  CDSGraph(CDVDClock* pClock, IPlayerCallback& callback);
+  CDSGraph(IPlayerCallback& callback, CRenderDSManager& renderManager);
   virtual ~CDSGraph();
 
   /** Determine if the graph can seek
@@ -157,6 +158,20 @@ public:
 
   Com::SmartPtr<IFilterGraph2> pFilterGraph;
 
+  bool Configure(unsigned int width, unsigned int height, unsigned int d_width, unsigned int d_height, float fps, unsigned flags);
+  void UpdateDisplayLatencyForMadvr(float refresh);
+  void NewFrame();
+  void RegisterCallback(IPaintCallback *callback);
+  void UnregisterCallback();
+  void Reset();
+  void Render(bool clear, DWORD flags = 0, DWORD alpha = 255, bool gui = true);
+  void OnAfterPresent();
+
+  void SetProcesInfo(CProcessInfo *processInfo) { m_processInfo = processInfo; }
+  void UpdateProcessInfo(int index = -1);
+  void SetAudioCodeDelayInfo(int index = -1);
+  bool SetSpeed(double dSpeed);
+
 private:
   //Direct Show Filters
   CFGManager*                           m_pGraphBuilder;
@@ -180,6 +195,8 @@ private:
   int m_iCurrentFrameRefreshCycle;
 
   IPlayerCallback& m_callback;
+  CRenderDSManager& m_renderManager;
+  CProcessInfo *m_processInfo;
 
   struct SPlayerState
   {
@@ -238,6 +255,10 @@ private:
     GUID time_format;
     bool isDVD;
   } m_VideoInfo;
+  float m_fps;
+  int m_width;
+  int m_height;
+  int m_audioStreamCount;
 };
 
 extern CDSGraph* g_dsGraph;

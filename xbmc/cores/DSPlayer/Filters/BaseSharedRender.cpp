@@ -25,7 +25,6 @@
 #include "Utils/Log.h"
 #include "guilib/GUIWindowManager.h"
 #include "windowing/WindowingFactory.h"
-#include "settings/AdvancedSettings.h"
 
 const DWORD D3DFVF_VID_FRAME_VERTEX = D3DFVF_XYZRHW | D3DFVF_TEX1;
 
@@ -39,13 +38,23 @@ struct VID_FRAME_VERTEX
   float v;
 };
 
+CRenderWait::CRenderWait()
+{
+  m_renderState = RENDERFRAME_UNLOCK;
+}
+
 void CRenderWait::Wait(int ms)
 {
-  m_renderState = RENDERFRAME_LOCK;
   XbmcThreads::EndTime timeout(ms);
   CSingleLock lock(m_presentlock);
   while (m_renderState == RENDERFRAME_LOCK && !timeout.IsTimePast())
     m_presentevent.wait(lock, timeout.MillisLeft());
+}
+
+void CRenderWait::Lock()
+{
+  CSingleLock lock(m_presentlock);
+  m_renderState = RENDERFRAME_LOCK;
 }
 
 void CRenderWait::Unlock()
@@ -96,7 +105,7 @@ HRESULT CBaseSharedRender::ForceComplete()
 
 CBaseSharedRender::CBaseSharedRender()
 {
-  color_t clearColour = (g_advancedSettings.m_videoBlackBarColour & 0xff) * 0x010101;
+  color_t clearColour = g_Windowing.UseLimitedColor() ? (16 * 0x010101) : 0;
   CD3DHelper::XMStoreColor(m_fColor, clearColour);
   m_bUnderRender = false;
   m_bGuiVisible = false;
@@ -160,6 +169,10 @@ HRESULT CBaseSharedRender::CreateTextures(ID3D11Device* pD3DDeviceKodi, IDirect3
 HRESULT CBaseSharedRender::RenderInternal(DS_RENDER_LAYER layer)
 {
   HRESULT hr = E_UNEXPECTED;
+
+  // If there isn't something to draw skip di rendering
+  if (!m_bGuiVisible)
+    return hr;
 
   // If the over layer it's empty skip the rendering of the under layer and drawn everything over DSPlayer renderer device
   if (layer == RENDER_LAYER_UNDER && !m_bGuiVisibleOver)

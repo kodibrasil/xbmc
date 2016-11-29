@@ -74,7 +74,7 @@
 using namespace std;
 
 CGUIDialogLAVSplitter::CGUIDialogLAVSplitter()
-  : CGUIDialogSettingsManualBase(WINDOW_DIALOG_LAVSPLITTER, "VideoOSDSettings.xml")
+  : CGUIDialogSettingsManualBase(WINDOW_DIALOG_LAVSPLITTER, "DialogSettings.xml")
 {
   m_allowchange = true;
 }
@@ -89,20 +89,15 @@ void CGUIDialogLAVSplitter::OnInitWindow()
   HideUnused();
 }
 
-void CGUIDialogLAVSplitter::OnDeinitWindow(int nextWindowID)
-{
-  CGUIDialogSettingsManualBase::OnDeinitWindow(nextWindowID);
-}
-
-void CGUIDialogLAVSplitter::Save()
-{
-}
-
 void CGUIDialogLAVSplitter::SetupView()
 {
   CGUIDialogSettingsManualBase::SetupView();
 
   SetHeading(55079);
+
+  SET_CONTROL_HIDDEN(CONTROL_SETTINGS_OKAY_BUTTON);
+  SET_CONTROL_HIDDEN(CONTROL_SETTINGS_CUSTOM_BUTTON);
+  SET_CONTROL_LABEL(CONTROL_SETTINGS_CANCEL_BUTTON, 15067);
 }
 
 void CGUIDialogLAVSplitter::InitializeSettings()
@@ -202,10 +197,10 @@ void CGUIDialogLAVSplitter::InitializeSettings()
 
   //SUBMODE
   entries.clear();
-  entries.push_back(make_pair(82004, 0));
-  entries.push_back(make_pair(82005, 1));
-  entries.push_back(make_pair(82006, 2));
-  entries.push_back(make_pair(82007, 3));
+  entries.emplace_back(82004, 0);
+  entries.emplace_back(82005, 1);
+  entries.emplace_back(82006, 2);
+  entries.emplace_back(82007, 3);
   AddList(groupSubmode, LAVSPLITTER_SUBMODE, 82003, 0, lavSettings.splitter_subtitleMode, entries, 82003);
 
   //BLURAYSUB

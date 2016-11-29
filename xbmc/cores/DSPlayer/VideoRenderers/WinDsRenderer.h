@@ -27,14 +27,19 @@
 
 #if !defined(_LINUX) && !defined(HAS_GL) && defined(HAS_DS_PLAYER)
 
-#include "WinBaseRenderer.h"
 #include "../DSPlayer/DSUtil/SmartPtr.h"
 #include "threads/CriticalSection.h"
+#include "BaseDSRenderer.h"
+#include "guilib/D3DResource.h"
+#include "../VideoPlayer/VideoRenderers/RenderCapture.h"
+#include "settings/VideoSettings.h"
+
+#define AUTOSOURCE -1
 
 class CBaseTexture;
 class IPaintCallback;
 
-class CWinDsRenderer : public CWinBaseRenderer
+class CWinDsRenderer : public CBaseDSRenderer
 {
 public:
   CWinDsRenderer();
@@ -52,7 +57,7 @@ public:
   virtual void         ReleaseImage(int source, bool preserve = false) {};
   virtual unsigned int DrawSlice(unsigned char *src[], int stride[], int w, int h, int x, int y) { return 0; };
   virtual void         FlipPage(int source) {};
-  virtual unsigned int PreInit();
+  virtual void         PreInit();
   virtual void         UnInit();
   virtual void         Reset(); /* resets renderer after seek for example */
   virtual bool         IsConfigured() { return m_bConfigured; }
@@ -62,16 +67,15 @@ public:
   virtual void         UnregisterCallback();
   virtual inline void  OnAfterPresent();
 
+  // Feature support
+  virtual bool         SupportsMultiPassRendering() { return false; }
   virtual bool         Supports(ERENDERFEATURE feature);
-  virtual bool         Supports(EDEINTERLACEMODE mode);
   virtual bool         Supports(EINTERLACEMETHOD method);
   virtual bool         Supports(ESCALINGMETHOD method);
 
   virtual EINTERLACEMETHOD AutoInterlaceMethod();
 
-  virtual void         AutoCrop(bool bCrop);
-  void                 RenderUpdate(bool clear, DWORD flags = 0, DWORD alpha = 255);
-  virtual RESOLUTION   ChooseBestMadvrResolution(float fps);
+  void                 RenderUpdate(bool clear, unsigned int flags = 0, unsigned int alpha = 255);
 
 protected:
   virtual void         Render(DWORD flags);

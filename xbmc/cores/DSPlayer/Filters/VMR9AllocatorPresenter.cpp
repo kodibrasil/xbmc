@@ -617,7 +617,7 @@ STDMETHODIMP CVMR9AllocatorPresenter::PresentImage(DWORD_PTR dwUserID, VMR9Prese
 {
   CheckPointer(m_pIVMRSurfAllocNotify, E_UNEXPECTED);
 
-  if (m_rtTimePerFrame == 0 || m_bNeedCheckSample || !g_renderManager.IsConfigured())
+  if (m_rtTimePerFrame == 0 || m_bNeedCheckSample || !g_application.m_pPlayer->IsRenderingVideo())
   {
     m_bNeedCheckSample = false;
     Com::SmartPtr<IBaseFilter>  pVMR9;
@@ -677,11 +677,9 @@ STDMETHODIMP CVMR9AllocatorPresenter::PresentImage(DWORD_PTR dwUserID, VMR9Prese
     if (m_rtTimePerFrame == 0) m_rtTimePerFrame = 417166;
 
     m_fps = (float)(10000000.0 / m_rtTimePerFrame);
-    if (!g_renderManager.IsConfigured())
+    if (!g_application.m_pPlayer->IsRenderingVideo())
     {
-      g_renderManager.Configure(m_NativeVideoSize.cx, m_NativeVideoSize.cy, m_AspectRatio.cx, m_AspectRatio.cy, m_fps,
-        CONF_FLAGS_FULLSCREEN,
-        RENDER_FMT_NONE, 0, 0);
+      g_dsGraph->Configure(m_NativeVideoSize.cx, m_NativeVideoSize.cy, m_AspectRatio.cx, m_AspectRatio.cy, m_fps, CONF_FLAGS_FULLSCREEN);
       CLog::Log(LOGDEBUG, "%s Render manager configured (FPS: %f)", __FUNCTION__, m_fps);
     }
   }
@@ -721,7 +719,7 @@ STDMETHODIMP CVMR9AllocatorPresenter::PresentImage(DWORD_PTR dwUserID, VMR9Prese
   }
 
   //From the new frame the rendermanager will call the dx9allocator paint function
-  g_renderManager.NewFrame();
+  g_dsGraph->NewFrame();
   //The wait frame is not needed anymore
   return S_OK;
 }

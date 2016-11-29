@@ -2299,7 +2299,7 @@ void CVobSubStream::Add(REFERENCE_TIME tStart, REFERENCE_TIME tStop, BYTE* pData
   CVobSubImage vsi;
   vsi.GetPacketInfo(pData, (pData[0]<<8)|pData[1], (pData[2]<<8)|pData[3]);
 
-  boost::shared_ptr<SubPic> p(DNew SubPic());
+  std::shared_ptr<SubPic> p(DNew SubPic());
   p->tStart = tStart;
   p->tStop = vsi.delay > 0 ? (tStart + 10000i64*vsi.delay) : tStop;
   p->pData.resize(len);
@@ -2339,7 +2339,7 @@ STDMETHODIMP_(__w64 int) CVobSubStream::GetStartPosition(REFERENCE_TIME rt, doub
 {
   CAutoLock cAutoLock(&m_csSubPics);
   int idx = m_subpics.size();
-  std::vector<boost::shared_ptr<SubPic>>::reverse_iterator it = m_subpics.rbegin();
+  std::vector<std::shared_ptr<SubPic>>::reverse_iterator it = m_subpics.rbegin();
   for(; it != m_subpics.rend(); ++it, --idx)
   {
     SubPic* sp = it->get();
@@ -2385,7 +2385,7 @@ STDMETHODIMP CVobSubStream::Render(SubPicDesc& spd, REFERENCE_TIME rt, double fp
 {
   if(spd.bpp != 32) return E_INVALIDARG;
 
-  std::vector<boost::shared_ptr<SubPic>>::reverse_iterator it = m_subpics.rbegin();
+  std::vector<std::shared_ptr<SubPic>>::reverse_iterator it = m_subpics.rbegin();
   for(; it != m_subpics.rend(); ++it)
   {
     SubPic* sp = it->get();

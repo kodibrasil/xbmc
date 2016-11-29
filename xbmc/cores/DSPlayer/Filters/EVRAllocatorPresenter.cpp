@@ -1658,12 +1658,10 @@ void CEVRAllocatorPresenter::GetMixerThread()
           m_rtTimePerFrame = 417166;
 
         m_fps = (float)(10000000.0 / m_rtTimePerFrame);
-        if (!g_renderManager.IsConfigured())
+        if (!g_application.m_pPlayer->IsRenderingVideo())
         {
 
-          g_renderManager.Configure(m_NativeVideoSize.cx, m_NativeVideoSize.cy, m_AspectRatio.cx, m_AspectRatio.cy, m_fps,
-            CONF_FLAGS_FULLSCREEN,
-            RENDER_FMT_NONE, 0, 0);
+          g_dsGraph->Configure(m_NativeVideoSize.cx, m_NativeVideoSize.cy, m_AspectRatio.cx, m_AspectRatio.cy, m_fps, CONF_FLAGS_FULLSCREEN);
           CLog::Log(LOGDEBUG, "%s Render manager configured (FPS: %f)", __FUNCTION__, m_fps);
         }
       }
@@ -2309,7 +2307,7 @@ void CEVRAllocatorPresenter::PaintInternal()
   }
 
   m_drawingIsDone.Reset();
-  g_renderManager.NewFrame();
+  g_dsGraph->NewFrame();
   m_drawingIsDone.Wait(); // Wait until the drawing is done
 
   {

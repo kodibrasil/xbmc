@@ -45,6 +45,7 @@
 #include "guilib/IDirtyRegionSolver.h"
 #include "settings/AdvancedSettings.h"
 
+
 #ifndef TRACE
 #define TRACE(x)
 #endif
@@ -228,9 +229,8 @@ CDX9AllocatorPresenter::CDX9AllocatorPresenter(HWND hWnd, HRESULT& hr, bool bIsE
   m_pEvrShared = DNew CEvrSharedRender();
   m_firstBoot = true;
   g_Windowing.Register(this);
-  g_renderManager.PreInit(RENDERER_DSHOW);
 
-  g_renderManager.RegisterCallback(this);
+  g_dsGraph->RegisterCallback(this);
   m_bIsFullscreen = g_dsSettings.IsD3DFullscreen();
 
   m_hDeviceWnd = CDSPlayer::m_hWnd;
@@ -323,8 +323,7 @@ CDX9AllocatorPresenter::~CDX9AllocatorPresenter()
   CDSRendererCallback::Destroy();
   SAFE_DELETE(m_pEvrShared);
   g_Windowing.Unregister(this);
-  g_renderManager.UnregisterCallback();
-  g_renderManager.UnInit();
+  g_dsGraph->UnregisterCallback();
   if (m_bDesktopCompositionDisabled)
   {
     m_bDesktopCompositionDisabled = false;
@@ -2060,7 +2059,7 @@ STDMETHODIMP_(bool) CDX9AllocatorPresenter::Paint(bool fAll)
 {
   CAutoSetEvent autoEvent(&m_drawingIsDone);
 
-  if (!g_renderManager.IsStarted() || m_bPendingResetDevice)
+  if (!g_application.m_pPlayer->IsRenderingVideo() || m_bPendingResetDevice)
     return false;
 
   if (CDSPlayer::PlayerState == DSPLAYER_CLOSING || CDSPlayer::PlayerState == DSPLAYER_CLOSED)
@@ -2099,7 +2098,7 @@ STDMETHODIMP_(bool) CDX9AllocatorPresenter::Paint(bool fAll)
   hr = m_pD3DDev->ColorFill(m_pVideoSurface[m_nNbDXSurface + 2], NULL, 0);*/
 
 
-  if (g_renderManager.IsConfigured() && !rDstVid.IsRectEmpty())
+  if (g_application.m_pPlayer->IsRenderingVideo() && !rDstVid.IsRectEmpty())
   {
 
     if (m_pVideoTexture[m_nCurSurface])

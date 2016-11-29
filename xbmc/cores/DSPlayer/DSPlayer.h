@@ -43,12 +43,10 @@
 #include "dialogs/GUIDialogBoxBase.h"
 #include "settings/Settings.h"
 
-#include "filesystem/PVRFile.h"
 #include "pvr/PVRManager.h"
 #include "Application.h"
-#ifdef HAS_VIDEO_PLAYBACK
-#include "cores/VideoRenderers/RenderManager.h"
-#endif
+#include "Videorenderers/RenderDSManager.h"
+#include "cores/VideoPlayer/Process/ProcessInfo.h"
 
 #if !defined(NPT_POINTER_TO_LONG)
 #define NPT_POINTER_TO_LONG(_p) ((long)(_p))
@@ -115,120 +113,93 @@ protected:
   void Process();
 };
 
-class CDSPlayer : public IPlayer, public CThread
+class CDSPlayer : public IPlayer, public CThread, public IDispResource, public IRenderDSMsg
 {
 public:
   //IPlayer
   CDSPlayer(IPlayerCallback& callback);
   virtual ~CDSPlayer();
-  virtual bool OpenFile(const CFileItem& file, const CPlayerOptions &options);
-  virtual bool CloseFile(bool reopen = false);
-  virtual bool IsPlaying() const;
-  virtual bool IsCaching() const { return false; };
-  virtual bool IsPaused() const { return (m_pGraphThread.GetCurrentRate() == 0) && g_dsGraph->IsPaused(); };
-  virtual bool HasVideo() const;
-  virtual bool HasAudio() const;
-  virtual bool HasMenu() { return g_dsGraph->IsDvd(); };
-  bool IsInMenu() const { return g_dsGraph->IsInMenu(); };
-  virtual void Pause();
-  virtual bool CanSeek()                                        { return g_dsGraph->CanSeek(); }
-  virtual void Seek(bool bPlus, bool bLargeStep, bool bChapterOverride);
-  virtual void SeekPercentage(float iPercent);
-  virtual float GetPercentage()                                 { return g_dsGraph->GetPercentage(); }
-  virtual float GetCachePercentage()							{ return g_dsGraph->GetCachePercentage(); }
-  virtual bool ControlsVolume()									{ return true; }
-  virtual void SetMute(bool bOnOff)								{ if (bOnOff) g_dsGraph->SetVolume(VOLUME_MINIMUM); }
-  virtual void SetVolume(float nVolume)                         { g_dsGraph->SetVolume(nVolume); }
-  virtual void GetAudioInfo(std::string& strAudioInfo);
-  virtual void GetVideoInfo(std::string& strVideoInfo);
-  virtual void GetGeneralInfo(std::string& strGeneralInfo);
-  virtual bool Closing()                                      { return PlayerState == DSPLAYER_CLOSING; }
-  virtual void SetAVDelay(float fValue = 0.0f);
-  virtual float GetAVDelay();
-  virtual void SetSubTitleDelay(float fValue = 0.0f);
-  virtual float GetSubTitleDelay();
+  virtual bool OpenFile(const CFileItem& file, const CPlayerOptions &options) override;
+  virtual bool CloseFile(bool reopen = false) override;
+  virtual bool IsPlaying() const override;
+  virtual bool HasVideo() const override;
+  virtual bool HasAudio() const override;
+  virtual void Pause() override;
+  virtual bool CanSeek()  override { return g_dsGraph->CanSeek(); }
+  virtual void Seek(bool bPlus, bool bLargeStep, bool bChapterOverride) override;
+  virtual void SeekPercentage(float iPercent) override;
+  virtual float GetPercentage() override { return g_dsGraph->GetPercentage(); }
+  virtual float GetCachePercentage() override { return g_dsGraph->GetCachePercentage(); }
+  virtual void SetVolume(float nVolume)  override { g_dsGraph->SetVolume(nVolume); }
+  virtual void SetMute(bool bOnOff)  override { if (bOnOff) g_dsGraph->SetVolume(VOLUME_MINIMUM); }
+  virtual void SetAVDelay(float fValue = 0.0f) override;
+  virtual float GetAVDelay() override;
 
-  //Audio stream selection
-  virtual int  GetAudioStreamCount() { return (CStreamsManager::Get()) ? CStreamsManager::Get()->GetAudioStreamCount() : 0; }
-  virtual int  GetAudioStream() { return (CStreamsManager::Get()) ? CStreamsManager::Get()->GetAudioStream() : 0; }
-  virtual void GetAudioStreamName(int iStream, CStdString &strStreamName) {
-    if (CStreamsManager::Get())
-      CStreamsManager::Get()->GetAudioStreamName(iStream, strStreamName);
-  };
-  virtual void SetAudioStream(int iStream) {
-    if (CStreamsManager::Get())
-      CStreamsManager::Get()->SetAudioStream(iStream);
-  };
+  virtual void SetSubTitleDelay(float fValue = 0.0f) override;
+  virtual float GetSubTitleDelay() override;
+  virtual int  GetSubtitleCount() override;
+  virtual int  GetSubtitle() override;
+  virtual void GetSubtitleStreamInfo(int index, SPlayerSubtitleStreamInfo &info) override;
+  virtual void SetSubtitle(int iStream) override;
+  virtual bool GetSubtitleVisible() override;
+  virtual void SetSubtitleVisible(bool bVisible) override;
+  virtual void AddSubtitle(const std::string& strSubPath) override;
+
+  virtual int  GetAudioStreamCount() override { return (CStreamsManager::Get()) ? CStreamsManager::Get()->GetAudioStreamCount() : 0; }
+  virtual int  GetAudioStream() override { return (CStreamsManager::Get()) ? CStreamsManager::Get()->GetAudioStream() : 0; }
+  virtual void SetAudioStream(int iStream) override;
+
+  //virtual int GetVideoStream() {} const override;
+  //virtual int GetVideoStreamCount() const override;
+  virtual void GetVideoStreamInfo(int streamId, SPlayerVideoStreamInfo &info) override;
+  //virtual void SetVideoStream(int iStream);
+
+  virtual int  GetChapterCount() override { CSingleLock lock(m_StateSection); return CChaptersManager::Get()->GetChapterCount(); }
+  virtual int  GetChapter() override { CSingleLock lock(m_StateSection); return CChaptersManager::Get()->GetChapter(); }
+  virtual void GetChapterName(std::string& strChapterName, int chapterIdx = -1) override { CSingleLock lock(m_StateSection); CChaptersManager::Get()->GetChapterName(strChapterName, chapterIdx); }
+  virtual int64_t GetChapterPos(int chapterIdx = -1) override { return CChaptersManager::Get()->GetChapterPos(chapterIdx); }
+  virtual int  SeekChapter(int iChapter) override { return CChaptersManager::Get()->SeekChapter(iChapter); }
+
+  virtual void SeekTime(__int64 iTime = 0) override;
+  virtual bool SeekTimeRelative(__int64 iTime) override;
+  virtual __int64 GetTime() override { CSingleLock lock(m_StateSection); return llrint(DS_TIME_TO_MSEC(g_dsGraph->GetTime())); }
+  virtual __int64 GetTotalTime() override { CSingleLock lock(m_StateSection); return llrint(DS_TIME_TO_MSEC(g_dsGraph->GetTotalTime())); }
+  virtual void SetSpeed(float iSpeed) override;
+  virtual float GetSpeed() override;
+  virtual bool OnAction(const CAction &action) override;
+  virtual bool HasMenu() const override { return g_dsGraph->IsDvd(); };
+  bool IsInMenu() const override { return g_dsGraph->IsInMenu(); };
+
+  virtual void GetAudioStreamInfo(int index, SPlayerAudioStreamInfo &info) override;
+
+  virtual bool SwitchChannel(const PVR::CPVRChannelPtr &channel) override;
+
+  virtual void FrameMove() override;
+
+  virtual void Render(bool clear, uint32_t alpha = 255, bool gui = true) override;
+  virtual void FlushRenderer() override;
+  virtual void SetRenderViewMode(int mode) override;
+  float GetRenderAspectRatio() override;
+  virtual void TriggerUpdateResolution() override;
+  virtual bool IsRenderingVideo() override;
+  virtual bool IsRenderingGuiLayer() override;
+  virtual bool IsRenderingVideoLayer() override;
+  virtual bool Supports(EINTERLACEMETHOD method) override;
+  virtual bool Supports(ESCALINGMETHOD method) override;
+  virtual bool Supports(ERENDERFEATURE feature) override;
+
+  // IDispResource interface
+  virtual void OnLostDisplay();
+  virtual void OnResetDisplay();
+
+  virtual bool IsCaching() const override { return false; }
 
   //Editions selection
-  virtual int  GetEditionsCount()
-  {
-    return (CStreamsManager::Get()) ? CStreamsManager::Get()->GetEditionsCount() : 0;
-  }
-  virtual int  GetEdition()
-  {
-    return (CStreamsManager::Get()) ? CStreamsManager::Get()->GetEdition() : 0;
-  }
-  virtual void GetEditionInfo(int iEdition, std::string &strEditionName, REFERENCE_TIME *prt) {
-    if (CStreamsManager::Get())
-      CStreamsManager::Get()->GetEditionInfo(iEdition, strEditionName, prt);
-  };
-  virtual void SetEdition(int iEdition) {
-    if (CStreamsManager::Get())
-      CStreamsManager::Get()->SetEdition(iEdition);
-  };
-
-  virtual bool IsMatroskaEditions()
-  {
-    return (CStreamsManager::Get()) ? CStreamsManager::Get()->IsMatroskaEditions() : false;
-  }
-
-  virtual int  GetSubtitleCount();
-  virtual int  GetSubtitle();
-  virtual void GetSubtitleName(int iStream, CStdString &strStreamName) {
-    if (CStreamsManager::Get())
-      CStreamsManager::Get()->SubtitleManager->GetSubtitleName(iStream, strStreamName);
-  }
-  virtual void SetSubtitle(int iStream);
-  virtual bool GetSubtitleVisible();
-  virtual void SetSubtitleVisible(bool bVisible);
-
-  virtual void AddSubtitle(const std::string& strSubPath);
-
-  // Chapters
-
-  virtual int  GetChapterCount() { CSingleLock lock(m_StateSection); return CChaptersManager::Get()->GetChapterCount(); }
-  virtual int  GetChapter() { CSingleLock lock(m_StateSection); return CChaptersManager::Get()->GetChapter(); }
-  virtual void GetChapterName(std::string& strChapterName, int chapterIdx=-1) { CSingleLock lock(m_StateSection); CChaptersManager::Get()->GetChapterName(strChapterName, chapterIdx);}
-  virtual int64_t GetChapterPos(int chapterIdx = -1) { return CChaptersManager::Get()->GetChapterPos(chapterIdx); }
-  virtual int  SeekChapter(int iChapter) { return CChaptersManager::Get()->SeekChapter(iChapter); }
-
-  void Update(bool bPauseDrawing) { g_renderManager.Update(); }
-  void GetVideoRect(CRect& SrcRect, CRect& DestRect, CRect& ViewRect) { g_renderManager.GetVideoRect(SrcRect, DestRect, ViewRect); }
-  virtual void GetVideoAspectRatio(float& fAR) { fAR = g_renderManager.GetAspectRatio(); }
-
-  virtual int GetChannels() { return (CStreamsManager::Get()) ? CStreamsManager::Get()->GetChannels() : 0; };
-  virtual int GetBitsPerSample() { return (CStreamsManager::Get()) ? CStreamsManager::Get()->GetBitsPerSample() : 0; };
-  virtual int GetSampleRate() { return (CStreamsManager::Get()) ? CStreamsManager::Get()->GetSampleRate() : 0; };
-  virtual int GetPictureWidth() { return (CStreamsManager::Get()) ? CStreamsManager::Get()->GetPictureWidth() : 0; }
-  virtual int GetPictureHeight()  { return (CStreamsManager::Get()) ? CStreamsManager::Get()->GetPictureHeight() : 0; }
-  virtual CStdString GetAudioCodecName() { return (CStreamsManager::Get()) ? CStreamsManager::Get()->GetAudioCodecName() : ""; }
-  virtual CStdString GetVideoCodecName() { return (CStreamsManager::Get()) ? CStreamsManager::Get()->GetVideoCodecName() : ""; }
-
-  virtual void GetVideoStreamInfo(SPlayerVideoStreamInfo &info);
-  virtual void GetAudioStreamInfo(int index, SPlayerAudioStreamInfo &info);
-  virtual void GetSubtitleStreamInfo(int index, SPlayerSubtitleStreamInfo &info);
-
-  virtual void SeekTime(__int64 iTime = 0);
-  virtual bool SeekTimeRelative(__int64 iTime);
-  virtual __int64 GetTime() { CSingleLock lock(m_StateSection); return llrint(DS_TIME_TO_MSEC(g_dsGraph->GetTime())); }
-  virtual __int64 GetDisplayTime() { CSingleLock lock(m_StateSection); return llrint(DS_TIME_TO_MSEC(g_dsGraph->GetTime())); }
-  virtual __int64 GetTotalTime() { CSingleLock lock(m_StateSection); return llrint(DS_TIME_TO_MSEC(g_dsGraph->GetTotalTime())); }
-  virtual void ToFFRW(int iSpeed);
-  virtual bool OnAction(const CAction &action);
-
-  virtual bool SwitchChannel(const PVR::CPVRChannelPtr &channel);
-  virtual bool CachePVRStream(void) const;
+  virtual int  GetEditionsCount() override { return (CStreamsManager::Get()) ? CStreamsManager::Get()->GetEditionsCount() : 0; }
+  virtual int  GetEdition() override { return (CStreamsManager::Get()) ? CStreamsManager::Get()->GetEdition() : 0; }
+  virtual void GetEditionInfo(int iEdition, std::string &strEditionName, REFERENCE_TIME *prt) override { if (CStreamsManager::Get()) CStreamsManager::Get()->GetEditionInfo(iEdition, strEditionName, prt); };
+  virtual void SetEdition(int iEdition) override { if (CStreamsManager::Get()) CStreamsManager::Get()->SetEdition(iEdition); };
+  virtual bool IsMatroskaEditions() override { return (CStreamsManager::Get()) ? CStreamsManager::Get()->IsMatroskaEditions() : false; }
 
   //CDSPlayer
   virtual void Stop();
@@ -245,6 +216,11 @@ public:
   CCriticalSection m_StateSection;
   CCriticalSection m_CleanSection;
 
+  int GetPictureWidth() { return (CStreamsManager::Get()) ? CStreamsManager::Get()->GetPictureWidth() : 0; }
+  int GetPictureHeight()  { return (CStreamsManager::Get()) ? CStreamsManager::Get()->GetPictureHeight() : 0; }
+
+  void GetGeneralInfo(std::string& strGeneralInfo);
+
   void ShowEditionDlg(bool playStart);
   bool WaitForFileClose();
   bool OpenFileInternal(const CFileItem& file);
@@ -259,6 +235,8 @@ public:
   CStdString m_className;
   HINSTANCE m_hInstance; 
   bool m_isMadvr;
+
+  CProcessInfo *m_processInfo;
   
   static void PostGraphMessage(CDSMsg *msg, bool wait = true)
   {
@@ -307,6 +285,8 @@ public:
   static void SetDsWndVisible(bool bVisible);
 
 protected:
+  virtual void VideoParamsChange() override { };
+  virtual void GetDebugInfo(std::string &audio, std::string &video, std::string &general) override;
 
   void StopThread(bool bWait = true)
   {
@@ -332,15 +312,15 @@ protected:
 
   bool SelectChannel(bool bNext);
   bool SwitchChannel(unsigned int iChannelNumber);
-  void SetMadvrResolution();
 
   // CThread
-  virtual void OnStartup();
-  virtual void OnExit();
-  virtual void Process();
+  virtual void OnStartup() override;
+  virtual void OnExit() override;
+  virtual void Process() override;
 
   bool m_HasVideo;
   bool m_HasAudio;
 
+  CRenderDSManager m_renderManager;
 };
 

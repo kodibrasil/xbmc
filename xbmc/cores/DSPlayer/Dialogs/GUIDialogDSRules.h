@@ -46,14 +46,7 @@ public:
   CGUIDialogDSRules();
   virtual ~CGUIDialogDSRules();
 
-  static CGUIDialogDSRules* Get();
-  static void Destroy()
-  {
-    delete m_pSingleton;
-    m_pSingleton = NULL;
-  }
-
-  static int ShowDSRulesList();
+  static void ShowDSRulesList();
 
 protected:
 
@@ -72,9 +65,6 @@ protected:
   virtual void InitializeSettings();
   virtual void SetupView();
 
-  static CGUIDialogDSRules* m_pSingleton;
-
-  void ResetValue();
   void HideUnused();
   void HideUnused(ConfigType type, ConfigType subType);
   void SetVisible(CStdString id, bool visible, ConfigType subType, bool isChild = false);
@@ -83,7 +73,7 @@ protected:
   std::vector<DSConfigList *> m_ruleList;
   CGUIDialogDSManager* m_dsmanager;
 
-  bool isEdited;
+  bool m_bEdited;
   bool m_allowchange;
 
 private:

@@ -2054,7 +2054,7 @@ class CStdStr : public std::basic_string<CT>
 
 public:
   // shorthand conversion from PCTSTR to string resource ID
-  #define SSRES(pctstr)  LOWORD(reinterpret_cast<unsigned long>(pctstr))
+  #define SSRES(pctstr)  LOWORD(reinterpret_cast<ULONG_PTR>(pctstr))
 
   bool TryLoad(const void* pT)
   {
@@ -2063,7 +2063,7 @@ public:
 #if defined(SS_WIN32) && !defined(SS_ANSI)
     if ( ( pT != NULL ) && SS_IS_INTRESOURCE(pT) )
     {
-      UINT nId = LOWORD(reinterpret_cast<unsigned long>(pT));
+      UINT nId = LOWORD(reinterpret_cast<ULONG_PTR>(pT));
       if ( !LoadString(nId) )
       {
        // TRACE(_T("Can't load string %u\n"), SSRES(pT));
@@ -3714,17 +3714,18 @@ public:
   // Array-indexing operators.  Required because we defined an implicit cast
   // to operator const CT* (Thanks to Julian Selman for pointing this out)
 
+  /*
   CT& operator[](int nIdx)
   {
     return static_cast<MYBASE*>(this)->operator[](static_cast<MYSIZE>(nIdx));
-  }
+  }*/
 
   const CT& operator[](int nIdx) const
   {
     return static_cast<const MYBASE*>(this)->operator[](static_cast<MYSIZE>(nIdx));
   }
 
-  CT& operator[](unsigned int nIdx)
+  /*CT& operator[](unsigned int nIdx)
   {
     return static_cast<MYBASE*>(this)->operator[](static_cast<MYSIZE>(nIdx));
   }
@@ -3742,7 +3743,7 @@ public:
   const CT& operator[](unsigned long nIdx) const
   {
     return static_cast<const MYBASE*>(this)->operator[](static_cast<MYSIZE>(nIdx));
-  }
+  }*/
 
 #ifndef SS_NO_IMPLICIT_CAST
   operator const CT*() const

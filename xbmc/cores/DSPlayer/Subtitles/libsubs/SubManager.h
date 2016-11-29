@@ -60,7 +60,7 @@ private:
   SSubSettings m_settings;
   Com::SmartSize m_lastSize;
 
-  boost::shared_ptr<ISubPicQueue> m_pSubPicQueue;
+  std::shared_ptr<ISubPicQueue> m_pSubPicQueue;
   Com::SmartPtr<ISubPicAllocator> m_pAllocator;
 
   Com::SmartQIPtr<IAMStreamSelect> m_pSS; //graph filter with subtitles

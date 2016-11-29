@@ -165,5 +165,6 @@ private:
   CMadvrSettingsManager *m_pSettingsManager;
   CRect m_activeVideoRect;
   CRect m_madvrRect;
+  int m_frameCount;
 };
 

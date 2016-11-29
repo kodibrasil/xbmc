@@ -21,25 +21,17 @@
  *
  */
 #include "EvrSharedRender.h"
-#include "Utils/Log.h"
 #include "guilib/GraphicContext.h"
 #include "windowing/WindowingFactory.h"
-#include "cores/VideoRenderers/RenderManager.h"
+#include "DSGraph.h"
 
 CEvrSharedRender::CEvrSharedRender()
 {
+  CDSRendererCallback::Get()->Register(this);
 }
 
 CEvrSharedRender::~CEvrSharedRender()
 {
-}
-
-HRESULT CEvrSharedRender::CreateTextures(ID3D11Device* pD3DDeviceKodi, IDirect3DDevice9Ex* pD3DDeviceDS, int width, int height)
-{
-  HRESULT hr = __super::CreateTextures(pD3DDeviceKodi, pD3DDeviceDS, width, height);
-  CDSRendererCallback::Get()->Register(this);
-
-  return hr;
 }
 
 HRESULT CEvrSharedRender::Render(DS_RENDER_LAYER layer)
@@ -86,11 +78,11 @@ void CEvrSharedRender::EndRender()
   m_bGuiVisibleOver = CDSRendererCallback::Get()->GuiVisible(RENDER_LAYER_OVER);
 
   if (!m_bGuiVisibleOver && !g_graphicsContext.IsFullScreenVideo())
-    g_renderManager.Render(true, 0, 255);
+    g_dsGraph->Render(true, 0, 255);
 
   // Force to complete the rendering on Kodi device
   g_Windowing.FinishCommandList();
   ForceComplete();
 
-  g_renderManager.OnAfterPresent(); // We need to do some stuff after Present
+  g_dsGraph->OnAfterPresent(); // We need to do some stuff after Present
 }

@@ -65,7 +65,6 @@
 #define LAVVIDEO_DITHERMODE        "lavvideo.dwdithermode"
 #define LAVVIDEO_HWDEINTMODE       "lavvideo.dwhwdeintmode"
 #define LAVVIDEO_HWDEINTOUT        "lavvideo.dwhwdeintoutput"
-#define LAVVIDEO_HWDEINTHQ         "lavvideo.bhwdeinthq"
 #define LAVVIDEO_SWDEINTMODE       "lavvideo.dwswdeintmode"
 #define LAVVIDEO_SWDEINTOUT        "lavvideo.dwswdeintoutput"
 #define LAVVIDEO_RESET             "lavvideo.reset"
@@ -73,7 +72,7 @@
 using namespace std;
 
 CGUIDialogLAVVideo::CGUIDialogLAVVideo()
-  : CGUIDialogSettingsManualBase(WINDOW_DIALOG_LAVVIDEO, "VideoOSDSettings.xml")
+  : CGUIDialogSettingsManualBase(WINDOW_DIALOG_LAVVIDEO, "DialogSettings.xml")
 {
   m_allowchange = true;
 }
@@ -89,20 +88,15 @@ void CGUIDialogLAVVideo::OnInitWindow()
   HideUnused();
 }
 
-void CGUIDialogLAVVideo::OnDeinitWindow(int nextWindowID)
-{
-  CGUIDialogSettingsManualBase::OnDeinitWindow(nextWindowID);
-}
-
-void CGUIDialogLAVVideo::Save()
-{
-}
-
 void CGUIDialogLAVVideo::SetupView()
 {
   CGUIDialogSettingsManualBase::SetupView();
 
   SetHeading(55077);
+
+  SET_CONTROL_HIDDEN(CONTROL_SETTINGS_OKAY_BUTTON);
+  SET_CONTROL_HIDDEN(CONTROL_SETTINGS_CUSTOM_BUTTON);
+  SET_CONTROL_LABEL(CONTROL_SETTINGS_CANCEL_BUTTON, 15067);
 }
 
 void CGUIDialogLAVVideo::InitializeSettings()
@@ -188,54 +182,58 @@ void CGUIDialogLAVVideo::InitializeSettings()
   // HW ACCELERATION
   entries.clear();
   for (unsigned int i = 0; i < 5; i++)
-    entries.push_back(make_pair(80200 + i, i));
+    entries.emplace_back(80200 + i, i);
   AddList(groupHW, LAVVIDEO_HWACCEL, 80005, 0, lavSettings.video_dwHWAccel, entries, 80005);
 
   entries.clear();
   for (unsigned int i = 0; i < 17; i++)
-    entries.push_back(make_pair(80100 + i, i));
+    entries.emplace_back(80100 + i, i);
   AddList(groupHW, LAVVIDEO_NUMTHREADS, 80003, 0, lavSettings.video_dwNumThreads, entries, 80003);
 
   // SETTINGS
   AddToggle(groupSettings, LAVVIDEO_STREAMAR, 80002, 0, lavSettings.video_dwStreamAR);
 
   entries.clear();
-  entries.push_back(make_pair(80100, 0));
-  entries.push_back(make_pair(80205, 1));
-  entries.push_back(make_pair(80206, 2));
+  entries.emplace_back(80100, 0);
+  entries.emplace_back(80205, 1);
+  entries.emplace_back(80206, 2);
   AddList(groupSettings, LAVVIDEO_DEINTFILEDORDER, 80009, 0, lavSettings.video_dwDeintFieldOrder, entries, 80009);
 
   entries.clear();
-  entries.push_back(make_pair(80100, 0));
-  entries.push_back(make_pair(80207, 1));
-  entries.push_back(make_pair(80208, 2));
-  entries.push_back(make_pair(80209, 3));
+  entries.emplace_back(80100, 0);
+  entries.emplace_back(80207, 1);
+  entries.emplace_back(80208, 2);
+  entries.emplace_back(80209, 3);
   AddList(groupSettings, LAVVIDEO_DEINTMODE, 80010, 0, (LAVDeintMode)lavSettings.video_deintMode, entries, 80010);
 
   // OUTPUT RANGE
   entries.clear();
-  entries.push_back(make_pair(80214, 1));
-  entries.push_back(make_pair(80215, 2));
-  entries.push_back(make_pair(80216, 0));
+  entries.emplace_back(80214, 1);
+  entries.emplace_back(80215, 2);
+  entries.emplace_back(80216, 0);
   AddList(groupOutput, LAVVIDEO_RGBRANGE, 80004, 0, lavSettings.video_dwRGBRange, entries, 80004);
 
   entries.clear();
-  entries.push_back(make_pair(80212, 0));
-  entries.push_back(make_pair(80213, 1));
+  entries.emplace_back(80212, 0);
+  entries.emplace_back(80213, 1);
   AddList(groupOutput, LAVVIDEO_DITHERMODE, 80012, 0, lavSettings.video_dwDitherMode, entries, 80012);
 
   // DEINT HW/SW
   AddToggle(groupDeintHW, LAVVIDEO_HWDEINTMODE, 80006, 0, lavSettings.video_dwHWDeintMode);
   entries.clear();
-  entries.push_back(make_pair(80210, 1));
-  entries.push_back(make_pair(80211, 0));
+  entries.emplace_back(80210, 1);
+  entries.emplace_back(80211, 0);
   AddList(groupDeintHW, LAVVIDEO_HWDEINTOUT, 80007, 0, lavSettings.video_dwHWDeintOutput, entries, 80007);
-  AddToggle(groupDeintHW, LAVVIDEO_HWDEINTHQ, 80008, 0, lavSettings.video_bHWDeintHQ);
 
-  AddToggle(groupDeintSW, LAVVIDEO_SWDEINTMODE, 80011, 0, lavSettings.video_dwSWDeintMode);
   entries.clear();
-  entries.push_back(make_pair(80210, 1));
-  entries.push_back(make_pair(80211, 0));
+  entries.emplace_back(70117, 0);
+  entries.emplace_back(80217, 1);
+  entries.emplace_back(80218, 2);
+  entries.emplace_back(80219, 3);
+  AddList(groupDeintSW, LAVVIDEO_SWDEINTMODE, 80011, 0, lavSettings.video_dwSWDeintMode, entries, 800011);
+  entries.clear();
+  entries.emplace_back(80210, 1);
+  entries.emplace_back(80211, 0);
   AddList(groupDeintSW, LAVVIDEO_SWDEINTOUT, 80007, 0, lavSettings.video_dwSWDeintOutput, entries, 80007);
 
   // BUTTON RESET
@@ -273,8 +271,6 @@ void CGUIDialogLAVVideo::OnSettingChanged(const CSetting *setting)
     lavSettings.video_dwHWDeintMode = static_cast<BOOL>(static_cast<const CSettingBool*>(setting)->GetValue());
   if (settingId == LAVVIDEO_HWDEINTOUT)
     lavSettings.video_dwHWDeintOutput = static_cast<int>(static_cast<const CSettingInt*>(setting)->GetValue());
-  if (settingId == LAVVIDEO_HWDEINTHQ)
-    lavSettings.video_bHWDeintHQ = static_cast<BOOL>(static_cast<const CSettingBool*>(setting)->GetValue());
   if (settingId == LAVVIDEO_SWDEINTMODE)
     lavSettings.video_dwSWDeintMode = static_cast<BOOL>(static_cast<const CSettingBool*>(setting)->GetValue());
   if (settingId == LAVVIDEO_SWDEINTOUT)
@@ -334,7 +330,6 @@ void CGUIDialogLAVVideo::HideUnused()
   setting = m_settingsManager->GetSetting(LAVVIDEO_HWDEINTMODE);
   bValue = static_cast<const CSettingBool*>(setting)->GetValue();
   SetVisible(LAVVIDEO_HWDEINTOUT, bValue);
-  SetVisible(LAVVIDEO_HWDEINTHQ, bValue);
 
   // SWDEINT
   setting = m_settingsManager->GetSetting(LAVVIDEO_SWDEINTMODE);

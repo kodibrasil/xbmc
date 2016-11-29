@@ -208,7 +208,7 @@ bool CUSFSubtitles::Read(LPCTSTR fn)
   if(!ParseUSFSubtitles(ppNode))
     return(false);
 
-  std::list<boost::shared_ptr<style_t>>::iterator pos = styles.begin();
+  std::list<std::shared_ptr<style_t>>::iterator pos = styles.begin();
   while(pos != styles.end())
   {
     style_t* def = pos->get(); pos++;
@@ -216,7 +216,7 @@ bool CUSFSubtitles::Read(LPCTSTR fn)
     if(def->name.CompareNoCase(L"Default"))
       continue;
 
-    std::list<boost::shared_ptr<style_t>>::iterator pos2 = styles.begin();
+    std::list<std::shared_ptr<style_t>>::iterator pos2 = styles.begin();
     while(pos2 != styles.end())
     {
       style_t* s = pos2->get(); pos2++;
@@ -249,7 +249,7 @@ bool CUSFSubtitles::Read(LPCTSTR fn)
     break;
   }
 
-  std::list<boost::shared_ptr<text_t>>::iterator pos3 = texts.begin();
+  std::list<std::shared_ptr<text_t>>::iterator pos3 = texts.begin();
   while(pos3 != texts.end())
   {
     text_t* t = pos3->get(); pos3++;
@@ -270,7 +270,7 @@ bool CUSFSubtitles::ConvertToSTS(CSimpleTextSubtitle& sts)
   // TODO: map metadata.language.code to charset num (windows doesn't have such a function...)
   int charSet = DEFAULT_CHARSET; 
 
-  std::list<boost::shared_ptr<style_t>>::iterator pos = styles.begin();
+  std::list<std::shared_ptr<style_t>>::iterator pos = styles.begin();
   while(pos != styles.end())
   {
     style_t* s = pos->get(); pos++;
@@ -333,7 +333,7 @@ bool CUSFSubtitles::ConvertToSTS(CSimpleTextSubtitle& sts)
     sts.AddStyle(WToT(s->name), stss);
   }
 
-  std::list<boost::shared_ptr<text_t>>::iterator pos2 = texts.begin();
+  std::list<std::shared_ptr<text_t>>::iterator pos2 = texts.begin();
   while(pos2 != texts.end())
   {
     text_t* t = pos2->get(); pos2++;
@@ -366,7 +366,7 @@ bool CUSFSubtitles::ConvertToSTS(CSimpleTextSubtitle& sts)
 
     if(t->style.CompareNoCase(L"Default") != 0)
     {
-      std::list<boost::shared_ptr<style_t>>::iterator pos = styles.begin();
+      std::list<std::shared_ptr<style_t>>::iterator pos = styles.begin();
       while(pos != styles.end())
       {
         style_t* s = pos->get(); pos++;
@@ -430,7 +430,7 @@ bool CUSFSubtitles::ParseUSFSubtitles(IXMLDOMNodePtr pNode)
 
           if(name == L"style")
           {
-            boost::shared_ptr<style_t> s(DNew style_t);
+            std::shared_ptr<style_t> s(DNew style_t);
             if(s.get())
             {
               ParseStyle(pGrandChild, s.get());
@@ -457,7 +457,7 @@ bool CUSFSubtitles::ParseUSFSubtitles(IXMLDOMNodePtr pNode)
 
           if(name == L"effect")
           {
-            boost::shared_ptr<effect_t> e(DNew effect_t);
+            std::shared_ptr<effect_t> e(DNew effect_t);
             if(e.get())
             {
               ParseEffect(pGrandChild, e.get());
@@ -637,7 +637,7 @@ void CUSFSubtitles::ParseEffect(IXMLDOMNodePtr pNode, effect_t* e)
 
       if(name == L"keyframe")
       {
-        boost::shared_ptr<keyframe_t> k(DNew keyframe_t);
+        std::shared_ptr<keyframe_t> k(DNew keyframe_t);
         if(k.get())
         {
           ParseKeyframe(pChild, k.get());
@@ -683,7 +683,7 @@ void CUSFSubtitles::ParseSubtitle(IXMLDOMNodePtr pNode, int start, int stop)
 
   if(name == L"text" || name == L"karaoke")
   {
-    boost::shared_ptr<text_t> t(DNew text_t);
+    std::shared_ptr<text_t> t(DNew text_t);
     if(t.get())
     {
       t->start = start;

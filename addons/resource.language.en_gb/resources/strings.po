@@ -19433,7 +19433,289 @@ msgctxt "#38023"
 msgid "Set my rating"
 msgstr ""
 
-<<<<<<< HEAD
+#: /xbmc/settings/dialogs/GUIDialogContentSettings.cpp
+msgctxt "#38024"
+msgid "Information provider selection"
+msgstr ""
+
+#: /xbmc/settings/dialogs/GUIDialogContentSettings.cpp
+msgctxt "#38025"
+msgid "Choose information provider"
+msgstr ""
+
+#: xbmc/view/GUIViewStateVideo.cpp
+msgctxt "#38026"
+msgid "Appearances"
+msgstr ""
+
+#: system/settings/rbp.xml
+msgctxt "#38027"
+msgid "Decode the stereo stream from 3D files"
+msgstr ""
+
+#. Description of setting with label #38027 "Decode the stereo stream from 3D files"
+#: system/settings/rbp.xml
+msgctxt "#38028"
+msgid "If enabled, videos created in Multiview Video Coding (MVC) format can also be watched in stereoscopic 3D. MVC format is typically found on 3D Blu-rays.[CR]Note: Processing of this data may reduce playback performance, so only enable if you require stereoscopic 3D support."
+msgstr ""
+
+#: system/settings/rbp.xml
+msgctxt "#38029"
+msgid "Enable Full HD HDMI modes for stereoscopic 3D"
+msgstr ""
+
+#. Description of setting "Enable Full HD HDMI modes for stereoscopic 3D" with label #38029
+#: system/settings/rbp.xml
+msgctxt "#38030"
+msgid "This option uses frame-packing to output full resolution for 3D through HDMI.[CR]Enabling this improves quality of Multiview Video Coding (MVC) videos, but may not be supported by all displays."
+msgstr ""
+
+#. Label for an option to select the video stream to play if current video has more than one video stream
+#: xbmc/video/dialogs/GUIDialogVideoSettings.cpp
+msgctxt "#38031"
+msgid "Video stream"
+msgstr ""
+
+#. Label for an option to select the angle to play if current disc has more than one angle
+#: xbmc/video/dialogs/GUIDialogVideoSettings.cpp
+msgctxt "#38032"
+msgid "Angle"
+msgstr ""
+
+#: xbmc/dialogs/GUIDialogSmartPlaylistRule.cpp
+#: xbmc/playlists/SmartPlaylist.cpp
+msgctxt "#38033"
+msgid "Role"
+msgstr ""
+
+#. Orchestra playing on the recording (if present)
+#: Label of ListItem.Property(Role.Orchestra)
+msgctxt "#38034"
+msgid "Orchestra"
+msgstr ""
+
+#. Lyricist that wrote the lyrics of the song (if present)
+#: Label of ListItem.Property(Role.Lyricist)
+msgctxt "#38035"
+msgid "Lyricist"
+msgstr ""
+
+#. Remixer of the song (if present)
+#: Label of ListItem.Property(Role.Remixer)
+msgctxt "#38036"
+msgid "Remixer"
+msgstr ""
+
+#. Arranger of the song (if present)
+#: Label of ListItem.Property(Role.Arranger)
+msgctxt "#38037"
+msgid "Arranger"
+msgstr ""
+
+#. Engineer of the song (if present)
+#: Label of ListItem.Property(Role.Engineer)
+msgctxt "#38038"
+msgid "Engineer"
+msgstr ""
+
+#. Producer of the song (if present)
+#: Label of ListItem.Property(Role.Producer)
+msgctxt "#38039"
+msgid "Producer"
+msgstr ""
+
+#. DJMixer of the song (if present)
+#: Label of ListItem.Property(Role.DJMixer)
+msgctxt "#38040"
+msgid "DJMixer"
+msgstr ""
+
+#. Mixer of the song (if present)
+#: Label of ListItem.Property(Role.Mixer)
+msgctxt "#38041"
+msgid "Mixer"
+msgstr ""
+
+#. Name used when artist name is missing from music file tags
+#: music/MusicDatabase.cpp
+msgctxt "#38042"
+msgid "[Missing]"
+msgstr ""
+
+#. Title album artists node
+#: system/library/music/musicroles/albumartists.xml
+msgctxt "#38043"
+msgid "Album artists"
+msgstr ""
+
+#. Title all artists node
+#: system/library/music/musicroles/allartists.xml
+msgctxt "#38044"
+msgid "Song & album artists"
+msgstr ""
+
+#. Title all contributors node (any role e.g. composer, piano, producer, engineer)
+#: system/library/music/musicroles/allcontributors.xml
+msgctxt "#38045"
+msgid "All contributors"
+msgstr ""
+
+#. Title all roles node
+#: system/library/music/musicroles/allroles.xml
+msgctxt "#38046"
+msgid "All roles"
+msgstr ""
+
+#empty strings from id 38047 to 38059
+
+#. Question when forced rescan of music tags needed after upgrade from previous version of Kodi
+#: xbmc/music/windows/GUIWindowMusicBase.cpp
+msgctxt "#38060"
+msgid "Music library needs to rescan tags from files. Would you like to scan now?"
+msgstr ""
+
+#. Extra scraping question on upgrade from previous version
+#: xbmc/music/windows/GUIWindowMusicBase.cpp
+msgctxt "#38061"
+msgid "Fetch additional information for albums and artists? This could take some time so you may prefer to do this later"
+msgstr ""
+
+#empty strings from id 38062 to 38099
+
+#. Description of section #14200 "Player""
+#: system/settings/settings.xml
+msgctxt "#38100"
+msgid "Section that contains the settings for the playback of media"
+msgstr ""
+
+#. Description of section #14201 "Media"
+#: system/settings/settings.xml
+msgctxt "#38101"
+msgid "Section that contains the settings for sources and how media information is collected, stored, shown, and navigated"
+msgstr ""
+
+#. Description of section #14203 "Customise"
+#: system/settings/settings.xml
+msgctxt "#38102"
+msgid "Section that contains the settings influencing the GUI experience and for controlling the GUI/system"
+msgstr ""
+
+#. Description of category #14210 "Videos"
+#: system/settings/settings.xml
+msgctxt "#38103"
+msgid "This category contains the settings for the playback of videos"
+msgstr ""
+
+#. Description of category #14211 "Music"
+#: system/settings/settings.xml
+msgctxt "#38104"
+msgid "This category contains the settings for the playback of music"
+msgstr ""
+
+#. Description of category #14212 "Pictures"
+#: system/settings/settings.xml
+msgctxt "#38105"
+msgid "This category contains the settings for playback of pictures via a slideshow"
+msgstr ""
+
+#. Description of category #14213 "Language"
+#: system/settings/settings.xml
+msgctxt "#38106"
+msgid "This category contains the settings for audio & subtitle language"
+msgstr ""
+
+#. Description of category #14210 "Videos"
+#: system/settings/settings.xml
+msgctxt "#38107"
+msgid "This category contains the settings for how information for videos is collected, stored, shown, and navigated"
+msgstr ""
+
+#. Description of category #14211 "Music"
+#: system/settings/settings.xml
+msgctxt "#38108"
+msgid "This category contains the settings for how information for music is collected, stored, shown, and navigated"
+msgstr ""
+
+#. Description of category #14212 "Pictures"
+#: system/settings/settings.xml
+msgctxt "#38109"
+msgid "This category contains the settings for how information for pictures is shown and navigated"
+msgstr ""
+
+#. Description of category #14215 "Databases"
+#: system/settings/settings.xml
+msgctxt "#38110"
+msgid "This category contains the settings for the library databases"
+msgstr ""
+
+#. Description of category #14224 "Other"
+#: system/settings/settings.xml
+msgctxt "#38111"
+msgid "This category contains other settings for the GUI interface"
+msgstr ""
+
+#empty strings from id 38112 to 38999
+
+#: system/settings/settings.xml
+msgctxt "#39000"
+msgid "HD and up"
+msgstr ""
+
+#: system/settings/settings.xml
+msgctxt "#39001"
+msgid "Accelerate MPEG2"
+msgstr ""
+
+#: system/settings/settings.xml
+msgctxt "#39002"
+msgid "Accelerate MPEG4"
+msgstr ""
+
+#: system/settings/settings.xml
+msgctxt "#39003"
+msgid "Accelerate h264"
+msgstr ""
+
+#. Description of category "Library" with label #14202
+#: system/settings/settings.xml
+msgctxt "#39004"
+msgid "This category contains provides access to the windows for source management and the Library settings for the databases"
+msgstr ""
+
+#. Description of setting "Videos... with label #14242
+#: system/settings/settings.xml
+msgctxt "#39005"
+msgid "This provides access to where video sources can be added and otherwise managed."
+msgstr ""
+
+#. Description of setting "Music... with label #14243
+#: system/settings/settings.xml
+msgctxt "#39006"
+msgid "This provides access to where music sources can be added and otherwise managed."
+msgstr ""
+
+#. Description of setting "Pictures... with label #14244
+#: system/settings/settings.xml
+msgctxt "#39007"
+msgid "This provides access to where picture sources can be added and otherwise managed."
+msgstr ""
+
+#: xbmc/video/dialogs/GUIDialogVideoSettings.cpp
+msgctxt "#39008"
+msgid "Zoom - 120% width"
+msgstr ""
+
+#: xbmc/video/dialogs/GUIDialogVideoSettings.cpp
+msgctxt "#39009"
+msgid "Zoom - 110% width"
+msgstr ""
+
+#: view/GUIViewState.cpp
+msgctxt "#39010"
+msgid "Select sort method"
+msgstr ""
+
+
 #. 55000-55100 reserved for DSPlayer
 msgctxt "#55000"
 msgid "DSPlayer"
@@ -19444,7 +19726,7 @@ msgid "Video Renderer"
 msgstr ""
 
 msgctxt "#55002"
-msgid "Use EVR instead of VMR9 Renderer"
+msgid "Filters"
 msgstr ""
 
 msgctxt "#55003"
@@ -19644,6 +19926,10 @@ msgctxt "#55072"
 msgid "DVDPlayer"
 msgstr ""
 
+msgctxt "#55073"
+msgid "Extra Options"
+msgstr ""
+
 msgctxt "#55074"
 msgid "Force to exit from fullscreen before stop"
 msgstr ""
@@ -19726,6 +20012,14 @@ msgstr ""
 
 msgctxt "#55094"
 msgid "Reset to default values"
+msgstr ""
+
+msgctxt "#55095"
+msgid "Renderers"
+msgstr ""
+
+msgctxt "#55096"
+msgid "Preferred audio codec name"
 msgstr ""
 
 msgctxt "#60001"
@@ -19925,6 +20219,10 @@ msgctxt "#66011"
 msgid "- Mimetypes"
 msgstr ""
 
+msgctxt "#69999"
+msgid "Write all madVR settings in debug log"
+msgstr ""
+
 msgctxt "#70000"
 msgid "Scaling algorithms..."
 msgstr ""
@@ -19946,7 +20244,7 @@ msgid "Mitchel-Netravali"
 msgstr ""
 
 msgctxt "#70005"
-msgid "Catmul-Rom"
+msgid "Bicubic (sharpness 50) (Catmul-Rom)"
 msgstr ""
 
 msgctxt "#70006"
@@ -20050,15 +20348,15 @@ msgid "Image downscaling"
 msgstr ""
 
 msgctxt "#70031"
-msgid "- anti-ringing filter"
+msgid "anti-ringing filter"
 msgstr ""
 
 msgctxt "#70032"
-msgid "- scale in linear light"
+msgid "scale in linear light"
 msgstr ""
 
 msgctxt "#70033"
-msgid "Bilateral"
+msgid "Bilateral (Old)"
 msgstr ""
 
 msgctxt "#70034"
@@ -20071,7 +20369,7 @@ msgstr ""
 
 msgctxt "#70036"
 msgid "Super-Xbr (sharpness 75)"
-msgstr 
+msgstr ""
 
 msgctxt "#70037"
 msgid "Super-Xbr (sharpness 100)"
@@ -20079,7 +20377,7 @@ msgstr
 
 msgctxt "#70038"
 msgid "Super-Xbr (sharpness 125)"
-msgstr 
+msgstr ""
 
 msgctxt "#70039"
 msgid "Super-Xbr (sharpness 150)"
@@ -20087,11 +20385,147 @@ msgstr
 
 msgctxt "#70040"
 msgid "Nedi"
-msgstr 
+msgstr ""
 
 msgctxt "#70041"
-msgid "- super-res filter"
+msgid "super-res filter"
+msgstr ""
+
+msgctxt "#70042"
+msgid "Reconstruction (soft)"
+msgstr ""
+
+msgctxt "#70043"
+msgid "Reconstruction (sharp)"
+msgstr ""
+
+msgctxt "#70044"
+msgid "Reconstruction (placebo)"
 msgstr 
+
+msgctxt "#70045"
+msgid "Reconstruction (sharp AR)"
+msgstr ""
+
+msgctxt "#70046"
+msgid "Reconstruction (placebo AR)"
+msgstr ""
+
+msgctxt "#70047"
+msgid "Bicubic (sharpness 150)"
+msgstr ""
+
+msgctxt "#70048"
+msgid "SSIM 1D (strength 25)"
+msgstr ""
+
+msgctxt "#70049"
+msgid "scale in sigmoidal light"
+msgstr ""
+
+msgctxt "#70050"
+msgid "Bicubic (sharpness 125)"
+msgstr ""
+
+msgctxt "#70051"
+msgid "SSIM 1D (strength 50)"
+msgstr ""
+
+msgctxt "#70052"
+msgid "SSIM 1D (strength 75)"
+msgstr ""
+
+msgctxt "#70053"
+msgid "SSIM 1D (strength 100)"
+msgstr ""
+
+msgctxt "#70054"
+msgid "SSIM 2D (strength 25)"
+msgstr ""
+
+msgctxt "#70055"
+msgid "SSIM 2D (strength 50)"
+msgstr ""
+
+msgctxt "#70056"
+msgid "SSIM 2D (strength 75)"
+msgstr ""
+
+msgctxt "#70057"
+msgid "SSIM 2D (strength 100)"
+msgstr ""
+
+msgctxt "#70058"
+msgid "Super-Xbr (anti-bloating 25)"
+msgstr ""
+
+msgctxt "#70059"
+msgid "Super-Xbr (anti-bloating 50)"
+msgstr ""
+
+msgctxt "#70060"
+msgid "Super-Xbr (anti-bloating 75)"
+msgstr ""
+
+msgctxt "#70061"
+msgid "Super-Xbr (anti-bloating 100)"
+msgstr ""
+
+msgctxt "#70062"
+msgid "Bilateral (Soft)"
+msgstr ""
+
+msgctxt "#70063"
+msgid "Bilateral (Sharp)"
+msgstr ""
+
+msgctxt "#70064"
+msgid "NNEDI3"
+msgstr ""
+
+msgctxt "#70065"
+msgid "NGU"
+msgstr ""
+
+msgctxt "#70066"
+msgid "NGU (Low)"
+msgstr ""
+
+msgctxt "#70067"
+msgid "NGU (Medium)"
+msgstr ""
+
+msgctxt "#70068"
+msgid "NGU (High)"
+msgstr ""
+
+msgctxt "#70069"
+msgid "NGU (Very High)"
+msgstr ""
+
+msgctxt "#70070"
+msgid "luma doubling"
+msgstr ""
+
+msgctxt "#70071"
+msgid "chroma quality"
+msgstr ""
+
+msgctxt "#70072"
+msgid "downscale quality"
+msgstr "
+
+msgctxt "#70073"
+msgid "activate"
+msgstr "
+
+msgctxt "#70074"
+msgid "only if it's useful"
+msgstr "
+
+msgctxt "#70075"
+msgid "luma quality"
+msgstr "
 
 msgctxt "#70100"
 msgid "Double Luma resolution"
@@ -20142,7 +20576,7 @@ msgid "only if scaling factor is 1.2x (or bigger)"
 msgstr ""
 
 msgctxt "#70112"
-msgid "always if upscaling needed"
+msgid "only if upscaling is needed"
 msgstr ""
 
 msgctxt "#70113"
@@ -20158,7 +20592,7 @@ msgid "only if scaling factor is 2.4x (or bigger)"
 msgstr ""
 
 msgctxt "#70116"
-msgid "- scaling condition"
+msgid "scaling condition"
 msgstr ""
 
 msgctxt "#70117"
@@ -20182,7 +20616,7 @@ msgid "Super Resolution (up refinement)"
 msgstr ""
 
 msgctxt "#70122"
-msgid "- strength"
+msgid "strength"
 msgstr ""
 
 msgctxt "#70123"
@@ -20202,7 +20636,7 @@ msgid "Refine image (2x upscaling step)"
 msgstr ""
 
 msgctxt "#70127"
-msgid "- apply super-res first"
+msgid "apply super-res first"
 msgstr ""
 
 msgctxt "#70128"
@@ -20226,7 +20660,7 @@ msgid "- sharpness"
 msgstr ""
 
 msgctxt "#70133"
-msgid "- use linear light"
+msgid "use linear light"
 msgstr ""
 
 msgctxt "#70134"
@@ -20259,6 +20693,150 @@ msgstr ""
 
 msgctxt "#70141"
 msgid "Enhance Detail (up refinement)"
+msgstr ""
+
+msgctxt "#70142"
+msgid "Sharpen anti-ringing (up refinement)"
+msgstr ""
+
+msgctxt "#70143"
+msgid "Sharpen anti-ringing (image enhancement)"
+msgstr ""
+
+msgctxt "#70144"
+msgid "always - 2x supersampling"
+msgstr ""
+
+msgctxt "#70145"
+msgid "relaxed"
+msgstr ""
+
+msgctxt "#70146"
+msgid "strict (soft)"
+msgstr ""
+
+msgctxt "#70147"
+msgid "anti-bloating filter"
+msgstr ""
+
+msgctxt "#70148"
+msgid "25%"
+msgstr ""
+
+msgctxt "#70149"
+msgid "50%"
+msgstr ""
+
+msgctxt "#70150"
+msgid "75%"
+msgstr ""
+
+msgctxt "#70151"
+msgid "100%"
+msgstr ""
+
+msgctxt "#70152"
+msgid "125%"
+msgstr ""
+
+msgctxt "#70153"
+msgid "150%"
+msgstr ""
+
+msgctxt "#70154"
+msgid "Sharpen anti-bloating (up refinement)"
+msgstr ""
+
+msgctxt "#70155"
+msgid "Sharpen anti-bloating (image enhancement)"
+msgstr ""
+
+msgctxt "#70156"
+msgid "16 neurons"
+msgstr ""
+
+msgctxt "#70157"
+msgid "32 neurons"
+msgstr ""
+
+msgctxt "#70158"
+msgid "64 neurons"
+msgstr ""
+
+msgctxt "#70159"
+msgid "128 neurons"
+msgstr ""
+
+msgctxt "#70160"
+msgid "256 neurons"
+msgstr ""
+
+msgctxt "#70161"
+msgid "16 neurons, 4x: 16 neurons"
+msgstr ""
+
+msgctxt "#70162"
+msgid "32 neurons, 4x: 16 neurons"
+msgstr ""
+
+msgctxt "#70163"
+msgid "64 neurons, 4x: 16 neurons"
+msgstr ""
+
+msgctxt "#70164"
+msgid "64 neurons, 4x: 32 neurons"
+msgstr ""
+
+msgctxt "#70165"
+msgid "128 neurons, 4x: 16 neurons"
+msgstr ""
+
+msgctxt "#70166"
+msgid "128 neurons, 4x: 32 neurons"
+msgstr ""
+
+msgctxt "#70167"
+msgid "256 neurons, 4x: 16 neurons"
+msgstr ""
+
+msgctxt "#70168"
+msgid "256 neurons, 4x: 32 neurons"
+msgstr ""
+
+msgctxt "#70169"
+msgid "256 neurons, 4x: 64 neurons"
+msgstr ""
+
+msgctxt "#70170"
+msgid "automatic"
+msgstr ""
+
+msgctxt "#70171"
+msgid "low"
+msgstr ""
+
+msgctxt "#70172"
+msgid "medium"
+msgstr ""
+
+msgctxt "#70173"
+msgid "normal"
+msgstr ""
+
+msgctxt "#70174"
+msgid "high"
+msgstr ""
+
+msgctxt "#70175"
+msgid "very high"
+msgstr ""
+
+msgctxt "#70176"
+msgid "Soften Edges (up refinement)"
+msgstr ""
+
+msgctxt "#70177"
+msgid "Add Grain (up refinement)"
 msgstr ""
 
 msgctxt "#70200"
@@ -20561,11 +21139,11 @@ msgid "error diffusion 2 (mild patterns) (dx11)"
 msgstr ""
 
 msgctxt "#70405"
-msgid "- use colored noise"
+msgid "use colored noise"
 msgstr ""
 
 msgctxt "#70406"
-msgid "- change dither for every frame"
+msgid "change dither for every frame"
 msgstr ""
 
 msgctxt "#70500"
@@ -20573,11 +21151,11 @@ msgid "Reduce banding artifacts"
 msgstr ""
 
 msgctxt "#70501"
-msgid "- default debanding strength"
+msgid "default debanding strength"
 msgstr ""
 
 msgctxt "#70502"
-msgid "- strength during fade in/out"
+msgid "strength during fade in/out"
 msgstr ""
 
 msgctxt "#70503"
@@ -20618,6 +21196,146 @@ msgstr ""
 
 msgctxt "#70606"
 msgid "Save for all videos"
+msgstr ""
+
+msgctxt "#70607"
+msgid "Reset to default for all videos"
+msgstr ""
+
+msgctxt "#71000"
+msgid "Processing..."
+msgstr ""
+
+msgctxt "#71001"
+msgid "Reduce ringing artifacts"
+msgstr ""
+
+msgctxt "#71002"
+msgid "Reduce dark halos around bright edges"
+msgstr ""
+
+msgctxt "#72000"
+msgid "Rendering..."
+msgstr ""
+
+msgctxt "#72001"
+msgid "Use Direct3D 11 for presentation"
+msgstr ""
+
+msgctxt "#72002"
+msgid "present a frame for every VSync"
+msgstr ""
+
+msgctxt "#72003"
+msgid "Number of pre-presented frames (windowed mode)"
+msgstr ""
+
+msgctxt "#72004"
+msgid "Number of pre-presented frames (exclusive mode)"
+msgstr ""
+
+msgctxt "#72005"
+msgid "1 frame"
+msgstr ""
+
+msgctxt "#72006"
+msgid "2 frames"
+msgstr ""
+
+msgctxt "#72007"
+msgid "3 frames"
+msgstr ""
+
+msgctxt "#72008"
+msgid "4 frames"
+msgstr ""
+
+msgctxt "#72009"
+msgid "6 frames"
+msgstr ""
+
+msgctxt "#72010"
+msgid "8 frames"
+msgstr ""
+
+msgctxt "#72011"
+msgid "10 frames"
+msgstr ""
+
+msgctxt "#72012"
+msgid "12 frames"
+msgstr ""
+
+msgctxt "#72013"
+msgid "14 frames"
+msgstr ""
+
+msgctxt "#72014"
+msgid "16 frames"
+msgstr ""
+
+msgctxt "#73000"
+msgid "Image enhancements..."
+msgstr ""
+
+msgctxt "#74000"
+msgid "Upscaling refinement..."
+msgstr ""
+
+msgctxt "#75000"
+msgid "Trade quality for performance..."
+msgstr ""
+
+msgctxt "#75001"
+msgid "Optimize subtitle quality for perfomance instead of quality"
+msgstr ""
+
+msgctxt "#75002"
+msgid "Use DXVA chroma upscaling when doing native DXVA decoding"
+msgstr ""
+
+msgctxt "#75003"
+msgid "Use DXVA chroma upscaling when doing DXVA deinterlacing"
+msgstr ""
+
+msgctxt "#75004"
+msgid "Store custom pixel shader results in 16bit buffer instead of 32bit"
+msgstr ""
+
+msgctxt "#75005"
+msgid "Don't use linear light for dithering"
+msgstr ""
+
+msgctxt "#75006"
+msgid "Don't analyze gradient angles for debanding"
+msgstr ""
+
+msgctxt "#75007"
+msgid "Don't rerender frames when fade in/out is detected"
+msgstr ""
+
+msgctxt "#75008"
+msgid "Scale chroma separately, if saves perfomance"
+msgstr ""
+
+msgctxt "#75009"
+msgid "Lose BTB and WTW if it improves performance"
+msgstr ""
+
+msgctxt "#75010"
+msgid "Don't use linear light for smooth motion frame blending"
+msgstr ""
+
+msgctxt "#75011"
+msgid "Use 10bit chroma buffer instead of 16bit"
+msgstr ""
+
+msgctxt "#75012"
+msgid "Use 10bit image buffer instead of 16bit"
+msgstr ""
+
+msgctxt "#75013"
+msgid "Run custom pixel shaders in video levels instead of PC levels"
 msgstr ""
 
 msgctxt "#80001"
@@ -20661,7 +21379,7 @@ msgid "Deinterlacing Mode"
 msgstr ""
 
 msgctxt "#80011"
-msgid "Software deinterlacing (YADIF)"
+msgid "Software deinterlacing"
 msgstr ""
 
 msgctxt "#80012"
@@ -20806,6 +21524,18 @@ msgstr ""
 
 msgctxt "#80216"
 msgid "Untouched (as input)"
+msgstr ""
+
+msgctxt "#80217"
+msgid "YADIF"
+msgstr ""
+
+msgctxt "#80218"
+msgid "Weston Three Field (simple)"
+msgstr ""
+
+msgctxt "#80219"
+msgid "Weston Three Field (complex)"
 msgstr ""
 
 msgctxt "#81001"
@@ -21104,292 +21834,18 @@ msgctxt "#90026"
 msgid "Configure the Internal filter Xy-VSFilter."
 msgstr ""
 
+msgctxt "#90027"
+msgid ""
+msgstr ""
+
+msgctxt "#90028"
+msgid "Force to select the preferred audio track that will match the priority codec string defined in the option (ex. dts|ac3) and the language GUI defined in Kodi"
+msgstr ""
+
 msgctxt "#909001"
 msgid "Rus"
 msgstr ""
 
 msgctxt "#909002"
 msgid "IP"
-=======
-#: /xbmc/settings/dialogs/GUIDialogContentSettings.cpp
-msgctxt "#38024"
-msgid "Information provider selection"
-msgstr ""
-
-#: /xbmc/settings/dialogs/GUIDialogContentSettings.cpp
-msgctxt "#38025"
-msgid "Choose information provider"
-msgstr ""
-
-#: xbmc/view/GUIViewStateVideo.cpp
-msgctxt "#38026"
-msgid "Appearances"
-msgstr ""
-
-#: system/settings/rbp.xml
-msgctxt "#38027"
-msgid "Decode the stereo stream from 3D files"
-msgstr ""
-
-#. Description of setting with label #38027 "Decode the stereo stream from 3D files"
-#: system/settings/rbp.xml
-msgctxt "#38028"
-msgid "If enabled, videos created in Multiview Video Coding (MVC) format can also be watched in stereoscopic 3D. MVC format is typically found on 3D Blu-rays.[CR]Note: Processing of this data may reduce playback performance, so only enable if you require stereoscopic 3D support."
-msgstr ""
-
-#: system/settings/rbp.xml
-msgctxt "#38029"
-msgid "Enable Full HD HDMI modes for stereoscopic 3D"
-msgstr ""
-
-#. Description of setting "Enable Full HD HDMI modes for stereoscopic 3D" with label #38029
-#: system/settings/rbp.xml
-msgctxt "#38030"
-msgid "This option uses frame-packing to output full resolution for 3D through HDMI.[CR]Enabling this improves quality of Multiview Video Coding (MVC) videos, but may not be supported by all displays."
-msgstr ""
-
-#. Label for an option to select the video stream to play if current video has more than one video stream
-#: xbmc/video/dialogs/GUIDialogVideoSettings.cpp
-msgctxt "#38031"
-msgid "Video stream"
-msgstr ""
-
-#. Label for an option to select the angle to play if current disc has more than one angle
-#: xbmc/video/dialogs/GUIDialogVideoSettings.cpp
-msgctxt "#38032"
-msgid "Angle"
-msgstr ""
-
-#: xbmc/dialogs/GUIDialogSmartPlaylistRule.cpp
-#: xbmc/playlists/SmartPlaylist.cpp
-msgctxt "#38033"
-msgid "Role"
-msgstr ""
-
-#. Orchestra playing on the recording (if present)
-#: Label of ListItem.Property(Role.Orchestra)
-msgctxt "#38034"
-msgid "Orchestra"
-msgstr ""
-
-#. Lyricist that wrote the lyrics of the song (if present)
-#: Label of ListItem.Property(Role.Lyricist)
-msgctxt "#38035"
-msgid "Lyricist"
-msgstr ""
-
-#. Remixer of the song (if present)
-#: Label of ListItem.Property(Role.Remixer)
-msgctxt "#38036"
-msgid "Remixer"
-msgstr ""
-
-#. Arranger of the song (if present)
-#: Label of ListItem.Property(Role.Arranger)
-msgctxt "#38037"
-msgid "Arranger"
-msgstr ""
-
-#. Engineer of the song (if present)
-#: Label of ListItem.Property(Role.Engineer)
-msgctxt "#38038"
-msgid "Engineer"
-msgstr ""
-
-#. Producer of the song (if present)
-#: Label of ListItem.Property(Role.Producer)
-msgctxt "#38039"
-msgid "Producer"
-msgstr ""
-
-#. DJMixer of the song (if present)
-#: Label of ListItem.Property(Role.DJMixer)
-msgctxt "#38040"
-msgid "DJMixer"
-msgstr ""
-
-#. Mixer of the song (if present)
-#: Label of ListItem.Property(Role.Mixer)
-msgctxt "#38041"
-msgid "Mixer"
-msgstr ""
-
-#. Name used when artist name is missing from music file tags
-#: music/MusicDatabase.cpp
-msgctxt "#38042"
-msgid "[Missing]"
-msgstr ""
-
-#. Title album artists node
-#: system/library/music/musicroles/albumartists.xml
-msgctxt "#38043"
-msgid "Album artists"
-msgstr ""
-
-#. Title all artists node
-#: system/library/music/musicroles/allartists.xml
-msgctxt "#38044"
-msgid "Song & album artists"
-msgstr ""
-
-#. Title all contributors node (any role e.g. composer, piano, producer, engineer)
-#: system/library/music/musicroles/allcontributors.xml
-msgctxt "#38045"
-msgid "All contributors"
-msgstr ""
-
-#. Title all roles node
-#: system/library/music/musicroles/allroles.xml
-msgctxt "#38046"
-msgid "All roles"
-msgstr ""
-
-#empty strings from id 38047 to 38059
-
-#. Question when forced rescan of music tags needed after upgrade from previous version of Kodi
-#: xbmc/music/windows/GUIWindowMusicBase.cpp
-msgctxt "#38060"
-msgid "Music library needs to rescan tags from files. Would you like to scan now?"
-msgstr ""
-
-#. Extra scraping question on upgrade from previous version
-#: xbmc/music/windows/GUIWindowMusicBase.cpp
-msgctxt "#38061"
-msgid "Fetch additional information for albums and artists? This could take some time so you may prefer to do this later"
-msgstr ""
-
-#empty strings from id 38062 to 38099
-
-#. Description of section #14200 "Player""
-#: system/settings/settings.xml
-msgctxt "#38100"
-msgid "Section that contains the settings for the playback of media"
-msgstr ""
-
-#. Description of section #14201 "Media"
-#: system/settings/settings.xml
-msgctxt "#38101"
-msgid "Section that contains the settings for sources and how media information is collected, stored, shown, and navigated"
-msgstr ""
-
-#. Description of section #14203 "Customise"
-#: system/settings/settings.xml
-msgctxt "#38102"
-msgid "Section that contains the settings influencing the GUI experience and for controlling the GUI/system"
-msgstr ""
-
-#. Description of category #14210 "Videos"
-#: system/settings/settings.xml
-msgctxt "#38103"
-msgid "This category contains the settings for the playback of videos"
-msgstr ""
-
-#. Description of category #14211 "Music"
-#: system/settings/settings.xml
-msgctxt "#38104"
-msgid "This category contains the settings for the playback of music"
-msgstr ""
-
-#. Description of category #14212 "Pictures"
-#: system/settings/settings.xml
-msgctxt "#38105"
-msgid "This category contains the settings for playback of pictures via a slideshow"
-msgstr ""
-
-#. Description of category #14213 "Language"
-#: system/settings/settings.xml
-msgctxt "#38106"
-msgid "This category contains the settings for audio & subtitle language"
-msgstr ""
-
-#. Description of category #14210 "Videos"
-#: system/settings/settings.xml
-msgctxt "#38107"
-msgid "This category contains the settings for how information for videos is collected, stored, shown, and navigated"
-msgstr ""
-
-#. Description of category #14211 "Music"
-#: system/settings/settings.xml
-msgctxt "#38108"
-msgid "This category contains the settings for how information for music is collected, stored, shown, and navigated"
-msgstr ""
-
-#. Description of category #14212 "Pictures"
-#: system/settings/settings.xml
-msgctxt "#38109"
-msgid "This category contains the settings for how information for pictures is shown and navigated"
-msgstr ""
-
-#. Description of category #14215 "Databases"
-#: system/settings/settings.xml
-msgctxt "#38110"
-msgid "This category contains the settings for the library databases"
-msgstr ""
-
-#. Description of category #14224 "Other"
-#: system/settings/settings.xml
-msgctxt "#38111"
-msgid "This category contains other settings for the GUI interface"
-msgstr ""
-
-#empty strings from id 38112 to 38999
-
-#: system/settings/settings.xml
-msgctxt "#39000"
-msgid "HD and up"
-msgstr ""
-
-#: system/settings/settings.xml
-msgctxt "#39001"
-msgid "Accelerate MPEG2"
-msgstr ""
-
-#: system/settings/settings.xml
-msgctxt "#39002"
-msgid "Accelerate MPEG4"
-msgstr ""
-
-#: system/settings/settings.xml
-msgctxt "#39003"
-msgid "Accelerate h264"
-msgstr ""
-
-#. Description of category "Library" with label #14202
-#: system/settings/settings.xml
-msgctxt "#39004"
-msgid "This category contains provides access to the windows for source management and the Library settings for the databases"
-msgstr ""
-
-#. Description of setting "Videos... with label #14242
-#: system/settings/settings.xml
-msgctxt "#39005"
-msgid "This provides access to where video sources can be added and otherwise managed."
-msgstr ""
-
-#. Description of setting "Music... with label #14243
-#: system/settings/settings.xml
-msgctxt "#39006"
-msgid "This provides access to where music sources can be added and otherwise managed."
-msgstr ""
-
-#. Description of setting "Pictures... with label #14244
-#: system/settings/settings.xml
-msgctxt "#39007"
-msgid "This provides access to where picture sources can be added and otherwise managed."
-msgstr ""
-
-#: xbmc/video/dialogs/GUIDialogVideoSettings.cpp
-msgctxt "#39008"
-msgid "Zoom - 120% width"
-msgstr ""
-
-#: xbmc/video/dialogs/GUIDialogVideoSettings.cpp
-msgctxt "#39009"
-msgid "Zoom - 110% width"
-msgstr ""
-
-#: view/GUIViewState.cpp
-msgctxt "#39010"
-msgid "Select sort method"
->>>>>>> upstream/master
 msgstr ""

@@ -33,7 +33,6 @@
 
 #include "AllocatorCommon.h"
 #include "RendererSettings.h"
-#include "cores/VideoRenderers/RenderManager.h"
 #include "guilib/D3DResource.h"
 #include "IPaintCallback.h"
 #include "Utils/smartlist.h"
@@ -51,8 +50,6 @@
 
 #include <d3d9.h>
 #include <d3dx9.h>
-#pragma comment(lib, "d3d9.lib")
-#pragma comment(lib, "d3dx9.lib") 
 
 MIDL_INTERFACE("A273C7F6-25D4-46b0-B2C8-4F7FADC44E37")
 IVMRffdshow9 : public IUnknown

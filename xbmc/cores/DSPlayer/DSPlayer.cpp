@@ -63,6 +63,8 @@
 #include "settings/MediaSettings.h"
 #include "settings/DisplaySettings.h"
 #include "DSRendererCallback.h"
+#include "ServiceBroker.h"
+#include "cores/DataCacheCore.h"
 
 using namespace PVR;
 using namespace std;
@@ -81,7 +83,8 @@ CDSPlayer::CDSPlayer(IPlayerCallback& callback)
   m_hReadyEvent(true),
   m_pGraphThread(this),
   m_pDSGraphThread(this),
-  m_bEof(false)
+  m_bEof(false),
+  m_renderManager(this)
 {
   m_HasVideo = false;
   m_HasAudio = false;
@@ -100,14 +103,21 @@ CDSPlayer::CDSPlayer(IPlayerCallback& callback)
   CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
   m_pClock.GetClock(); // Reset the clock
-  g_dsGraph = new CDSGraph(&m_pClock, callback);
+  g_dsGraph = new CDSGraph(callback, m_renderManager);
 
   // Change DVD Clock, time base
-  CDVDClock::SetTimeBase((int64_t)DS_TIME_BASE);
+  m_pClock.SetTimeBase((int64_t)DS_TIME_BASE);
+
+  m_processInfo = CProcessInfo::CreateInstance();
+  g_dsGraph->SetProcesInfo(m_processInfo);
+
+  g_Windowing.Register(this);
 }
 
 CDSPlayer::~CDSPlayer()
 {
+  g_Windowing.Unregister(this);
+
   /* Resume AE processing of XBMC native audio */
   if (!CAEFactory::Resume())
   {
@@ -121,7 +131,7 @@ CDSPlayer::~CDSPlayer()
   CLog::Log(LOGDEBUG, "%s External objects unloaded", __FUNCTION__);
 
   // Restore DVD Player time base clock
-  CDVDClock::SetTimeBase(DVD_TIME_BASE);
+  m_pClock.SetTimeBase(DVD_TIME_BASE);
 
   // Save Shader settings
   g_dsSettings.pixelShaderList->SaveXML();
@@ -246,7 +256,7 @@ void CDSPlayer::ShowEditionDlg(bool playStart)
     int selected = GetEdition();
     for (UINT i = 0; i < count; i++)
     {
-      CStdString name;
+      std::string name;
       REFERENCE_TIME duration;
 
       GetEditionInfo(i, name, &duration);
@@ -271,7 +281,7 @@ void CDSPlayer::ShowEditionDlg(bool playStart)
     dialog->SetSelected(selected);
     dialog->Open();
 
-    selected = dialog->GetSelectedLabel();
+    selected = dialog->GetSelectedItem();
     if (selected >= 0)
     {
       if (selected == editionOptions.size())
@@ -298,6 +308,8 @@ bool CDSPlayer::WaitForFileClose()
 
 bool CDSPlayer::OpenFileInternal(const CFileItem& file)
 {
+  m_processInfo->ResetVideoCodecInfo();
+  m_processInfo->ResetAudioCodecInfo();
   try
   {
     CLog::Log(LOGNOTICE, "%s - DSPlayer: Opening: %s", __FUNCTION__, file.GetPath().c_str());
@@ -312,6 +324,8 @@ bool CDSPlayer::OpenFileInternal(const CFileItem& file)
 
     m_hReadyEvent.Reset();
 
+    m_renderManager.PreInit();
+
     Create();
 
     // wait for the ready event
@@ -322,16 +336,13 @@ bool CDSPlayer::OpenFileInternal(const CFileItem& file)
       float fValue;
 
       // Select Audio Stream
-      int iLibrary = CMediaSettings::GetInstance().GetCurrentVideoSettings().m_AudioStream;
-
-      if ((iLibrary < GetAudioStreamCount()) && !(iLibrary < 0))
-        g_application.m_pPlayer->SetAudioStream(iLibrary);
+      if (CStreamsManager::Get()) CStreamsManager::Get()->SelectBestAudio();
 
       // Select Subtitle Stream and set Delay
       fValue = CMediaSettings::GetInstance().GetCurrentVideoSettings().m_SubtitleDelay;
       if (CGraphFilters::Get()->HasSubFilter())
       {
-        if (CStreamsManager::Get()) CStreamsManager::Get()->SelectBestSubtitle();
+        if (CStreamsManager::Get()) CStreamsManager::Get()->SelectBestSubtitle(file.GetPath());
         if (CStreamsManager::Get()) CStreamsManager::Get()->SetSubTitleDelay(fValue);
       }
       else
@@ -354,10 +365,6 @@ bool CDSPlayer::OpenFileInternal(const CFileItem& file)
 
       m_HasVideo = true;
       m_HasAudio = true;
-
-      // Madvr Settings
-      if (CDSRendererCallback::Get()->UsingDS())
-        SetMadvrResolution();
 
       if (CSettings::GetInstance().GetBool(CSettings::SETTING_DSPLAYER_SHOWBDTITLECHOICE))
         ShowEditionDlg(true);
@@ -400,6 +407,8 @@ bool CDSPlayer::OpenFile(const CFileItem& file, const CPlayerOptions &options)
     CGraphFilters::Get()->SetKodiRealFS(true);
     CSettings::GetInstance().SetBool(CSettings::SETTING_VIDEOSCREEN_FAKEFULLSCREEN, true);
   }
+
+  CGraphFilters::Get()->SetAuxAudioDelay();
 
   CLog::Log(LOGNOTICE, "%s - DSPlayer: Opening: %s", __FUNCTION__, file.GetPath().c_str());
 
@@ -447,22 +456,23 @@ bool CDSPlayer::CloseFile(bool reopen)
   m_pGraphThread.StopThread(false);
   StopThread(false);
 
+  m_renderManager.UnInit();
+
   CLog::Log(LOGDEBUG, "%s File closed", __FUNCTION__);
   return true;
 }
 
-void CDSPlayer::GetVideoStreamInfo(SPlayerVideoStreamInfo &info)
+void CDSPlayer::GetVideoStreamInfo(int streamId, SPlayerVideoStreamInfo &info)
 {
   CSingleLock lock(m_StateSection);
-  info.width = (CStreamsManager::Get()) ? CStreamsManager::Get()->GetPictureWidth() : 0;
-  info.height = (CStreamsManager::Get()) ? CStreamsManager::Get()->GetPictureHeight() : 0;
+  info.width = (GetPictureWidth());
+  info.height = (GetPictureHeight());
   info.videoCodecName = (CStreamsManager::Get()) ? CStreamsManager::Get()->GetVideoCodecName() : "";
   info.videoAspectRatio = (float)info.width / (float)info.height;
   CRect viewRect;
-  GetVideoRect(info.SrcRect, info.DestRect, viewRect);
+  m_renderManager.GetVideoRect(info.SrcRect, info.DestRect, viewRect);
   info.stereoMode == "";
 }
-
 
 void CDSPlayer::GetAudioStreamInfo(int index, SPlayerAudioStreamInfo &info)
 {
@@ -475,8 +485,8 @@ void CDSPlayer::GetAudioStreamInfo(int index, SPlayerAudioStreamInfo &info)
   CStdString label;
   CStdString codecname;
 
-  info.bitrate = (CStreamsManager::Get()) ? CStreamsManager::Get()->GetBitsPerSample() : 0;
-  info.audioCodecName = (CStreamsManager::Get()) ? CStreamsManager::Get()->GetAudioCodecName() : "";
+  info.bitrate = (CStreamsManager::Get()) ? CStreamsManager::Get()->GetBitsPerSample(index) : 0;
+  info.audioCodecName = (CStreamsManager::Get()) ? CStreamsManager::Get()->GetAudioCodecName(index) : "";
   if (CStreamsManager::Get()) CStreamsManager::Get()->GetAudioStreamName(index, strStreamName);
   info.language = strStreamName;
   info.channels = (CStreamsManager::Get()) ? CStreamsManager::Get()->GetChannels(index) : 0;
@@ -493,7 +503,6 @@ void CDSPlayer::GetAudioStreamInfo(int index, SPlayerAudioStreamInfo &info)
   else
     info.name = strStreamName;
 }
-
 
 void CDSPlayer::GetSubtitleStreamInfo(int index, SPlayerSubtitleStreamInfo &info)
 {
@@ -523,16 +532,11 @@ bool CDSPlayer::HasAudio() const
   return m_HasAudio;
 }
 
-void CDSPlayer::GetAudioInfo(std::string& strAudioInfo)
+void CDSPlayer::GetDebugInfo(std::string &audio, std::string &video, std::string &general)
 {
-  CSingleLock lock(m_StateSection);
-  strAudioInfo = g_dsGraph->GetAudioInfo();
-}
-
-void CDSPlayer::GetVideoInfo(std::string& strVideoInfo)
-{
-  CSingleLock lock(m_StateSection);
-  strVideoInfo = g_dsGraph->GetVideoInfo();
+  audio = g_dsGraph->GetAudioInfo();
+  video = g_dsGraph->GetVideoInfo();
+  GetGeneralInfo(general);
 }
 
 void CDSPlayer::GetGeneralInfo(std::string& strGeneralInfo)
@@ -553,7 +557,18 @@ float CDSPlayer::GetAVDelay()
 
 void CDSPlayer::SetAVDelay(float fValue)
 {
-  if (CStreamsManager::Get()) CStreamsManager::Get()->SetAVDelay(fValue);
+  //get displaylatency
+  int iDisplayLatency = m_renderManager.GetDisplayLatency() * 1000;
+
+  if (CStreamsManager::Get()) CStreamsManager::Get()->SetAVDelay(fValue,iDisplayLatency);
+
+  g_dsGraph->SetAudioCodeDelayInfo();
+}
+
+void CDSPlayer::SetAudioStream(int iStream) 
+{ 
+  if (CStreamsManager::Get()) CStreamsManager::Get()->SetAudioStream(iStream); 
+  g_dsGraph->UpdateProcessInfo(iStream);
 }
 
 float CDSPlayer::GetSubTitleDelay()
@@ -902,13 +917,18 @@ void CDSPlayer::Pause()
   }
   PostMessage(new CDSMsg(CDSMsg::PLAYER_PAUSE));
 }
-void CDSPlayer::ToFFRW(int iSpeed)
+void CDSPlayer::SetSpeed(float iSpeed)
 {
   if (iSpeed != 1)
     g_infoManager.SetDisplayAfterSeek();
 
   m_pGraphThread.SetCurrentRate(iSpeed);
   m_pGraphThread.SetSpeedChanged(true);
+}
+
+float CDSPlayer::GetSpeed()
+{
+  return m_pGraphThread.GetCurrentRate();
 }
 
 void CDSPlayer::Seek(bool bPlus, bool bLargeStep, bool bChapterOverride)
@@ -1087,23 +1107,24 @@ bool CDSPlayer::OnAction(const CAction &action)
     }
     else
       break;
-  }
+  case ACTION_PLAYER_DEBUG:
+    m_renderManager.ToggleDebug();
+    break;
 
+  case ACTION_PLAYER_PROCESS_INFO:
+    
+    if (action.GetID() == ACTION_PLAYER_PROCESS_INFO)
+    {
+      if (g_windowManager.GetActiveWindow() != WINDOW_DIALOG_PLAYER_PROCESS_INFO)
+      {
+        g_windowManager.ActivateWindow(WINDOW_DIALOG_PLAYER_PROCESS_INFO);
+        return true;
+      }
+    }
+    break;
+  }
   // return false to inform the caller we didn't handle the message
   return false;
-}
-
-void CDSPlayer::SetMadvrResolution()
-{
-  if (CSettings::GetInstance().GetInt(CSettings::SETTING_DSPLAYER_MANAGEMADVRWITHKODI) != KODIGUI_LOAD_DSPLAYER)
-    return;
-
-  CStreamDetails streamDetails;
-  int res = CDSRendererCallback::Get()->VideoDimsToResolution(GetPictureWidth(), GetPictureHeight());
-  std::string str = g_application.CurrentFileItem().GetVideoInfoTag()->m_strShowTitle;
-
-  CMediaSettings::GetInstance().GetCurrentMadvrSettings().m_Resolution = res;
-  CMediaSettings::GetInstance().GetCurrentMadvrSettings().m_TvShowName = str;
 }
 
 // Time is in millisecond
@@ -1152,7 +1173,7 @@ void CDSPlayer::UpdateChannelSwitchSettings()
 #ifdef HAS_VIDEO_PLAYBACK
   // when using fast channel switching some shortcuts are taken which 
   // means we'll have to update the view mode manually
-  g_renderManager.SetViewMode(CMediaSettings::GetInstance().GetCurrentVideoSettings().m_ViewMode);
+  m_renderManager.SetViewMode(CMediaSettings::GetInstance().GetCurrentVideoSettings().m_ViewMode);
 #endif
 }
 
@@ -1217,16 +1238,83 @@ bool CDSPlayer::ShowPVRChannelInfo()
   return bReturn;
 }
 
-bool CDSPlayer::CachePVRStream(void) const
-{
-  return g_pPVRStream && !g_PVRManager.IsPlayingRecording() && g_advancedSettings.m_bPVRCacheInDvdPlayer;
-}
-
 CDSGraphThread::CDSGraphThread(CDSPlayer * pPlayer)
   : m_pPlayer(pPlayer), CThread("CDSGraphThread thread")
 {
   CoInitializeEx(NULL, COINIT_MULTITHREADED);
 }
+
+void CDSPlayer::FrameMove()
+{
+  m_renderManager.FrameMove();
+  m_renderManager.UpdateResolution();
+}
+
+
+void CDSPlayer::Render(bool clear, uint32_t alpha, bool gui)
+{
+  m_renderManager.Render(clear, 0, alpha, gui);
+}
+
+void CDSPlayer::FlushRenderer()
+{
+  m_renderManager.Flush();
+}
+
+void CDSPlayer::SetRenderViewMode(int mode)
+{
+  m_renderManager.SetViewMode(mode);
+}
+
+float CDSPlayer::GetRenderAspectRatio()
+{
+  return m_renderManager.GetAspectRatio();
+}
+
+void CDSPlayer::TriggerUpdateResolution()
+{
+  m_renderManager.TriggerUpdateResolution(0, 0, 0);
+}
+
+bool CDSPlayer::IsRenderingVideo()
+{
+  return m_renderManager.IsConfigured();
+}
+
+bool CDSPlayer::IsRenderingGuiLayer()
+{
+  return m_renderManager.IsGuiLayer();
+}
+
+bool CDSPlayer::IsRenderingVideoLayer()
+{
+  return m_renderManager.IsVideoLayer();
+}
+
+bool CDSPlayer::Supports(EINTERLACEMETHOD method)
+{
+  return m_renderManager.Supports(method);
+}
+
+bool CDSPlayer::Supports(ESCALINGMETHOD method)
+{
+  return m_renderManager.Supports(method);
+}
+
+bool CDSPlayer::Supports(ERENDERFEATURE feature)
+{
+  return m_renderManager.Supports(feature);
+}
+
+void CDSPlayer::OnLostDisplay()
+{
+}
+
+void CDSPlayer::OnResetDisplay()
+{
+}
+
+
 
 void CDSGraphThread::OnStartup()
 {
@@ -1262,7 +1350,7 @@ void CDSGraphThread::HandleMessages()
 
       if (pMsg->IsType(CDSMsg::RESET_DEVICE))
       {
-        g_renderManager.Reset();
+        g_dsGraph->Reset();
       }
       pMsg->Set();
       pMsg->Release();
@@ -1317,33 +1405,46 @@ void CGraphManagementThread::Process()
     // Handle Rewind or Fast Forward
     if (m_currentRate != 1)
     {
-      double clock = m_pPlayer->GetClock().GetClock() - m_clockStart; // Time elapsed since the rate change
-      // Only seek if elapsed time is greater than 250 ms
-      if (abs(DS_TIME_TO_MSEC(clock)) >= 250)
+      if (g_dsGraph->SetSpeed(m_currentRate))
       {
-        //CLog::Log(LOGDEBUG, "Seeking time : %f", DS_TIME_TO_MSEC(clock));
-
-        // New position
-        uint64_t newPos = g_dsGraph->GetTime() + (uint64_t)clock;
-        //CLog::Log(LOGDEBUG, "New position : %f", DS_TIME_TO_SEC(newPos));
-
-        // Check boundaries
-        if (newPos <= 0)
+        if (g_dsGraph->GetTime() >= g_dsGraph->GetTotalTime()
+          || g_dsGraph->GetTotalTime() <= 0)
         {
-          newPos = 0;
           m_currentRate = 1;
           m_pPlayer->GetPlayerCallback().OnPlayBackSpeedChanged(1);
           m_bSpeedChanged = true;
         }
-        else if (newPos >= g_dsGraph->GetTotalTime())
+      }
+      else
+      {
+        double clock = m_pPlayer->GetClock().GetClock() - m_clockStart; // Time elapsed since the rate change
+                                                                        // Only seek if elapsed time is greater than 250 ms
+        if (abs(DS_TIME_TO_MSEC(clock)) >= 250)
         {
-          CApplicationMessenger::GetInstance().SendMsg(TMSG_MEDIA_STOP);
-          break;
+          //CLog::Log(LOGDEBUG, "Seeking time : %f", DS_TIME_TO_MSEC(clock));
+
+          // New position
+          uint64_t newPos = g_dsGraph->GetTime() + (uint64_t)clock;
+          //CLog::Log(LOGDEBUG, "New position : %f", DS_TIME_TO_SEC(newPos));
+
+          // Check boundaries
+          if (newPos <= 0)
+          {
+            newPos = 0;
+            m_currentRate = 1;
+            m_pPlayer->GetPlayerCallback().OnPlayBackSpeedChanged(1);
+            m_bSpeedChanged = true;
+          }
+          else if (newPos >= g_dsGraph->GetTotalTime())
+          {
+            CApplicationMessenger::GetInstance().SendMsg(TMSG_MEDIA_STOP);
+            break;
+          }
+
+          g_dsGraph->Seek(newPos);
+
+          m_clockStart = m_pPlayer->GetClock().GetClock();
         }
-
-        g_dsGraph->Seek(newPos);
-
-        m_clockStart = m_pPlayer->GetClock().GetClock();
       }
     }
     if (CDSPlayer::PlayerState == DSPLAYER_CLOSED)
@@ -1360,4 +1461,5 @@ void CGraphManagementThread::Process()
       break;
   }
 }
+
 #endif

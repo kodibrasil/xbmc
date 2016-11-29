@@ -109,7 +109,7 @@ namespace ssf
     Commit();
   }
 
-  bool SubtitleFile::Lookup(float at, std::list<boost::shared_ptr<Subtitle>>& subs)
+  bool SubtitleFile::Lookup(float at, std::list<std::shared_ptr<Subtitle>>& subs)
   {
     if(!subs.empty()) {ASSERT(0); return false;}
 
@@ -121,11 +121,11 @@ namespace ssf
     {
       SegmentItem si = *it;
 
-      boost::shared_ptr<Subtitle> s(DNew Subtitle(this));
+      std::shared_ptr<Subtitle> s(DNew Subtitle(this));
 
       if(s->Parse(si.pDef, si.start, si.stop, at))
       {
-        for(std::list<boost::shared_ptr<Subtitle>>::iterator it = subs.begin();
+        for(std::list<std::shared_ptr<Subtitle>>::iterator it = subs.begin();
           it != subs.end(); ++it)
         {
           if(s->m_layer < it->get()->m_layer)

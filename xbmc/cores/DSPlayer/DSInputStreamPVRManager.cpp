@@ -27,20 +27,19 @@
 #include "DSInputStreamPVRManager.h"
 #include "URL.h"
 
-#include "filesystem/PVRFile.h "
 #include "pvr/addons/PVRClients.h"
 #include "pvr/PVRManager.h"
 #include "pvr/channels/PVRChannelGroupsContainer.h"
 #include "dialogs/GUIDialogKaiToast.h"
 #include "settings/AdvancedSettings.h"
+#include "utils/StringUtils.h"
+#include "pvr/recordings/PVRRecordingsPath.h"
+
 
 CDSInputStreamPVRManager* g_pPVRStream = NULL;
 
 CDSInputStreamPVRManager::CDSInputStreamPVRManager(CDSPlayer *pPlayer)
   : m_pPlayer(pPlayer)
-  , m_pFile(NULL)
-  , m_pLiveTV(NULL)
-  , m_pRecordable(NULL)
   , m_pPVRBackend(NULL)
 {
 }
@@ -52,20 +51,13 @@ CDSInputStreamPVRManager::~CDSInputStreamPVRManager(void)
 
 void CDSInputStreamPVRManager::Close()
 {
-  if (m_pFile)
-  {
-    m_pFile->Close();
-    SAFE_DELETE(m_pFile);
-  }
+  g_PVRManager.CloseStream();
   SAFE_DELETE(m_pPVRBackend);
-  m_pLiveTV = NULL;
-  m_pRecordable = NULL;
 }
 
 bool CDSInputStreamPVRManager::CloseAndOpenFile(const CURL& url)
 {
-  if (!m_pFile)
-    return false;
+  std::string strURL = url.Get();
 
   // In case opened channel need to be closed before opening new channel
   bool bReturnVal = false;
@@ -86,10 +78,14 @@ bool CDSInputStreamPVRManager::CloseAndOpenFile(const CURL& url)
       bReturnVal = false;
       for (int iRetry = 0; iRetry < 10 && !bReturnVal; iRetry++)
       {
-        if (m_pFile->Open(url))
-          bReturnVal = true;
-        else
-          Sleep(500);
+        CFileItemPtr tag = g_PVRChannelGroups->GetByPath(strURL);
+        if (tag && tag->HasPVRChannelInfoTag())
+        {
+          if (g_PVRManager.OpenLiveStream(*tag))
+            bReturnVal = true;
+          else
+            Sleep(500);
+        }
       }
       if (!bReturnVal)
         CLog::Log(LOGERROR, "%s Opening file failed", __FUNCTION__);
@@ -102,29 +98,81 @@ bool CDSInputStreamPVRManager::CloseAndOpenFile(const CURL& url)
   return bReturnVal;
 }
 
+
+std::string CDSInputStreamPVRManager::TranslatePVRFilename(const std::string& pathFile)
+{
+  if (!g_PVRManager.IsStarted())
+    return "";
+
+  std::string FileName = pathFile;
+  if (FileName.substr(0, 14) == "pvr://channels")
+  {
+    CFileItemPtr channel = g_PVRChannelGroups->GetByPath(FileName);
+    if (channel && channel->HasPVRChannelInfoTag())
+    {
+      std::string stream = channel->GetPVRChannelInfoTag()->StreamURL();
+      if (!stream.empty())
+      {
+        if (stream.compare(6, 7, "stream/") == 0)
+        {
+          // pvr://stream
+          // This function was added to retrieve the stream URL for this item
+          // Is is used for the MediaPortal (ffmpeg) PVR addon
+          // see PVRManager.cpp
+          return g_PVRClients->GetStreamURL(channel->GetPVRChannelInfoTag());
+        }
+        else
+        {
+          return stream;
+        }
+      }
+    }
+  }
+  return FileName;
+}
+
 bool CDSInputStreamPVRManager::Open(const CFileItem& file)
 {
   Close();
 
   bool bReturnVal = false;
   std::string strTranslatedPVRFile;
-  m_pFile = new CPVRFile;
 
   CURL url(file.GetPath());
-  bReturnVal = m_pFile->Open(url);
+
+  std::string strURL = url.Get();
+
+  if (StringUtils::StartsWith(strURL, "pvr://channels/tv/") ||
+    StringUtils::StartsWith(strURL, "pvr://channels/radio/"))
+  {
+    CFileItemPtr tag = g_PVRChannelGroups->GetByPath(strURL);
+    if (tag && tag->HasPVRChannelInfoTag())
+    {
+      if (!g_PVRManager.OpenLiveStream(*tag))
+        return false;
+
+      bReturnVal = true;
+      m_isRecording = false;
+      CLog::Log(LOGDEBUG, "CDSInputStreamPVRManager - %s - playback has started on filename %s", __FUNCTION__, strURL.c_str());
+    }
+    else
+    {
+      CLog::Log(LOGERROR, "CDSInputStreamPVRManager - %s - channel not found with filename %s", __FUNCTION__, strURL.c_str());
+      return false;
+    }
+  }
+
   if (!bReturnVal)
     bReturnVal = CloseAndOpenFile(url);
 
   if (bReturnVal)
   {
-    m_pLiveTV = ((CPVRFile*)m_pFile)->GetLiveTV();
-    m_pRecordable = ((CPVRFile*)m_pFile)->GetRecordable();
     m_pPVRBackend = GetPVRBackend();
 
     if (file.IsLiveTV())
     {
       bReturnVal = true;
-      strTranslatedPVRFile = XFILE::CPVRFile::TranslatePVRFilename(file.GetPath());
+      strTranslatedPVRFile = TranslatePVRFilename(file.GetPath());
       if (strTranslatedPVRFile == file.GetPath())
       {
         if (file.HasPVRChannelInfoTag())
@@ -262,18 +310,21 @@ bool CDSInputStreamPVRManager::SelectChannel(const CPVRChannelPtr &channel)
 {
   bool bResult = false;
 
-  if (!SupportsChannelSwitch())
   {
-    CFileItem item(channel);
-    bResult = Open(item);
-  }
-  else if (m_pLiveTV && PrepareForChannelSwitch(channel))
-  {
-    bResult = m_pLiveTV->SelectChannel(channel->ChannelNumber());
-    if (bResult)
-      bResult = PerformChannelSwitch();
-  }
+    assert(channel.get());
 
+    if (!SupportsChannelSwitch())
+    {
+      CFileItem item(channel);
+      bResult = Open(item);
+    }
+    else if (PrepareForChannelSwitch(channel))
+    {
+      bResult = g_PVRManager.ChannelSwitchById(channel->ChannelID());
+      if (bResult)
+        bResult = PerformChannelSwitch();
+    }
+  }
   return bResult;
 }
 
@@ -281,6 +332,7 @@ bool CDSInputStreamPVRManager::NextChannel(bool preview /* = false */)
 {
   bool bResult = false;
   PVR_CLIENT client;
+  unsigned int newchannel;
 
   CPVRChannelPtr channel(g_PVRManager.GetCurrentChannel());
   CFileItemPtr item = g_PVRChannelGroups->Get(channel->IsRadio())->GetSelectedGroup()->GetByChannelUp(channel);
@@ -295,9 +347,9 @@ bool CDSInputStreamPVRManager::NextChannel(bool preview /* = false */)
     if (item.get())
       bResult = Open(*item.get());
   }
-  else if (m_pLiveTV && PrepareForChannelSwitch(item->GetPVRChannelInfoTag()))
+  else if (PrepareForChannelSwitch(item->GetPVRChannelInfoTag()))
   {
-    bResult = m_pLiveTV->NextChannel(preview);
+    bResult = g_PVRManager.ChannelUp(&newchannel,preview);
     if (bResult)
       bResult = PerformChannelSwitch();
   }
@@ -309,6 +361,7 @@ bool CDSInputStreamPVRManager::PrevChannel(bool preview/* = false*/)
 {
   bool bResult = false;
   PVR_CLIENT client;
+  unsigned int newchannel;
 
   CPVRChannelPtr channel(g_PVRManager.GetCurrentChannel());
   CFileItemPtr item = g_PVRChannelGroups->Get(channel->IsRadio())->GetSelectedGroup()->GetByChannelDown(channel);
@@ -323,9 +376,9 @@ bool CDSInputStreamPVRManager::PrevChannel(bool preview/* = false*/)
     if (item.get())
       bResult = Open(*item.get());
   }
-  else if (m_pLiveTV && PrepareForChannelSwitch(item->GetPVRChannelInfoTag()))
+  else if (PrepareForChannelSwitch(item->GetPVRChannelInfoTag()))
   {
-    bResult = m_pLiveTV->PrevChannel(preview);
+    bResult = g_PVRManager.ChannelDown(&newchannel, preview);
     if (bResult)
       bResult = PerformChannelSwitch();
   }
@@ -351,9 +404,9 @@ bool CDSInputStreamPVRManager::SelectChannelByNumber(unsigned int iChannelNumber
     if (item.get())
       bResult = Open(*item.get());
   }
-  else if (m_pLiveTV && PrepareForChannelSwitch(item->GetPVRChannelInfoTag()))
+  else if (PrepareForChannelSwitch(item->GetPVRChannelInfoTag()))
   {
-    bResult = m_pLiveTV->SelectChannel(iChannelNumber);
+    bResult = g_PVRManager.ChannelSwitchById(item->GetPVRChannelInfoTag()->ChannelID());
     if (bResult)
       bResult = PerformChannelSwitch();
   }
@@ -379,9 +432,7 @@ bool CDSInputStreamPVRManager::SupportsChannelSwitch()const
 
 bool CDSInputStreamPVRManager::UpdateItem(CFileItem& item)
 {
-  if (m_pLiveTV)
-    return m_pLiveTV->UpdateItem(item);
-  return false;
+  return g_PVRManager.UpdateItem(item);
 }
 
 CDSPVRBackend* CDSInputStreamPVRManager::GetPVRBackend()
@@ -408,15 +459,15 @@ CDSPVRBackend* CDSInputStreamPVRManager::GetPVRBackend()
 
 uint64_t CDSInputStreamPVRManager::GetTotalTime()
 {
-  if (m_pLiveTV)
-    return m_pLiveTV->GetTotalTime();
+  if (!m_isRecording)
+    return g_PVRManager.GetTotalTime();
   return 0;
 }
 
 uint64_t CDSInputStreamPVRManager::GetTime()
 {
-  if (m_pLiveTV)
-    return m_pLiveTV->GetStartTime();
+  if (!m_isRecording)
+    return g_PVRManager.GetStartTime();
   return 0;
 }
 

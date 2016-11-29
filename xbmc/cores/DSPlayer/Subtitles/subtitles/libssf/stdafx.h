@@ -55,7 +55,6 @@
 #include <map>
 #include <list>
 #include <memory>
-#include <boost/shared_ptr.hpp>
 
 // TODO: reference additional headers your program requires here
 

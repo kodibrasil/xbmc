@@ -22,31 +22,26 @@
  */
 #include "MadvrSharedRender.h"
 #include "mvrInterfaces.h"
-#include "Utils/Log.h"
 #include "guilib/GraphicContext.h"
 #include "windowing/WindowingFactory.h"
+#include "settings/Settings.h"
 
 CMadvrSharedRender::CMadvrSharedRender()
 {
+  CDSRendererCallback::Get()->Register(this);
+  m_bSkipRender = false;
+  m_bWaitKodiRendering = CSettings::GetInstance().GetBool(CSettings::SETTING_DSPLAYER_WAITKODIRENDERING);
 }
 
 CMadvrSharedRender::~CMadvrSharedRender()
 {
 }
 
-HRESULT CMadvrSharedRender::CreateTextures(ID3D11Device* pD3DDeviceKodi, IDirect3DDevice9Ex* pD3DDeviceDS, int width, int height)
-{
-  HRESULT hr = __super::CreateTextures(pD3DDeviceKodi, pD3DDeviceDS, width, height);
-  CDSRendererCallback::Get()->Register(this);
-
-  return hr;
-}
-
-
 HRESULT CMadvrSharedRender::Render(DS_RENDER_LAYER layer)
 {
   // Lock madVR thread while kodi rendering
-  CAutoLock lock(&m_dsLock);
+  if (m_bWaitKodiRendering)
+    m_dsWait.Wait(100);
 
   if (!CDSRendererCallback::Get()->GetRenderOnDS() || (g_graphicsContext.IsFullScreenVideo() && layer == RENDER_LAYER_UNDER))
     return CALLBACK_INFO_DISPLAY;
@@ -64,13 +59,15 @@ HRESULT CMadvrSharedRender::Render(DS_RENDER_LAYER layer)
 
 void CMadvrSharedRender::RenderToUnderTexture()
 {
-  // Wait that madVR complete the rendering
-  m_kodiWait.Wait(100);
+  if (CheckSkipRender())
+    return;
 
+  // Wait that madVR complete the rendering
+  m_kodiWait.Lock();
+  m_kodiWait.Wait(100);
   {
     // Lock madVR thread while kodi rendering
-    CAutoLock lock(&m_dsLock);
-    m_dsLock.Lock();
+    m_dsWait.Lock();
 
     CDSRendererCallback::Get()->SetCurrentVideoLayer(RENDER_LAYER_UNDER);
     CDSRendererCallback::Get()->ResetRenderCount();
@@ -87,6 +84,9 @@ void CMadvrSharedRender::RenderToUnderTexture()
 
 void CMadvrSharedRender::RenderToOverTexture()
 {
+  if (CheckSkipRender())
+    return;
+
   CDSRendererCallback::Get()->SetCurrentVideoLayer(RENDER_LAYER_OVER);
 
   ID3D11DeviceContext* pContext = g_Windowing.Get3D11Context();
@@ -108,5 +108,16 @@ void CMadvrSharedRender::EndRender()
   m_bGuiVisibleOver = CDSRendererCallback::Get()->GuiVisible(RENDER_LAYER_OVER);
 
   // Unlock madVR rendering
-  m_dsLock.Unlock();
+  m_dsWait.Unlock();
+}
+
+bool CMadvrSharedRender::CheckSkipRender()
+{
+  if (m_bSkipRender)
+  {
+    if (g_graphicsContext.IsFullScreenVideo())
+      m_bSkipRender = false;
+  }
+  
+  return m_bSkipRender;
 }

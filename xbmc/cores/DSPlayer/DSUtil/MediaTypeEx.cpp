@@ -304,9 +304,9 @@ CStdStringA CMediaTypeEx::GetAudioCodecName(const GUID& subtype, WORD wFormatTag
 	  names[WAVE_FORMAT_UHER_ADPCM]            = "UHER ADPCM";
 	  names[WAVE_FORMAT_DTS2]                  = "DTS"; // = WAVE_FORMAT_DVD_DTS
 	  // other
-	  names[WAVE_FORMAT_DOLBY_AC3]             = "ac3";
-	  names[WAVE_FORMAT_LATM_AAC]              = "aac";
-	  names[WAVE_FORMAT_FLAC]                  = "flac";
+	  names[WAVE_FORMAT_DOLBY_AC3]             = "AC3";
+	  names[WAVE_FORMAT_LATM_AAC]              = "AAC";
+	  names[WAVE_FORMAT_FLAC]                  = "FLAC";
 	  names[WAVE_FORMAT_TTA1]                  = "TTA";
 	  names[WAVE_FORMAT_WAVPACK4]              = "wavpack";
 	  names[WAVE_FORMAT_14_4]                  = "RealAudio 14.4";
@@ -319,6 +319,7 @@ CStdStringA CMediaTypeEx::GetAudioCodecName(const GUID& subtype, WORD wFormatTag
 	  names[WAVE_FORMAT_SIPR]                  = "RealAudio SIPR";
 	  names[WAVE_FORMAT_PS2_PCM]               = "PS2 PCM";
 	  names[WAVE_FORMAT_PS2_ADPCM]             = "PS2 ADPCM";
+	  names[WAVE_FORMAT_AAC_ADTS]              = "AAC";
   }
 
   std::map<WORD, CStdStringA>::iterator it = names.find(wFormatTag);

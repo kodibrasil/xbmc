@@ -44,6 +44,7 @@
 #include "utils/DSFileUtils.h"
 #include "guilib/LocalizeStrings.h"
 #include "LangInfo.h"
+#include "DSPlayerDatabase.h"
 
 CDSStreamDetail::CDSStreamDetail()
   : IAMStreamSelect_Index(0), flags(0), pObj(NULL), pUnk(NULL), lcid(0),
@@ -93,6 +94,7 @@ CStreamsManager::CStreamsManager(void)
   , m_pIDirectVobSub(NULL)
 {
   m_readyEvent.Set();
+  m_lastDelay = 0;
 }
 
 CStreamsManager::~CStreamsManager(void)
@@ -767,14 +769,14 @@ bool CStreamsManager::SetAudioInterface()
   return (m_bIsLavAudio || m_bIsFFDSAudio);
 }
 
-void CStreamsManager::SetAVDelay(float fValue)
+void CStreamsManager::SetAVDelay(float fValue, int iDisplayerLatency)
 {
   //delay float secs to int msecs
   int iValue = round(fValue * 1000.0f);
 
-  //get displaylatency and invert the sign because kodi interface
-  int displayLatency = -(g_renderManager.GetDisplayLatency() * 1000);
-  iValue = iValue + displayLatency;
+  //invert the sign displaylatency because kodi interface
+  iDisplayerLatency = -iDisplayerLatency;
+  iValue = iValue + iDisplayerLatency;
 
   //get delay and invert the sign because kodi interface
   iValue = -iValue;
@@ -785,6 +787,8 @@ void CStreamsManager::SetAVDelay(float fValue)
 
   if (m_bIsFFDSAudio)
     m_pIFFDSwhoAudioSettings->putParam(IDFF_audio_decoder_delay, iValue);
+
+  m_lastDelay = iValue;
 }
 
 float CStreamsManager::GetAVDelay()
@@ -859,6 +863,30 @@ int CStreamsManager::AddSubtitle(const std::string& subFilePath)
   return GetSubfilterCount() - 1;
 }
 
+bool CStreamsManager::SetSubfilter(const std::string &sTrackName)
+{
+  if (!m_init || sTrackName.empty())
+    return false;
+
+  CSingleLock lock(m_lock);
+
+  if (GetSubfilterCount() <= 0)
+    return false;
+
+  int iStream = 0;
+  for (const auto &sub : m_subfilterStreams)
+  {
+    if (sub->displayname == sTrackName)
+    {
+      SetSubfilter(iStream);
+      return true;
+    }
+    iStream++;
+  }
+
+  return false;
+}
+
 void CStreamsManager::SetSubfilter(int iStream)
 {
   if (!m_init)
@@ -869,7 +897,7 @@ void CStreamsManager::SetSubfilter(int iStream)
   if (GetSubfilterCount() <= 0)
     return;
 
-  if (iStream > GetSubfilterCount())
+  if (iStream > GetSubfilterCount()-1)
     return;
 
   long disableIndex = GetSubfilter(), enableIndex = iStream;
@@ -880,7 +908,9 @@ void CStreamsManager::SetSubfilter(int iStream)
   CMediaSettings::GetInstance().GetCurrentVideoSettings().m_SubtitleStream = enableIndex;
 
   if (m_subfilterStreams[enableIndex]->m_subType == EXTERNAL)
-  {
+  {    
+    CMediaSettings::GetInstance().GetCurrentVideoSettings().m_SubtitleExtTrackName = m_subfilterStreams[enableIndex]->displayname;
+    
     DisconnectCurrentSubtitlePins();
 
     CDSStreamDetailSubfilter *s = reinterpret_cast<CDSStreamDetailSubfilter *>(m_subfilterStreams[enableIndex]);
@@ -892,6 +922,7 @@ void CStreamsManager::SetSubfilter(int iStream)
 
   else if (m_pIAMStreamSelect)
   {
+    CMediaSettings::GetInstance().GetCurrentVideoSettings().m_SubtitleExtTrackName = "";
 
     if (disableIndex >= 0 && m_subfilterStreams[disableIndex]->connected)
       DisconnectCurrentSubtitlePins();
@@ -956,11 +987,67 @@ void CStreamsManager::SubInterface(SelectSubType action)
   }
 }
 
-void CStreamsManager::SelectBestSubtitle()
+void CStreamsManager::SelectBestAudio()
 {
+  std::string sPrefCodec = CSettings::GetInstance().GetString(CSettings::SETTING_DSPLAYER_PREFAUDIOCODEC);
+  int iLibrary = CMediaSettings::GetInstance().GetCurrentVideoSettings().m_AudioStream;
+  if ((iLibrary < GetAudioStreamCount()) && !(iLibrary < 0))
+  {
+    SetAudioStream(iLibrary);
+  }
+  else if (!m_audioStreams.empty() && !sPrefCodec.empty())
+  {
+    std::vector<std::string> codecs = StringUtils::Split(sPrefCodec, "|");
+
+    std::string sPrefLang = g_langInfo.GetLocale().GetLanguageCode();
+
+    int i = 0;
+    for (const auto &it : m_audioStreams)
+    {     
+      CStdString audioLang;
+      CStdString audioCodec = it->m_strCodecName;
+
+      if (it->lcid)
+      {
+        int len = 0;
+        if (len = GetLocaleInfo(it->lcid, LOCALE_SISO639LANGNAME, audioLang.GetBuffer(64), 64))
+          audioLang.resize(len - 1); //get rid of last \0
+      }
+
+      for (const auto &codec : codecs)
+      {
+        if (audioCodec.ToLower().find(codec) != std::string::npos && audioLang == sPrefLang)
+        {
+          SetAudioStream(i);
+          return;
+        }
+      }
+
+      i++;
+    }
+  }
+
+}
+
+void CStreamsManager::SelectBestSubtitle(const std::string &fileName /* ="" */)
+{
+
   int selectFirst = -1;
   int select = -1;
   int iLibrary;
+  std::string exSubTrackName = "";
+
+  CDSPlayerDatabase db;
+  if (db.Open())
+  {
+    exSubTrackName = db.GetSubtitleExtTrackName(fileName);
+    db.Close();
+    if (!exSubTrackName.empty())
+    {
+      if (SetSubfilter(exSubTrackName))
+        return;
+    }
+  }
 
   // set previuos selected stream
   iLibrary = CMediaSettings::GetInstance().GetCurrentVideoSettings().m_SubtitleStream;
@@ -968,7 +1055,7 @@ void CStreamsManager::SelectBestSubtitle()
     select = iLibrary;
     
   // set prefered external sub or first external sub
-  else if (m_subfilterStreams.size() != 0)
+  else if (!m_subfilterStreams.empty())
   {
     int i = 0;
     for (std::vector<CDSStreamDetailSubfilter *>::const_iterator it = m_subfilterStreams.begin();
@@ -1075,16 +1162,9 @@ int CStreamsManager::GetChannels(int istream)
   return (istream == -1) ? 0 : m_audioStreams[istream]->m_iChannels;
 }
 
-int CStreamsManager::GetBitsPerSample()
+int CStreamsManager::GetBitsPerSample(int istream)
 {
-  int i = GetAudioStream();
-  return (i == -1) ? 0 : m_audioStreams[i]->m_iBitRate;
-}
-
-int CStreamsManager::GetSampleRate()
-{
-  int i = GetAudioStream();
-  return (i == -1) ? 0 : m_audioStreams[i]->m_iSampleRate;
+  return (istream == -1) ? 0 : m_audioStreams[istream]->m_iBitRate;
 }
 
 int CStreamsManager::GetSampleRate(int istream)
@@ -1150,7 +1230,7 @@ void CStreamsManager::MediaTypeToStreamDetail(AM_MEDIA_TYPE *pMediaType, CStream
         WAVEFORMATEX *f = reinterpret_cast<WAVEFORMATEX *>(pMediaType->pbFormat);
         infos.m_iChannels = f->nChannels;
         infos.m_iSampleRate = f->nSamplesPerSec;
-        infos.m_iBitRate = f->nAvgBytesPerSec;
+        infos.m_iBitRate = f->wBitsPerSample;
         ExtractCodecDetail(infos, CMediaTypeEx::GetAudioCodecName(pMediaType->subtype, f->wFormatTag));
       }
     }
@@ -1285,10 +1365,9 @@ int CStreamsManager::GetPictureHeight()
   return m_videoStream.m_iHeight;
 }
 
-CStdString CStreamsManager::GetAudioCodecName()
+CStdString CStreamsManager::GetAudioCodecName(int istream)
 {
-  int i = GetAudioStream();
-  return (i == -1) ? "" : m_audioStreams[i]->m_strCodec;
+  return (istream == -1) ? "" : m_audioStreams[istream]->m_strCodec;
 }
 
 CStdString CStreamsManager::GetVideoCodecName()
@@ -1337,9 +1416,9 @@ void CStreamsManager::FormatStreamNameBySplitter(CStreamDetail& s)
 
 void CStreamsManager::FormatStreamName(CStreamDetail& s)
 {
-  std::vector<boost::shared_ptr<CRegExp>> regex;
+  std::vector<std::shared_ptr<CRegExp>> regex;
 
-  boost::shared_ptr<CRegExp> reg(new CRegExp(true));
+  std::shared_ptr<CRegExp> reg(new CRegExp(true));
   reg->RegComp("(.*?)(\\(audio.*?\\)|\\(subtitle.*?\\))"); // mkv source audio / subtitle
   regex.push_back(reg);
 
@@ -1349,7 +1428,7 @@ void CStreamsManager::FormatStreamName(CStreamDetail& s)
 
   CDSStreamDetail& pS = dynamic_cast<CDSStreamDetail&> (s);
 
-  for (std::vector<boost::shared_ptr<CRegExp>>::iterator
+  for (std::vector<std::shared_ptr<CRegExp>>::iterator
     it = regex.begin(); it != regex.end(); ++it)
   {
     if ((*it)->RegFind(pS.displayname) > -1)

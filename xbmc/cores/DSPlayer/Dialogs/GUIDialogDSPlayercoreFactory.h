@@ -33,14 +33,7 @@ public:
   CGUIDialogDSPlayercoreFactory();
   virtual ~CGUIDialogDSPlayercoreFactory();
 
-  static CGUIDialogDSPlayercoreFactory* Get();
-  static void Destroy()
-  {
-    delete m_pSingleton;
-    m_pSingleton = NULL;
-  }
-
-  static int ShowDSPlayercoreFactory();
+  static void ShowDSPlayercoreFactory();
 
 protected:
 
@@ -60,10 +53,7 @@ protected:
 
   virtual void SetupView();
 
-  static CGUIDialogDSPlayercoreFactory* m_pSingleton;
-
-
-  bool isEdited;
+  bool m_bEdited;
 
   std::vector<DSConfigList *> m_ruleList;
   CGUIDialogDSManager* m_dsmanager;

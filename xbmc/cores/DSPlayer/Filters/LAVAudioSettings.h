@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2010-2015 Hendrik Leppkes
+ *      Copyright (C) 2010-2016 Hendrik Leppkes
  *      http://www.1f0.de
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -98,8 +98,7 @@ typedef enum LAVAudioMixingMode {
 } LAVAudioMixingMode;
 
 // LAV Audio configuration interface
-[uuid("4158A22B-6553-45D0-8069-24716F8FF171")]
-interface ILAVAudioSettings : public IUnknown
+interface __declspec(uuid("4158A22B-6553-45D0-8069-24716F8FF171")) ILAVAudioSettings : public IUnknown
 {
   // Switch to Runtime Config mode. This will reset all settings to default, and no changes to the settings will be saved
   // You can use this to programmatically configure LAV Audio without interfering with the users settings in the registry.
@@ -200,8 +199,7 @@ interface ILAVAudioSettings : public IUnknown
   STDMETHOD(SetOutput51LegacyLayout)(BOOL b51Legacy) = 0;
 };
 
-[uuid("2d0a37bb-5645-46f8-8cc4-48de2a963ae6")]
-interface ILAVAudioSettingsDSPlayerCustom : public IUnknown
+interface __declspec(uuid("2d0a37bb-5645-46f8-8cc4-48de2a963ae6")) ILAVAudioSettingsDSPlayerCustom : public IUnknown
 {
   // Set a custom callback function to handle the property page
   STDMETHOD(SetPropertyPageCallback)(HRESULT(*fpPropPageCallback)(IUnknown* pFilter)) = 0;
@@ -209,8 +207,7 @@ interface ILAVAudioSettingsDSPlayerCustom : public IUnknown
 
 // LAV Audio Status Interface
 // Get the current playback stats
-[uuid("A668B8F2-BA87-4F63-9D41-768F7DE9C50E")]
-interface ILAVAudioStatus : public IUnknown
+interface __declspec(uuid("A668B8F2-BA87-4F63-9D41-768F7DE9C50E")) ILAVAudioStatus : public IUnknown
 {
   // Check if the given sample format is supported by the current playback chain
   STDMETHOD_(BOOL,IsSampleFormatSupported)(LAVAudioSampleFormat sfCheck) = 0;

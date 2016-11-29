@@ -48,7 +48,6 @@ CmadVRAllocatorPresenter::CmadVRAllocatorPresenter(HWND hWnd, HRESULT& hr, CStdS
 {
 
   //Init Variable
-  g_renderManager.PreInit(RENDERER_DSHOW);
   m_exclusiveCallback = ExclusiveCallback;
   m_firstBoot = true;
   m_isEnteringExclusive = false;
@@ -57,6 +56,7 @@ CmadVRAllocatorPresenter::CmadVRAllocatorPresenter(HWND hWnd, HRESULT& hr, CStdS
   m_pMadvrShared = DNew CMadvrSharedRender();
   m_activeVideoRect.SetRect(0, 0, 0, 0);
   m_madvrRect.SetRect(0, 0, 0, 0);
+  m_frameCount = 0;
   
   if (FAILED(hr)) {
     _Error += L"ISubPicAllocatorPresenterImpl failed\n";
@@ -86,7 +86,6 @@ CmadVRAllocatorPresenter::~CmadVRAllocatorPresenter()
   if (Com::SmartQIPtr<IMadVRCommand> pMadVrCmd = m_pDXR)
     pMadVrCmd->SendCommand("restoreDisplayModeNow");
 
-  g_renderManager.UnInit();
   g_advancedSettings.m_guiAlgorithmDirtyRegions = m_kodiGuiDirtyAlgo;
   
   // the order is important here
@@ -117,21 +116,21 @@ void CmadVRAllocatorPresenter::SetResolution()
   ULONGLONG frameRate;
   float fps;
 
-  // Set the context in FullScreenVideo
-  g_graphicsContext.SetFullScreenVideo(true);
-
   if (Com::SmartQIPtr<IMadVRInfo> pInfo = m_pDXR)
   {
     pInfo->GetUlonglong("frameRate", &frameRate);
     fps = 10000000.0 / frameRate;
   }
 
+  SIZE nativeVideoSize = GetVideoSize(false);
+
   if (CSettings::GetInstance().GetInt(CSettings::SETTING_VIDEOPLAYER_ADJUSTREFRESHRATE) != ADJUST_REFRESHRATE_OFF
     && (CSettings::GetInstance().GetInt(CSettings::SETTING_DSPLAYER_CHANGEREFRESHWITH) == ADJUST_REFRESHRATE_WITH_BOTH || CSettings::GetInstance().GetInt(CSettings::SETTING_DSPLAYER_CHANGEREFRESHWITH) == ADJUST_REFRESHRATE_WITH_DSPLAYER)
     && g_graphicsContext.IsFullScreenRoot())
   {
-    RESOLUTION bestRes = g_renderManager.m_pRenderer->ChooseBestMadvrResolution(fps);
+    RESOLUTION bestRes = CResolutionUtils::ChooseBestResolution(fps, nativeVideoSize.cx, false);
     CDSPlayer::SetDsWndVisible(true);
+    m_pMadvrShared->SkipRender(true);
     g_graphicsContext.SetVideoResolution(bestRes);
   }
   else
@@ -279,13 +278,13 @@ HRESULT CmadVRAllocatorPresenter::Render( REFERENCE_TIME rtStart, REFERENCE_TIME
     m_pSubPicQueue->SetFPS(m_fps);
   }
 
-  if (!g_renderManager.IsConfigured())
+  if (!g_application.m_pPlayer->IsRenderingVideo())
   {
     m_NativeVideoSize = GetVideoSize(false);
     m_AspectRatio = GetVideoSize(true);
 
     // Configure Render Manager
-    g_renderManager.Configure(m_NativeVideoSize.cx, m_NativeVideoSize.cy, m_AspectRatio.cx, m_AspectRatio.cy, m_fps, CONF_FLAGS_FULLSCREEN , RENDER_FMT_NONE, 0, 0);
+    g_dsGraph->Configure(m_NativeVideoSize.cx, m_NativeVideoSize.cy, m_AspectRatio.cx, m_AspectRatio.cy, m_fps, CONF_FLAGS_FULLSCREEN);
     CLog::Log(LOGDEBUG, "%s Render manager configured (FPS: %f) %i %i %i %i", __FUNCTION__, m_fps, m_NativeVideoSize.cx, m_NativeVideoSize.cy, m_AspectRatio.cx, m_AspectRatio.cy);
 
     // Begin Render Kodi 
@@ -299,13 +298,47 @@ HRESULT CmadVRAllocatorPresenter::Render( REFERENCE_TIME rtStart, REFERENCE_TIME
       { 
         double refreshRate;
         pInfo->GetDouble("refreshRate", &refreshRate);
-        g_renderManager.UpdateDisplayLatencyForMadvr(refreshRate);
+        g_dsGraph->UpdateDisplayLatencyForMadvr(refreshRate);
       }
     }
   }
 
-  AlphaBltSubPic(Com::SmartSize(width, height));
+  // Reset madVR Stats at start (after 50 frames)
+  if (m_frameCount > -1)
+  {
+    m_frameCount += 1;
 
+    if (m_frameCount > 50)
+    {
+      INPUT ip;
+      ip.type = INPUT_KEYBOARD;
+      ip.ki.wScan = 0;
+      ip.ki.time = 0;
+      ip.ki.dwExtraInfo = 0;
+
+      // Press
+      ip.ki.wVk = VK_CONTROL;
+      ip.ki.dwFlags = 0; // 0 for key press
+      SendInput(1, &ip, sizeof(INPUT));
+
+      ip.ki.wVk = 'R';
+      ip.ki.dwFlags = 0;
+      SendInput(1, &ip, sizeof(INPUT));
+
+      // Release
+      ip.ki.wVk = 'R';
+      ip.ki.dwFlags = KEYEVENTF_KEYUP;
+      SendInput(1, &ip, sizeof(INPUT));
+
+      ip.ki.wVk = VK_CONTROL;
+      ip.ki.dwFlags = KEYEVENTF_KEYUP;
+      SendInput(1, &ip, sizeof(INPUT));
+
+      m_frameCount = -1;
+    }
+  }
+ 
+  AlphaBltSubPic(Com::SmartSize(width, height));
   return S_OK;
 }
 

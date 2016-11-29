@@ -610,10 +610,10 @@ namespace Com
     {
       return *this;
     }
-    //OPERATOR FOR RETURNING boost::shared_ptr
-    /*operator boost::shared_ptr< T >()
+    //OPERATOR FOR RETURNING std::shared_ptr
+    /*operator std::shared_ptr< T >()
       {
-      return boost::shared_ptr<T>(*this);
+      return std::shared_ptr<T>(*this);
       }*/
 
     // basic comparison operators

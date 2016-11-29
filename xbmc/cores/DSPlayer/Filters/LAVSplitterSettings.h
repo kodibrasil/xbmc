@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2010-2015 Hendrik Leppkes
+ *      Copyright (C) 2010-2016 Hendrik Leppkes
  *      http://www.1f0.de
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -36,8 +36,7 @@ typedef enum LAVSubtitleMode {
   LAVSubtitleMode_Advanced
 } LAVSubtitleMode;
 
-[uuid("774A919D-EA95-4A87-8A1E-F48ABE8499C7")]
-interface ILAVFSettings : public IUnknown
+interface __declspec(uuid("774A919D-EA95-4A87-8A1E-F48ABE8499C7")) ILAVFSettings : public IUnknown
 {
   // Switch to Runtime Config mode. This will reset all settings to default, and no changes to the settings will be saved
   // You can use this to programmatically configure LAV Splitter without interfering with the users settings in the registry.
@@ -196,8 +195,7 @@ interface ILAVFSettings : public IUnknown
   STDMETHOD_(DWORD, GetMaxQueueSize)() = 0;
 };
 
-[uuid("594222d3-0b8e-48aa-ae60-41969a993008")]
-interface ILAVFSettingsDSPlayerCustom : public IUnknown
+interface __declspec(uuid("594222d3-0b8e-48aa-ae60-41969a993008")) ILAVFSettingsDSPlayerCustom : public IUnknown
 {
   // Set a custom callback function to handle the property page
   STDMETHOD(SetPropertyPageCallback)(HRESULT(*fpPropPageCallback)(IUnknown* pFilter)) = 0;

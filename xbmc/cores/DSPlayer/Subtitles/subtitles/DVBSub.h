@@ -24,7 +24,6 @@
 #pragma once
 
 #include "BaseSub.h"
-#include "boost\shared_ptr.hpp"
 
 #define MAX_REGIONS      10
 #define MAX_OBJECTS      10      // Max number of objects per region

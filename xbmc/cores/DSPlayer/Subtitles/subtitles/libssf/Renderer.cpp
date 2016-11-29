@@ -78,10 +78,10 @@ namespace ssf
     DeleteDC(m_hDC);
   }
 
-  void Renderer::NextSegment(std::list<boost::shared_ptr<Subtitle>>& subs)
+  void Renderer::NextSegment(std::list<std::shared_ptr<Subtitle>>& subs)
   {
     StringMapW<bool> names;
-    std::list<boost::shared_ptr<Subtitle>>::iterator it = subs.begin();
+    std::list<std::shared_ptr<Subtitle>>::iterator it = subs.begin();
     for(; it != subs.end(); ++it) names[(*it).get()->m_name] = true;
 
     StringMapW<SubRect>::iterator it2 = m_sra.begin();
@@ -153,7 +153,7 @@ namespace ssf
 
     WCHAR c_prev = 0, c_next;
 
-    std::list<boost::shared_ptr<Glyph>> glyphs;
+    std::list<std::shared_ptr<Glyph>> glyphs;
 
     std::list<Text>::const_iterator it = s->m_text.begin();
     for(; it != s->m_text.end(); ++it)
@@ -193,7 +193,7 @@ namespace ssf
 
       for(LPCWSTR c = t.str; *c; c++)
       {
-        boost::shared_ptr<Glyph> g(DNew Glyph());
+        std::shared_ptr<Glyph> g(DNew Glyph());
 
         g->c = *c;
         g->style = t.style;
@@ -252,10 +252,10 @@ namespace ssf
 
     // break glyphs into rows
 
-    std::list<boost::shared_ptr<Row>> rows;
-    boost::shared_ptr<Row> row;
+    std::list<std::shared_ptr<Row>> rows;
+    std::shared_ptr<Row> row;
 
-    std::list<boost::shared_ptr<Glyph>>::iterator pos = glyphs.begin();
+    std::list<std::shared_ptr<Glyph>>::iterator pos = glyphs.begin();
     for(; pos != glyphs.end(); ++pos)
     {
       if(! row.get()) row.reset(DNew Row());
@@ -268,11 +268,11 @@ namespace ssf
 
     if(s->m_direction.primary == _T("right")) // || s->m_direction.primary == _T("left")
     {
-      for(std::list<boost::shared_ptr<Row>>::iterator rpos = rows.begin(); rpos != rows.end(); ++rpos)
+      for(std::list<std::shared_ptr<Row>>::iterator rpos = rows.begin(); rpos != rows.end(); ++rpos)
       {
         Row r = (*rpos->get());
 
-        std::list<boost::shared_ptr<Glyph>>::iterator gpos = r.begin();
+        std::list<std::shared_ptr<Glyph>>::iterator gpos = r.begin();
         for(; gpos != r.end(); ++gpos)
         {
           Glyph g1 = (*gpos->get());
@@ -300,17 +300,17 @@ namespace ssf
       int maxwidth = abs((int)(vertical ? frame.Height() : frame.Width()));
       int minwidth = 0;
 
-      for(std::list<boost::shared_ptr<Row>>::iterator rpos = rows.begin(); rpos != rows.end(); ++rpos)
+      for(std::list<std::shared_ptr<Row>>::iterator rpos = rows.begin(); rpos != rows.end(); ++rpos)
       {
         Row r = (*rpos->get());
         
-        std::list<boost::shared_ptr<Glyph>>::iterator brpos = r.end();
+        std::list<std::shared_ptr<Glyph>>::iterator brpos = r.end();
 
         if(s->m_wrap == _T("even"))
         {
           int fullwidth = 0;
 
-          for(std::list<boost::shared_ptr<Glyph>>::iterator gpos = r.begin(); gpos != r.end(); ++gpos)
+          for(std::list<std::shared_ptr<Glyph>>::iterator gpos = r.begin(); gpos != r.end(); ++gpos)
           {
             Glyph g = (*gpos->get());
             fullwidth += g.width + g.spacing;
@@ -327,7 +327,7 @@ namespace ssf
 
         int width = 0;
 
-        for(std::list<boost::shared_ptr<Glyph>>::iterator gpos = r.begin(); gpos != r.end(); ++gpos)
+        for(std::list<std::shared_ptr<Glyph>>::iterator gpos = r.begin(); gpos != r.end(); ++gpos)
         {
           Glyph g = (*gpos->get());
 
@@ -336,7 +336,7 @@ namespace ssf
           if((brpos != r.end()) && abs(width) > maxwidth && g.c != Text::SP)
           {
             row.reset(DNew Row());
-            std::list<boost::shared_ptr<Glyph>>::iterator next = brpos;
+            std::list<std::shared_ptr<Glyph>>::iterator next = brpos;
             next++;
             do {row->push_front(*(brpos--));} while(brpos != r.begin());
             rows.insert(rpos, row); // TODO: Insert before
@@ -360,7 +360,7 @@ namespace ssf
 
     // trim rows
 
-    for(std::list<boost::shared_ptr<Row>>::iterator pos = rows.begin(); pos != rows.end(); ++pos)
+    for(std::list<std::shared_ptr<Row>>::iterator pos = rows.begin(); pos != rows.end(); ++pos)
     {
       Row r = (*pos->get());
 
@@ -377,11 +377,11 @@ namespace ssf
     int fill_id = 0;
     int fill_width = 0;
 
-    for(std::list<boost::shared_ptr<Row>>::iterator pos = rows.begin(); pos != rows.end(); ++pos)
+    for(std::list<std::shared_ptr<Row>>::iterator pos = rows.begin(); pos != rows.end(); ++pos)
     {
       Row r = (*pos->get());
 
-      std::list<boost::shared_ptr<Glyph>>::iterator gpos = r.begin();
+      std::list<std::shared_ptr<Glyph>>::iterator gpos = r.begin();
       while(gpos != r.end())
       {
         Glyph g = (*gpos->get()); gpos++;
@@ -421,7 +421,7 @@ namespace ssf
     if(s->m_direction.secondary == _T("left") || s->m_direction.secondary == _T("up"))
       rows.reverse();
 
-    for(std::list<boost::shared_ptr<Row>>::iterator pos = rows.begin(); pos != rows.end(); ++pos)
+    for(std::list<std::shared_ptr<Row>>::iterator pos = rows.begin(); pos != rows.end(); ++pos)
     {
       Row r = (*pos->get());
 
@@ -432,7 +432,7 @@ namespace ssf
 
       r.width = 0;
 
-      for(std::list<boost::shared_ptr<Glyph>>::iterator gpos = r.begin(); gpos != r.end(); ++gpos)
+      for(std::list<std::shared_ptr<Glyph>>::iterator gpos = r.begin(); gpos != r.end(); ++gpos)
       {
         Glyph g = (*gpos->get());
 
@@ -447,7 +447,7 @@ namespace ssf
         r.border = max(r.border, g.GetBackgroundSize());
       }
 
-      for(std::list<boost::shared_ptr<Glyph>>::iterator gpos = r.begin(); gpos != r.end(); ++gpos)
+      for(std::list<std::shared_ptr<Glyph>>::iterator gpos = r.begin(); gpos != r.end(); ++gpos)
       {
         Glyph g = (*gpos->get());
         g.row_ascent = r.ascent;
@@ -490,7 +490,7 @@ namespace ssf
 
     // continue positioning
 
-    for(std::list<boost::shared_ptr<Row>>::iterator pos = rows.begin(); pos != rows.end(); ++pos)
+    for(std::list<std::shared_ptr<Row>>::iterator pos = rows.begin(); pos != rows.end(); ++pos)
     {
       Row* r = (pos->get());
 
@@ -501,9 +501,9 @@ namespace ssf
       {
         p.y = GetAlignPoint(style.placement, scale, frame, rsize).y;
 
-        for(std::list<boost::shared_ptr<Glyph>>::iterator gpos = r->begin(); gpos != r->end(); ++gpos)
+        for(std::list<std::shared_ptr<Glyph>>::iterator gpos = r->begin(); gpos != r->end(); ++gpos)
         {
-          boost::shared_ptr<Glyph> g = *gpos;
+          std::shared_ptr<Glyph> g = *gpos;
           g->tl.x = p.x + (int)(g->style.placement.offset.x * scale.cx + 0.5) + r->ascent - g->ascent;
           g->tl.y = p.y + (int)(g->style.placement.offset.y * scale.cy + 0.5);
           p.y += g->width + g->spacing;
@@ -516,9 +516,9 @@ namespace ssf
       {
         p.x = GetAlignPoint(style.placement, scale, frame, rsize).x;
 
-        for(std::list<boost::shared_ptr<Glyph>>::iterator gpos = r->begin(); gpos != r->end(); ++gpos)
+        for(std::list<std::shared_ptr<Glyph>>::iterator gpos = r->begin(); gpos != r->end(); ++gpos)
         {
-          boost::shared_ptr<Glyph> g = *gpos;
+          std::shared_ptr<Glyph> g = *gpos;
           g->tl.x = p.x + (int)(g->style.placement.offset.x * scale.cx + 0.5);
           g->tl.y = p.y + (int)(g->style.placement.offset.y * scale.cy + 0.5) + r->ascent - g->ascent;
           p.x += g->width + g->spacing;
@@ -547,7 +547,7 @@ namespace ssf
     pos = rs->m_glyphs.begin();
     while(pos != rs->m_glyphs.end())
     {
-      std::list<boost::shared_ptr<Glyph>>::iterator cur = pos;
+      std::list<std::shared_ptr<Glyph>>::iterator cur = pos;
 
       Glyph* g = pos->get(); pos++;
 
@@ -615,7 +615,7 @@ namespace ssf
 
     // shadow
 
-    std::list<boost::shared_ptr<Glyph>>::const_iterator pos = m_glyphs.begin();
+    std::list<std::shared_ptr<Glyph>>::const_iterator pos = m_glyphs.begin();
     while(pos != m_glyphs.end())
     {
       Glyph g = (*pos->get()); ++pos;

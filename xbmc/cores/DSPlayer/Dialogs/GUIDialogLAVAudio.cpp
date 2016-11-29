@@ -83,7 +83,7 @@
 using namespace std;
 
 CGUIDialogLAVAudio::CGUIDialogLAVAudio()
-  : CGUIDialogSettingsManualBase(WINDOW_DIALOG_LAVAUDIO, "VideoOSDSettings.xml")
+  : CGUIDialogSettingsManualBase(WINDOW_DIALOG_LAVAUDIO, "DialogSettings.xml")
 {
   m_allowchange = true;
 }
@@ -99,20 +99,15 @@ void CGUIDialogLAVAudio::OnInitWindow()
   HideUnused();
 }
 
-void CGUIDialogLAVAudio::OnDeinitWindow(int nextWindowID)
-{
-  CGUIDialogSettingsManualBase::OnDeinitWindow(nextWindowID);
-}
-
-void CGUIDialogLAVAudio::Save()
-{
-}
-
 void CGUIDialogLAVAudio::SetupView()
 {
   CGUIDialogSettingsManualBase::SetupView();
 
   SetHeading(55078);
+
+  SET_CONTROL_HIDDEN(CONTROL_SETTINGS_OKAY_BUTTON);
+  SET_CONTROL_HIDDEN(CONTROL_SETTINGS_CUSTOM_BUTTON);
+  SET_CONTROL_LABEL(CONTROL_SETTINGS_CANCEL_BUTTON, 15067);
 }
 
 void CGUIDialogLAVAudio::FlagsToBool(int flags)
@@ -240,12 +235,12 @@ void CGUIDialogLAVAudio::InitializeSettings()
   // MIXER
   AddToggle(groupMixer, LAVAUDIO_MIXINGENABLED, 81013, 0, lavSettings.audio_bMixingEnabled);
   entries.clear();
-  entries.push_back(make_pair(81015, 4));
-  entries.push_back(make_pair(81016, 3));
-  entries.push_back(make_pair(81017, 1539));
-  entries.push_back(make_pair(81018, 63));
-  entries.push_back(make_pair(81019, 1807));
-  entries.push_back(make_pair(81020, 1599));
+  entries.emplace_back(81015, 4);
+  entries.emplace_back(81016, 3);
+  entries.emplace_back(81017, 1539);
+  entries.emplace_back(81018, 63);
+  entries.emplace_back(81019, 1807);
+  entries.emplace_back(81020, 1599);
   AddList(groupMixer, LAVAUDIO_MIXINGLAYOUT, 81014, 0, lavSettings.audio_dwMixingLayout, entries, 81014);
   AddSlider(groupMixer, LAVAUDIO_MIXINGCENTER, 81021, 0, DWToFloat(lavSettings.audio_dwMixingCenterLevel), "%1.2f", 0.0f, 0.01f, 1.00f);
   AddSlider(groupMixer, LAVAUDIO_MIXINGSURROUND, 81022, 0, DWToFloat(lavSettings.audio_dwMixingSurroundLevel), "%1.2f", 0.0f, 0.01f, 1.00f);
@@ -259,9 +254,9 @@ void CGUIDialogLAVAudio::InitializeSettings()
 
   // ENCODINGS
   entries.clear();
-  entries.push_back(make_pair(81028, 0));
-  entries.push_back(make_pair(81029, 1));
-  entries.push_back(make_pair(81030, 2));
+  entries.emplace_back(81028, 0);
+  entries.emplace_back(81029, 1);
+  entries.emplace_back(81030, 2);
   AddList(groupEncoding, LAVAUDIO_MIXINGMODE, 81027, 0, lavSettings.audio_dwMixingMode, entries, 81027);
 
   // BUTTON RESET

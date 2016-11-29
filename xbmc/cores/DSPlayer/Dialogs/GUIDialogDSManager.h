@@ -47,7 +47,9 @@ enum xmlType {
   FILTERSCONFIG,
   HOMEFILTERSCONFIG,
   SHADERS,
-  PLAYERCOREFACTORY
+  PLAYERCOREFACTORY,
+  MADVRSETTINGS,
+  HOMEMADVRSETTINGS
 };
 
 class DSConfigList
@@ -72,6 +74,7 @@ class CGUIDialogDSManager
 {
 public:
   CGUIDialogDSManager();
+  virtual ~CGUIDialogDSManager();
 
   static CGUIDialogDSManager* Get();
   static void Destroy()
@@ -80,12 +83,10 @@ public:
     m_pSingleton = NULL;
   }
 
-  void SetisNew(bool b) { m_isNew = b; };
-  bool GetisNew() { return m_isNew; };
-  void SetConfigIndex(int index)  { m_configIndex = index; };
-  int GetConfigIndex() { return m_configIndex; };
+  bool GetNew() { return m_bNew; };  
+  void SetConfig(bool bNew, int iIndex)  { m_bNew = bNew;  m_iIndex = iIndex; };
 
-  void InitConfig(std::vector<DSConfigList *> &configList, ConfigType type, CStdString strSetting, int label, CStdString strAttr = "", CStdString strNodeName = "", StringSettingOptionsFiller filler = NULL, int subNode = 0, CStdString strNodeList = "");
+  void InitConfig(std::vector<DSConfigList *> &configList, ConfigType type, const std::string &strSetting, int label, const std::string &strAttr = "", const std::string &strNodeName = "", StringSettingOptionsFiller filler = NULL, int subNode = 0, const std::string &strNodeList = "");
   void ResetValue(std::vector<DSConfigList *>& configList);
   void LoadDsXML(xmlType type, TiXmlElement* &pNode, bool forceCreate = false);
   void SaveDsXML(xmlType type);
@@ -97,16 +98,16 @@ public:
   static void BoolOptionFiller(const CSetting *setting, std::vector< std::pair<std::string, std::string> > &list, std::string &current, void *data);
   static void PriorityOptionFiller(const CSetting *setting, std::vector< std::pair<std::string, std::string> > &list, std::string &current, void *data);
   static bool compare_by_word(const DynamicStringSettingOption& lhs, const DynamicStringSettingOption& rhs);
-  std::vector<DynamicStringSettingOption> GetFilterList(xmlType type);
-  TiXmlElement* KeepSelectedNode(TiXmlElement* pNode, CStdString subNodeName);
-  bool FindPrepend(TiXmlElement* &pNode, CStdString xmlNode);
+  void GetFilterList(xmlType type, std::vector<DynamicStringSettingOption> &list);
+  TiXmlElement* KeepSelectedNode(TiXmlElement* pNode, const std::string &subNodeName);
+  bool FindPrepend(TiXmlElement* &pNode, const std::string &xmlNode);
 
 protected:
 
   static CGUIDialogDSManager* m_pSingleton;
 
-  bool m_isNew;
-  int m_configIndex;
+  bool m_bNew;
+  int m_iIndex;
   CXBMCTinyXML m_XML;
 
 };

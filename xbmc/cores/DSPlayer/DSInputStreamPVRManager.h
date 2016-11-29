@@ -27,7 +27,6 @@
 #endif
 
 #include "filesystem/IFile.h"
-#include "filesystem/ILiveTV.h"
 #include "DSPlayer.h"
 
 #include "PVR/DSPVRBackend.h"
@@ -40,9 +39,6 @@ using namespace PVR;
 class CDSInputStreamPVRManager
 {
   CDSPlayer             *m_pPlayer;
-  IFile                 *m_pFile;
-  ILiveTVInterface	    *m_pLiveTV;
-  IRecordable           *m_pRecordable;
   CDSPVRBackend         *m_pPVRBackend;
 
   bool              CloseAndOpenFile(const CURL& url);
@@ -67,6 +63,9 @@ public:
 
   uint64_t    GetTotalTime();
   uint64_t    GetTime();
+protected:
+  std::string TranslatePVRFilename(const std::string& pathFile);
+  bool m_isRecording;
 };
 
 extern CDSInputStreamPVRManager* g_pPVRStream;

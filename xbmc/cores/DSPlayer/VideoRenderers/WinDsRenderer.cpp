@@ -38,6 +38,7 @@
 #include "settings/DisplaySettings.h"
 #include "settings/MediaSettings.h"
 #include "DSRendererCallback.h"
+#include "guilib\GraphicContext.h"
 
 CWinDsRenderer::CWinDsRenderer():
   m_bConfigured(false), m_paintCallback(NULL)
@@ -74,10 +75,8 @@ bool CWinDsRenderer::Configure(unsigned int width, unsigned int height, unsigned
   // calculate the input frame aspect ratio
   CalculateFrameAspectRatio(d_width, d_height);
 
-  ChooseBestResolution(fps);
-
   SetViewMode(CMediaSettings::GetInstance().GetCurrentVideoSettings().m_ViewMode);
-  ManageDisplay();
+  ManageRenderArea();
 
   m_bConfigured = true;
 
@@ -92,8 +91,10 @@ void CWinDsRenderer::Reset()
 
 void CWinDsRenderer::Update()
 {
-  if (!m_bConfigured) return;
-  ManageDisplay();
+  if (!m_bConfigured) 
+    return;
+
+  ManageRenderArea();
 }
 
 bool CWinDsRenderer::RenderCapture(CRenderCapture* capture)
@@ -133,25 +134,7 @@ bool CWinDsRenderer::RenderCapture(CRenderCapture* capture)
   return succeeded;
 }
 
-
-RESOLUTION CWinDsRenderer::ChooseBestMadvrResolution(float fps)
-{
-  if (fps == 0.0) return (RESOLUTION)0;
-
-  float weight;
-  if (!FindResolutionFromOverride(fps, weight, false)) //find a refreshrate from overrides
-  {
-    if (!FindResolutionFromOverride(fps, weight, true))//if that fails find it from a fallback
-      FindResolutionFromFpsMatch(fps, weight);//if that fails use automatic refreshrate selection
-  }
-
-  CLog::Log(LOGNOTICE, "Display resolution for madVR ADJUST : %s (%d) (weight: %.3f)",
-    g_graphicsContext.GetResInfo(m_resolution).strMode.c_str(), m_resolution, weight);
-
-  return m_resolution;
-}
-
-void CWinDsRenderer::RenderUpdate(bool clear, DWORD flags, DWORD alpha)
+void CWinDsRenderer::RenderUpdate(bool clear, unsigned int flags, unsigned int alpha)
 {
   if (clear)
     g_graphicsContext.Clear(m_clearColour);
@@ -166,7 +149,7 @@ void CWinDsRenderer::RenderUpdate(bool clear, DWORD flags, DWORD alpha)
 
   CSingleLock lock(g_graphicsContext);
 
-  ManageDisplay();
+  ManageRenderArea();
 
   Render(flags);
 }
@@ -175,24 +158,20 @@ void CWinDsRenderer::Flush()
 {
   PreInit();
   SetViewMode(CMediaSettings::GetInstance().GetCurrentVideoSettings().m_ViewMode);
-  ManageDisplay();
+  ManageRenderArea();
 
   m_bConfigured = true;
 }
 
-unsigned int CWinDsRenderer::PreInit()
+void CWinDsRenderer::PreInit()
 {
   CSingleLock lock(g_graphicsContext);
   m_bConfigured = false;
-
   UnInit();
-  m_resolution = CDisplaySettings::GetInstance().GetCurrentResolution();
-  if ( m_resolution == RES_WINDOW )
-    m_resolution = RES_DESKTOP;
 
   // setup the background colour
-  m_clearColour = (g_advancedSettings.m_videoBlackBarColour & 0xff) * 0x010101;
-  return 0;
+  m_clearColour = g_Windowing.UseLimitedColor() ? (16 * 0x010101) : 0;
+  return;
 }
 
 
@@ -211,10 +190,6 @@ void CWinDsRenderer::Render(DWORD flags)
 
   if (m_paintCallback)
     m_paintCallback->OnPaint(m_destRect);
-}
-
-void CWinDsRenderer::AutoCrop(bool bCrop)
-{
 }
 
 void CWinDsRenderer::RegisterCallback(IPaintCallback *callback)
@@ -236,16 +211,6 @@ inline void CWinDsRenderer::OnAfterPresent()
 EINTERLACEMETHOD CWinDsRenderer::AutoInterlaceMethod()
 {
     return VS_INTERLACEMETHOD_NONE;
-}
-
-bool CWinDsRenderer::Supports(EDEINTERLACEMODE mode)
-{
-  if(mode == VS_DEINTERLACEMODE_OFF
-  || mode == VS_DEINTERLACEMODE_AUTO
-  || mode == VS_DEINTERLACEMODE_FORCE)
-    return true;
-
-  return false;
 }
 
 bool CWinDsRenderer::Supports(EINTERLACEMETHOD method)

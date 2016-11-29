@@ -34,7 +34,9 @@ enum SHAREDRENDER_STATE
 class CRenderWait
 {
 public:
+  CRenderWait();
   void Wait(int ms);
+  void Lock();
   void Unlock();
   XbmcThreads::ConditionVariable m_presentevent;
   CCriticalSection m_presentlock;
@@ -79,7 +81,7 @@ protected:
   bool m_bGuiVisible;
   bool m_bGuiVisibleOver;
   CRenderWait m_kodiWait;
-  CCritSec m_dsLock;
+  CRenderWait m_dsWait;
 
   // stored DSPlayer Renderer device state
   IDirect3DVertexShader9* m_pOldVS = nullptr;

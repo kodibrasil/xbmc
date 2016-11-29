@@ -51,7 +51,6 @@
 #include "Filters/IffdshowBase.h"
 #include "Filters/IffdshowDecAudio.h"
 
-#include <boost/shared_ptr.hpp>
 #include <cassert>
 
 #define XYVSFILTER_SUB_EXTERNAL 6590018
@@ -205,11 +204,14 @@ public:
   void GetSubfilterName(int iStream, CStdString &strStreamName);
   bool GetSubfilterVisible();
   void SetSubfilterVisible(bool bVisible);
+  bool SetSubfilter(const std::string &sTrackName);
   void SetSubfilter(int iStream);
-  void SelectBestSubtitle();
+  void SelectBestSubtitle(const std::string &fileName = "");
+  void SelectBestAudio();
   int AddSubtitle(const std::string& subFilePath);
-  void SetAVDelay(float fValue = 0.0f);
+  void SetAVDelay(float fValue = 0.0f, int iDisplayerLatency = 0);
   float GetAVDelay();
+  int GetLastAVDelay() { return m_lastDelay; };
   bool SetAudioInterface();
   void resetDelayInterface();
   void SetSubTitleDelay(float fValue = 0.0f);
@@ -229,12 +231,11 @@ public:
   int GetChannels();
   int GetChannels(int istream);
   /// @return The number of bits per sample of the current audio stream
-  int GetBitsPerSample();
+  int GetBitsPerSample(int istream);
   /// @return The sample rate of the current audio stream
-  int GetSampleRate();
   int GetSampleRate(int istream);
   /// @return The ID of the audio codec used in the media file (ie FLAC, MP3, DTS ...)
-  CStdString GetAudioCodecName();
+  CStdString GetAudioCodecName(int istream);
   /// @return The displayname of the audio codec used in the media file (ie FLAC, MP3, DTS ...)
   CStdString GetAudioCodecDisplayName() { int i = GetAudioStream(); return (i == -1) ? "" : m_audioStreams[i]->m_strCodecName; }
   CStdString GetAudioCodecDisplayName(int istream) { return (istream == -1) ? "" : m_audioStreams[istream]->m_strCodecName; }
@@ -273,7 +274,7 @@ public:
   CDSStreamDetailVideo* GetVideoStreamDetail(unsigned int iIndex = 0);
   CDSStreamDetailAudio* GetAudioStreamDetail(unsigned int iIndex = 0);
 
-  boost::shared_ptr<CSubtitleManager> SubtitleManager;
+  std::shared_ptr<CSubtitleManager> SubtitleManager;
 
 protected:
   CStreamsManager(void);
@@ -308,6 +309,7 @@ protected:
   bool m_bIsFFDSAudio;
   float m_InitialAudioDelay;
   float m_InitialSubsDelay;
+  int m_lastDelay;
 
   CDSStreamDetailVideo m_videoStream;
   CCriticalSection m_lock;
@@ -384,8 +386,8 @@ private:
 
   std::vector<CDSStreamDetailSubtitle *> m_subtitleStreams;
   DllLibSubs m_dll;
-  boost::shared_ptr<ISubManager> m_pManager;
-  boost::shared_ptr<ILogImpl> m_Log;
+  std::shared_ptr<ISubManager> m_pManager;
+  std::shared_ptr<ILogImpl> m_Log;
   CStreamsManager* m_pStreamManager;
   bool m_bSubtitlesUnconnected;
   bool m_bSubtitlesVisible;

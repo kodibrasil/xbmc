@@ -102,18 +102,15 @@ public:
     }
 
 #if defined(HAS_UPNP)
-<<<<<<< HEAD
-      case EPC_UPNPPLAYER: pPlayer = new UPNP::CUPnPPlayer(callback, m_id.c_str()); break;
-#endif
-#ifdef HAS_DS_PLAYER
-      case EPC_DSPLAYER: pPlayer = new CDSPlayer(callback); break;
-#endif
-      default: return NULL;
-=======
     else if (m_type.compare("remote") == 0)
     {
       pPlayer = new UPNP::CUPnPPlayer(callback, m_id.c_str());
->>>>>>> upstream/master
+    }
+#endif
+#ifdef HAS_DS_PLAYER
+    else if (m_type.compare("dsplayer") == 0)
+    {
+      pPlayer = new CDSPlayer(callback);
     }
 #endif
     else

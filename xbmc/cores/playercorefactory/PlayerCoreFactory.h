@@ -28,15 +28,15 @@
 #include "threads/CriticalSection.h"
 #include <string>
 
-/*----------------------------------------------------------------------
-|   forward references
-+---------------------------------------------------------------------*/
+// forward references
+
 class TiXmlElement;
 class CFileItem;
 class CPlayerCoreConfig;
 class CPlayerSelectionRule;
 class IPlayer;
 
+<<<<<<< HEAD
 // do not remove mplayer - will break scripts
 enum EPLAYERCORES
 {
@@ -61,6 +61,8 @@ const PLAYERCOREID PCID_PAPLAYER = EPC_PAPLAYER;
 const PLAYERCOREID PCID_DSPLAYER = EPC_DSPLAYER;
 #endif
 
+=======
+>>>>>>> upstream/master
 class CPlayerCoreFactory : public ISettingsHandler
 {
 public:
@@ -68,25 +70,20 @@ public:
 
   virtual void OnSettingsLoaded() override;
 
-  PLAYERCOREID GetPlayerCore(const std::string& strCoreName) const;
-  CPlayerCoreConfig* GetPlayerConfig(const std::string& strCoreName) const;
-  CPlayerCoreConfig* GetPlayerConfig(const PLAYERCOREID eCore) const;
-  std::string GetPlayerName(const PLAYERCOREID eCore) const;
+  IPlayer* CreatePlayer(const std::string& nameId, IPlayerCallback& callback) const;
+  void GetPlayers(const CFileItem& item, std::vector<std::string>&players) const;   //Players supporting the specified file
+  void GetPlayers(std::vector<std::string>&players, bool audio, bool video) const;  //All audio players and/or video players
+  void GetPlayers(std::vector<std::string>&players) const;                          //All players
+  void GetPlayers(std::vector<std::string>&players, std::string &type) const;
+  void GetRemotePlayers(std::vector<std::string>&players) const;                    //All remote players we can attach to
+  std::string GetPlayerType(const std::string &player) const;
+  bool PlaysAudio(const std::string &player) const;
+  bool PlaysVideo(const std::string &player) const;
 
-  IPlayer* CreatePlayer(const PLAYERCOREID eCore, IPlayerCallback& callback) const;
-  IPlayer* CreatePlayer(const std::string& strCore, IPlayerCallback& callback) const;
-  void GetPlayers( const CFileItem& item, VECPLAYERCORES &vecCores) const;   //Players supporting the specified file
-  void GetPlayers( VECPLAYERCORES &vecCores, bool audio, bool video ) const; //All audio players and/or video players
-  void GetPlayers( VECPLAYERCORES &vecCores ) const;                         //All players
-
-  void GetRemotePlayers( VECPLAYERCORES &vecCores ) const;                   //All remote players we can attach to
-
-  PLAYERCOREID GetDefaultPlayer( const CFileItem& item ) const;
-
-  PLAYERCOREID SelectPlayerDialog(const VECPLAYERCORES &vecCores, float posX = 0, float posY = 0) const;
-  PLAYERCOREID SelectPlayerDialog(float posX, float posY) const;
-
-  void OnPlayerDiscovered(const std::string& id, const std::string& name, EPLAYERCORES core);
+  std::string GetDefaultPlayer(const CFileItem& item) const;
+  std::string SelectPlayerDialog(const std::vector<std::string>&players, float posX = 0, float posY = 0) const;
+  std::string SelectPlayerDialog(float posX, float posY) const;
+  void OnPlayerDiscovered(const std::string& id, const std::string& name);
   void OnPlayerRemoved(const std::string& id);
 
 protected:
@@ -94,11 +91,12 @@ protected:
   CPlayerCoreFactory(const CPlayerCoreFactory&);
   CPlayerCoreFactory& operator=(CPlayerCoreFactory const&);
   virtual ~CPlayerCoreFactory();
+  int GetPlayerIndex(const std::string& strCoreName) const;
+  std::string GetPlayerName(size_t idx) const;
 
-private:
   bool LoadConfiguration(const std::string &file, bool clear);
 
-  std::vector<CPlayerCoreConfig *> m_vecCoreConfigs;
+  std::vector<CPlayerCoreConfig *> m_vecPlayerConfigs;
   std::vector<CPlayerSelectionRule *> m_vecCoreSelectionRules;
   CCriticalSection m_section;
 };

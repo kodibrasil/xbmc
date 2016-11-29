@@ -33,19 +33,37 @@
 #include "utils/log.h"
 #include "URL.h"
 
-#define ENV_PARTIAL_PATH "special://xbmcbin/system/;" \
+#if defined(TARGET_WINDOWS)
+#define ENV_PARTIAL_PATH \
+                 "special://xbmcbin/;" \
+                 "special://xbmcbin/system/;" \
+                 "special://xbmcbin/system/python/;" \
+                 "special://xbmc/;" \
+                 "special://xbmc/system/;" \
+                 "special://xbmc/system/python/"
+#else
+#define ENV_PARTIAL_PATH \
+                 "special://xbmcbin/system/;" \
                  "special://xbmcbin/system/players/mplayer/;" \
+<<<<<<< HEAD
                  "special://xbmcbin/system/players/dvdplayer/;" \
                  "special://xbmcbin/system/players/dsplayer/;" \
+=======
+                 "special://xbmcbin/system/players/VideoPlayer/;" \
+>>>>>>> upstream/master
                  "special://xbmcbin/system/players/paplayer/;" \
                  "special://xbmcbin/system/python/;" \
                  "special://xbmc/system/;" \
                  "special://xbmc/system/players/mplayer/;" \
+<<<<<<< HEAD
                  "special://xbmc/system/players/dvdplayer/;" \
                  "special://xbmc/system/players/dsplayer/;" \
+=======
+                 "special://xbmc/system/players/VideoPlayer/;" \
+>>>>>>> upstream/master
                  "special://xbmc/system/players/paplayer/;" \
                  "special://xbmc/system/python/"
-
+#endif
 #if defined(TARGET_DARWIN)
 #define ENV_PATH ENV_PARTIAL_PATH \
                  ";special://frameworks/"
@@ -241,16 +259,12 @@ LibraryLoader* DllLoaderContainer::LoadDll(const char* sName, bool bLoadSymbols)
 
   LibraryLoader* pLoader;
 #ifdef TARGET_POSIX
-  if (strstr(sName, ".so") != NULL || strstr(sName, ".vis") != NULL || strstr(sName, ".xbs") != NULL
-      || strstr(sName, ".mvis") != NULL || strstr(sName, ".dylib") != NULL || strstr(sName, ".framework") != NULL || strstr(sName, ".pvr") != NULL)
-    pLoader = new SoLoader(sName, bLoadSymbols);
-  else
+  pLoader = new SoLoader(sName, bLoadSymbols);
 #elif defined(TARGET_WINDOWS)
-  if (1)
-    pLoader = new Win32DllLoader(sName);
-  else
+  pLoader = new Win32DllLoader(sName, false);
+#else
+  pLoader = new DllLoader(sName, m_bTrack, false, bLoadSymbols);
 #endif
-    pLoader = new DllLoader(sName, m_bTrack, false, bLoadSymbols);
 
   if (!pLoader)
   {

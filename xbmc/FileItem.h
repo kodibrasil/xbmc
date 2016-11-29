@@ -28,6 +28,7 @@
 #include <utility>
 #include <vector>
 
+#include "addons/IAddon.h"
 #include "guilib/GUIListItem.h"
 #include "GUIPassword.h"
 #include "threads/CriticalSection.h"
@@ -71,6 +72,9 @@ class CVariant;
 class CFileItemList;
 class CCueDocument;
 typedef std::shared_ptr<CCueDocument> CCueDocumentPtr;
+
+class IEvent;
+typedef std::shared_ptr<const IEvent> EventPtr;
 
 /* special startoffset used to indicate that we wish to resume */
 #define STARTOFFSET_RESUME (-1)
@@ -118,6 +122,9 @@ public:
   CFileItem(const PVR::CPVRRecordingPtr& record);
   CFileItem(const PVR::CPVRTimerInfoTagPtr& timer);
   CFileItem(const CMediaSource& share);
+  CFileItem(std::shared_ptr<const ADDON::IAddon> addonInfo);
+  CFileItem(const EventPtr& eventLogEntry);
+
   virtual ~CFileItem(void);
   virtual CGUIListItem *Clone() const { return new CFileItem(*this); };
 
@@ -126,7 +133,7 @@ public:
   bool IsURL(const CURL& url) const;
   const std::string &GetPath() const { return m_strPath; };
   void SetPath(const std::string &path) { m_strPath = path; };
-  bool IsPath(const std::string& path) const;
+  bool IsPath(const std::string& path, bool ignoreURLOptions = false) const;
 
   /*! \brief reset class to it's default values as per construction.
    Free's all allocated memory.
@@ -141,19 +148,19 @@ public:
   virtual bool IsFileItem() const { return true; };
 
   bool Exists(bool bUseCache = true) const;
-  
+
   /*!
-   \brief Check whether an item is an optical media folder or its parent. 
+   \brief Check whether an item is an optical media folder or its parent.
     This will return the non-empty path to the playable entry point of the media
-    one or two levels down (VIDEO_TS.IFO for DVDs or index.bdmv for BDs). 
+    one or two levels down (VIDEO_TS.IFO for DVDs or index.bdmv for BDs).
     The returned path will be empty if folder does not meet this criterion.
-   \return non-empty string if item is optical media folder, empty otherwise. 
+   \return non-empty string if item is optical media folder, empty otherwise.
    */
   std::string GetOpticalMediaPath() const;
   /*!
    \brief Check whether an item is a video item. Note that this returns true for
     anything with a video info tag, so that may include eg. folders.
-   \return true if item is video, false otherwise. 
+   \return true if item is video, false otherwise.
    */
   bool IsVideo() const;
 
@@ -162,7 +169,7 @@ public:
   /*!
    \brief Check whether an item is a picture item. Note that this returns true for
     anything with a picture info tag, so that may include eg. folders.
-   \return true if item is picture, false otherwise. 
+   \return true if item is picture, false otherwise.
    */
   bool IsPicture() const;
   bool IsLyrics() const;
@@ -171,7 +178,7 @@ public:
   /*!
    \brief Check whether an item is an audio item. Note that this returns true for
     anything with a music info tag, so that may include eg. folders.
-   \return true if item is audio, false otherwise. 
+   \return true if item is audio, false otherwise.
    */
   bool IsAudio() const;
 
@@ -201,7 +208,7 @@ public:
   bool IsOnDVD() const;
   bool IsOnLAN() const;
   bool IsHD() const;
-  bool IsNfs() const;  
+  bool IsNfs() const;
   bool IsRemote() const;
   bool IsSmb() const;
   bool IsURL() const;
@@ -347,6 +354,9 @@ public:
     return m_pictureInfoTag;
   }
 
+  bool HasAddonInfo() const { return m_addonInfo != nullptr; }
+  const std::shared_ptr<const ADDON::IAddon> GetAddonInfo() const { return m_addonInfo; }
+
   CPictureInfoTag* GetPictureInfoTag();
 
   /*!
@@ -432,12 +442,18 @@ public:
   void FillInMimeType(bool lookup = true);
 
   /*!
-   \brief Some sources do not support HTTP HEAD request to determine i.e. mime type
-   \return false if HEAD requests have to be avoided
-   */
+  \brief Some sources do not support HTTP HEAD request to determine i.e. mime type
+  \return false if HEAD requests have to be avoided
+  */
   bool ContentLookup() { return m_doContentLookup; };
 
-  /*! 
+  /*!
+   \brief (Re)set the mime-type for internet files if allowed (m_doContentLookup)
+   Some sources do not support HTTP HEAD request to determine i.e. mime type
+   */
+  void SetMimeTypeForInternetFile();
+
+  /*!
    *\brief Lookup via HTTP HEAD request might not be needed, use this setter to
    * disable ContentLookup.
    */
@@ -466,6 +482,13 @@ public:
    \param video video details to use and set
    */
   void SetFromVideoInfoTag(const CVideoInfoTag &video);
+
+  /*! \brief Sets details using the information from the CMusicInfoTag object
+  Sets the musicinfotag and uses its information to set the label and path.
+  \param music music details to use and set
+  */
+  void SetFromMusicInfoTag(const MUSIC_INFO::CMusicInfoTag &music);
+
   /*! \brief Sets details using the information from the CAlbum object
    Sets the album in the music info tag and uses its information to set the
    label and album-specific properties.
@@ -523,6 +546,8 @@ private:
   PVR::CPVRTimerInfoTagPtr m_pvrTimerInfoTag;
   PVR::CPVRRadioRDSInfoTagPtr m_pvrRadioRDSInfoTag;
   CPictureInfoTag* m_pictureInfoTag;
+  std::shared_ptr<const ADDON::IAddon> m_addonInfo;
+  EventPtr m_eventLogEntry;
   bool m_bIsAlbum;
 
   CCueDocumentPtr m_cueDocument;
@@ -586,7 +611,8 @@ public:
   const CFileItemPtr operator[] (const std::string& strPath) const;
   void Clear();
   void ClearItems();
-  void Add(const CFileItemPtr &pItem);
+  void Add(CFileItemPtr item);
+  void Add(CFileItem&& item);
   void AddFront(const CFileItemPtr &pItem, int itemPosition);
   void Remove(CFileItem* pItem);
   void Remove(int iItem);
@@ -618,6 +644,7 @@ public:
   int GetObjectCount() const;
   void FilterCueItems();
   void RemoveExtensions();
+  void SetIgnoreURLOptions(bool ignoreURLOptions);
   void SetFastLookup(bool fastLookup);
   bool Contains(const std::string& fileName) const;
   bool GetFastLookup() const { return m_fastLookup; };
@@ -636,7 +663,7 @@ public:
    The file list may be cached based on which window we're viewing in, as different
    windows will be listing different portions of the same URL (eg viewing music files
    versus viewing video files)
-   
+
    \param windowID id of the window that's loading this list (defaults to 0)
    \return true if we loaded from the cache, false otherwise.
    \sa Save,RemoveDiscCache
@@ -644,11 +671,11 @@ public:
   bool Load(int windowID = 0);
 
   /*! \brief save a CFileItemList to the cache
-   
+
    The file list may be cached based on which window we're viewing in, as different
    windows will be listing different portions of the same URL (eg viewing music files
    versus viewing video files)
-   
+
    \param windowID id of the window that's saving this list (defaults to 0)
    \return true if successful, false otherwise.
    \sa Load,RemoveDiscCache
@@ -658,11 +685,11 @@ public:
   bool CacheToDiscAlways() const { return m_cacheToDisc == CACHE_ALWAYS; }
   bool CacheToDiscIfSlow() const { return m_cacheToDisc == CACHE_IF_SLOW; }
   /*! \brief remove a previously cached CFileItemList from the cache
-   
+
    The file list may be cached based on which window we're viewing in, as different
    windows will be listing different portions of the same URL (eg viewing music files
    versus viewing video files)
-   
+
    \param windowID id of the window whose cache we which to remove (defaults to 0)
    \sa Save,Load
    */
@@ -715,6 +742,7 @@ private:
 
   VECFILEITEMS m_items;
   MAPFILEITEMS m_map;
+  bool m_ignoreURLOptions;
   bool m_fastLookup;
   SortDescription m_sortDescription;
   bool m_sortIgnoreFolders;

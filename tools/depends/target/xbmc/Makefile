@@ -1,6 +1,6 @@
 -include ../../Makefile.include
 
-VERSION.TXT := $(XBMCROOT)/version.txt
+VERSION.TXT := $(CORE_SOURCE_DIR)/version.txt
 APP_NAME=$(shell awk '/APP_NAME/ {print tolower($$2)}' $(VERSION.TXT))
 
 SOURCE=../../../../
@@ -13,7 +13,7 @@ CONFIGURE = cp -f $(CONFIG_SUB) $(CONFIG_GUESS) build-aux/ ;\
   ./configure --prefix=$(PREFIX) $(DEBUG)
 
 ifeq ($(OS),android)
-CONFIGURE += --enable-codec=amcodec --enable-breakpad
+CONFIGURE += --disable-libcec
 endif
 
 ifeq ($(Configuration),Release)
@@ -32,7 +32,7 @@ debug: $(SOURCE)/lib$(APP_NAME).so
 
 $(SOURCE)/lib$(APP_NAME).so:
 	cd $(SOURCE); BOOTSTRAP_FROM_DEPENDS=yes ./bootstrap
-	cd $(SOURCE); echo $(CONFIGURE)
+	cd $(SOURCE); $(CONFIGURE)
 
 ../../Makefile.include:
 	$(error Please run configure)

@@ -25,6 +25,7 @@
 #define AFX_VIDEOSETTINGS_H__562A722A_CD2A_4B4A_8A67_32DE8088A7D3__INCLUDED_
 
 #pragma once
+<<<<<<< HEAD
 
 enum EDEINTERLACEMODE
 {
@@ -132,6 +133,9 @@ typedef enum {
   ViewModeCustom,
   ViewModeStretch16x9Nonlin
 } ViewMode;
+=======
+#include "cores/IPlayer.h"
+>>>>>>> upstream/master
 
 class CVideoSettings
 {
@@ -141,12 +145,15 @@ public:
 
   bool operator!=(const CVideoSettings &right) const;
 
+<<<<<<< HEAD
 #ifdef HAS_DS_PLAYER
   void SetDSPlayerScalingMethod(EDSSCALINGMETHOD method);
   EDSSCALINGMETHOD GetDSPlayerScalingMethod();
 #endif
 
   EDEINTERLACEMODE m_DeinterlaceMode;
+=======
+>>>>>>> upstream/master
   EINTERLACEMETHOD m_InterlaceMethod;
   int m_ScalingMethod;
   int m_ViewMode;   // current view mode
@@ -171,6 +178,7 @@ public:
   int m_ResumeTime;
   int m_StereoMode;
   bool m_StereoInvert;
+  int m_VideoStream;
 
 private:
 };

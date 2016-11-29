@@ -224,6 +224,12 @@ typedef enum {
   XBMCK_GREEN       = 0x148,
   XBMCK_YELLOW      = 0x149,
   XBMCK_BLUE        = 0x14a,
+  XBMCK_ZOOM        = 0x14b,
+  XBMCK_TEXT        = 0x14c,
+  XBMCK_FAVORITES   = 0x14d,
+  XBMCK_HOMEPAGE    = 0x14e,
+  XBMCK_CONFIG      = 0x14f,
+  XBMCK_EPG         = 0x150,
 
   // Add any other keys here
 

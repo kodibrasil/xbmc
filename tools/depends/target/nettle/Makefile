@@ -3,14 +3,12 @@ DEPS= ../../Makefile.include Makefile
 
 # lib name, version
 LIBNAME=nettle
-VERSION=2.7.1
+VERSION=3.2
 SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
 
 ifeq ($(OS),ios)
-  ifneq (,$(findstring 3.,$(XCODE_VERSION)))
-    CONFIGURE_FLAGS=-disable-assembler
-  endif
+  CONFIGURE_FLAGS=-disable-assembler
 endif
 
 # configuration settings

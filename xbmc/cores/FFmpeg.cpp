@@ -20,23 +20,50 @@
 
 #include "cores/FFmpeg.h"
 #include "utils/log.h"
-#include "threads/SharedSection.h"
+#include "threads/CriticalSection.h"
 #include "utils/StringUtils.h"
 #include "threads/Thread.h"
 #include "settings/AdvancedSettings.h"
+#include "URL.h"
 #include <map>
+
+static XbmcThreads::ThreadLocal<CFFmpegLog> CFFmpegLogTls;
+
+void CFFmpegLog::SetLogLevel(int level)
+{
+  CFFmpegLog::ClearLogLevel();
+  CFFmpegLog *log = new CFFmpegLog();
+  log->level = level;
+  CFFmpegLogTls.set(log);
+}
+
+int CFFmpegLog::GetLogLevel()
+{
+  CFFmpegLog* log = CFFmpegLogTls.get();
+  if (!log)
+    return -1;
+  return log->level;
+}
+
+void CFFmpegLog::ClearLogLevel()
+{
+  CFFmpegLog* log = CFFmpegLogTls.get();
+  CFFmpegLogTls.set(nullptr);
+  if (log)
+    delete log;
+}
 
 /* callback for the ffmpeg lock manager */
 int ffmpeg_lockmgr_cb(void **mutex, enum AVLockOp operation)
 {
-  CSharedSection **lock = (CSharedSection **)mutex;
+  CCriticalSection **lock = (CCriticalSection **)mutex;
 
   switch (operation)
   {
     case AV_LOCK_CREATE:
     {
       *lock = NULL;
-      *lock = new CSharedSection();
+      *lock = new CCriticalSection();
       if (*lock == NULL)
         return 1;
       break;
@@ -87,37 +114,59 @@ void ff_avutil_log(void* ptr, int level, const char* format, va_list va)
 
   AVClass* avc= ptr ? *(AVClass**)ptr : NULL;
 
-  if(level >= AV_LOG_DEBUG &&
+  int maxLevel = AV_LOG_WARNING;
+  if (CFFmpegLog::GetLogLevel() > 0)
+    maxLevel = AV_LOG_INFO;
+
+  if (level > maxLevel &&
      !g_advancedSettings.CanLogComponent(LOGFFMPEG))
     return;
-  else if(g_advancedSettings.m_logLevel <= LOG_LEVEL_NORMAL)
+  else if (g_advancedSettings.m_logLevel <= LOG_LEVEL_NORMAL)
     return;
 
   int type;
-  switch(level)
+  switch (level)
   {
-    case AV_LOG_INFO   : type = LOGINFO;    break;
-    case AV_LOG_ERROR  : type = LOGERROR;   break;
-    case AV_LOG_DEBUG  :
-    default            : type = LOGDEBUG;   break;
+    case AV_LOG_INFO:
+      type = LOGINFO;
+      break;
+
+    case AV_LOG_ERROR:
+      type = LOGERROR;
+      break;
+
+    case AV_LOG_DEBUG:
+    default:
+      type = LOGDEBUG;
+      break;
   }
 
   std::string message = StringUtils::FormatV(format, va);
   std::string prefix = StringUtils::Format("ffmpeg[%lX]: ", threadId);
-  if(avc)
+  if (avc)
   {
-    if(avc->item_name)
+    if (avc->item_name)
       prefix += std::string("[") + avc->item_name(ptr) + "] ";
-    else if(avc->class_name)
+    else if (avc->class_name)
       prefix += std::string("[") + avc->class_name + "] ";
   }
 
   buffer += message;
   int pos, start = 0;
-  while( (pos = buffer.find_first_of('\n', start)) >= 0 )
+  while ((pos = buffer.find_first_of('\n', start)) >= 0)
   {
-    if(pos>start)
-      CLog::Log(type, "%s%s", prefix.c_str(), buffer.substr(start, pos-start).c_str());
+    if(pos > start)
+    {
+      std::vector<std::string> toLog = StringUtils::Split(buffer.substr(start, pos - start), "from '");
+      if (toLog.size() > 1)
+      {
+       size_t pos = toLog[1].find_first_of('\'');
+       std::string url = CURL::GetRedacted(toLog[1].substr(0, pos - 1));
+       toLog[0] += url + toLog[1].substr(pos);
+      }
+
+      CLog::Log(type, "%s%s", prefix.c_str(), toLog[0].c_str());
+    }
     start = pos+1;
   }
   buffer.erase(0, start);

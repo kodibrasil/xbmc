@@ -72,6 +72,8 @@ CPowerManager::~CPowerManager()
 
 void CPowerManager::Initialize()
 {
+  SAFE_DELETE(m_instance);
+
 #if defined(TARGET_DARWIN)
   m_instance = new CCocoaPowerSyscall();
 #elif defined(TARGET_ANDROID)
@@ -254,6 +256,7 @@ void CPowerManager::OnSleep()
 #endif
 
   PVR::CPVRManager::GetInstance().SetWakeupCommand();
+  PVR::CPVRManager::GetInstance().OnSleep();
   g_application.SaveFileState(true);
   g_application.StopPlaying();
   g_application.StopShutdownTimer();
@@ -294,6 +297,7 @@ void CPowerManager::OnWake()
   g_application.UpdateLibraries();
   g_weatherManager.Refresh();
 
+  PVR::CPVRManager::GetInstance().OnWake();
   CAnnouncementManager::GetInstance().Announce(System, "xbmc", "OnWake");
 }
 

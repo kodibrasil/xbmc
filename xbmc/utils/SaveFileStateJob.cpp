@@ -34,12 +34,17 @@
 #include "guilib/GUIWindowManager.h"
 #include "GUIUserMessages.h"
 #include "music/MusicDatabase.h"
+<<<<<<< HEAD
 #include "cores/AudioEngine/DSPAddons/ActiveAEDSP.h"
 #ifdef HAS_DS_PLAYER
 #include "DSPlayerDatabase.h"
 #include "settings/Settings.h"
 #include "DSRendererCallback.h"
 #endif
+=======
+#include "cores/AudioEngine/Engines/ActiveAE/AudioDSPAddons/ActiveAEDSP.h"
+#include "xbmc/music/tags/MusicInfoTag.h"
+>>>>>>> upstream/master
 
 bool CSaveFileStateJob::DoWork()
 {
@@ -55,7 +60,7 @@ bool CSaveFileStateJob::DoWork()
       progressTrackingFile = original;
   }
 
-  if (progressTrackingFile != "")
+  if (!progressTrackingFile.empty())
   {
 #ifdef HAS_UPNP
     // checks if UPnP server of this file is available and supports updating
@@ -112,6 +117,14 @@ bool CSaveFileStateJob::DoWork()
 
             m_item.SetOverlayImage(CGUIListItem::ICON_OVERLAY_UNWATCHED, true);
             updateListing = true;
+
+            if (m_item.HasVideoInfoTag())
+            {
+              CVariant data;
+              data["id"] = m_item.GetVideoInfoTag()->m_iDbId;
+              data["type"] = m_item.GetVideoInfoTag()->m_type;
+              ANNOUNCEMENT::CAnnouncementManager::GetInstance().Announce(ANNOUNCEMENT::VideoLibrary, "xbmc", "OnUpdate", data);
+            }
           }
           else
             videodatabase.UpdateLastPlayed(m_item);
@@ -135,7 +148,7 @@ bool CSaveFileStateJob::DoWork()
 
             // UPnP announce resume point changes to clients
             // however not if playcount is modified as that already announces
-            if (m_item.IsVideoDb() && !m_updatePlayCount)
+            if (m_item.HasVideoInfoTag() && !m_updatePlayCount)
             {
               CVariant data;
               data["id"] = m_item.GetVideoInfoTag()->m_iDbId;
@@ -194,30 +207,33 @@ bool CSaveFileStateJob::DoWork()
 
       if (m_updatePlayCount)
       {
-#if 0
-        // Can't write to the musicdatabase while scanning for music info
-        CGUIDialogMusicScan *dialog = (CGUIDialogMusicScan *)g_windowManager.GetWindow(WINDOW_DIALOG_MUSIC_SCAN);
-        if (dialog && !dialog->IsDialogRunning())
-#endif
+        CMusicDatabase musicdatabase;
+        if (!musicdatabase.Open())
         {
-          CMusicDatabase musicdatabase;
-          if (!musicdatabase.Open())
-          {
-            CLog::Log(LOGWARNING, "%s - Unable to open music database. Can not save file state!", __FUNCTION__);
-          }
-          else
-          {
-            // consider this item as played
-            CLog::Log(LOGDEBUG, "%s - Marking audio item %s as listened", __FUNCTION__, redactPath.c_str());
+          CLog::Log(LOGWARNING, "%s - Unable to open music database. Can not save file state!", __FUNCTION__);
+        }
+        else
+        {
+          // consider this item as played
+          CLog::Log(LOGDEBUG, "%s - Marking audio item %s as listened", __FUNCTION__, redactPath.c_str());
 
-            musicdatabase.IncrementPlayCount(m_item);
-            musicdatabase.Close();
+          musicdatabase.IncrementPlayCount(m_item);
+          musicdatabase.Close();
+
+          // UPnP announce resume point changes to clients
+          // however not if playcount is modified as that already announces
+          if (m_item.IsMusicDb())
+          {
+            CVariant data;
+            data["id"] = m_item.GetMusicInfoTag()->GetDatabaseId();
+            data["type"] = m_item.GetMusicInfoTag()->GetType();
+            ANNOUNCEMENT::CAnnouncementManager::GetInstance().Announce(ANNOUNCEMENT::AudioLibrary, "xbmc", "OnUpdate", data);
           }
         }
       }
     }
 
-    if (ActiveAE::CActiveAEDSP::GetInstance().IsProcessing())
+    if (CServiceBroker::GetADSP().IsProcessing())
     {
       std::string redactPath = CURL::GetRedacted(progressTrackingFile);
       CLog::Log(LOGDEBUG, "%s - Saving file state for dsp audio item %s", __FUNCTION__, redactPath.c_str());

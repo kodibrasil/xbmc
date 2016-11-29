@@ -575,6 +575,7 @@ public:
     HRESULT AddData(_In_reads_bytes_(bufferSize) const void *pNewData, _In_ uint32_t bufferSize, _Outptr_ CDataBlock **ppBlock);
 
     // Allocate reserves bufferSize bytes of contiguous memory and returns a pointer to the user
+    _Success_(return != nullptr)
     void*   Allocate(_In_ uint32_t bufferSize, _Outptr_ CDataBlock **ppBlock);
 
     void    EnableAlignment();
@@ -620,7 +621,7 @@ public:
 // The trick is that we never free, so we don't have to keep as much state around
 // Use PRIVATENEW in CEffectLoader
 
-static void* __cdecl operator new(_In_ size_t s, _In_ CDataBlockStore &pAllocator)
+inline void* __cdecl operator new(_In_ size_t s, _In_ CDataBlockStore &pAllocator)
 {
 #ifdef _M_X64
     assert( s <= 0xffffffff );
@@ -628,7 +629,7 @@ static void* __cdecl operator new(_In_ size_t s, _In_ CDataBlockStore &pAllocato
     return pAllocator.Allocate( (uint32_t)s );
 }
 
-static void __cdecl operator delete(_In_opt_ void* p, _In_ CDataBlockStore &pAllocator)
+inline void __cdecl operator delete(_In_opt_ void* p, _In_ CDataBlockStore &pAllocator)
 {
     UNREFERENCED_PARAMETER(p);
     UNREFERENCED_PARAMETER(pAllocator);

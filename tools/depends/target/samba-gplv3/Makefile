@@ -1,11 +1,18 @@
 include ../../Makefile.include
-DEPS= ../../Makefile.include Makefile samba_android.patch
+DEPS= ../../Makefile.include Makefile samba_android.patch no_fork_and_exec.patch
 
 # lib name, version
 LIBNAME=samba
 VERSION=3.6.12
 SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
+
+ifeq ($(OS), ios)
+ifeq ($(CPU), arm64)
+# clang issue with optimizing out functions
+CONFIGURE_EXTRAS= --without-libmsrpc samba_cv_optimize_out_funcation_calls=no ac_cv_func_yp_get_default_domain=no
+endif
+endif
 
 CONFIGURE= cp -f $(CONFIG_SUB) $(CONFIG_GUESS) .; \
           ./configure --prefix=$(PREFIX) \
@@ -24,7 +31,9 @@ CONFIGURE= cp -f $(CONFIG_SUB) $(CONFIG_GUESS) .; \
 # Then xbmc will correctly access smb shares with LFS enabled
 # using the altered libsmbclient.h.
 ifeq ($(OS),android)
-export CFLAGS+=-D_FILE_OFFSET_BITS=64 -D_OFF_T_DEFINED_ -Doff_t=off64_t -Dlseek=lseek64
+ifeq ($(findstring arm64, $(CPU)), arm64)
+export CFLAGS+=-DHAVE_BZERO
+endif
 endif
 
 LIBDYLIB=$(PLATFORM)/source3/bin/libsmbclient.a
@@ -41,6 +50,13 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	cd $(PLATFORM); $(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 ifeq ($(OS),android)
 	cd $(PLATFORM); patch -p0 < ../samba_android.patch
+	cd $(PLATFORM); patch -p1 < ../samba_off64_t.patch
+endif
+ifeq ($(TARGET_PLATFORM),appletvos)
+	cd $(PLATFORM); patch -p0 < ../no_fork_and_exec.patch
+endif
+ifeq ($(OS),osx)
+	sed -ie "s|ifndef HAVE_CLOCK_GETTIME|if !defined(HAVE_CLOCK_GETTIME) \&\& !defined(CLOCK_REALTIME)|" "$(PLATFORM)/lib/replace/system/time.h"
 endif
 	cd $(PLATFORM)/source3; $(CONFIGURE)
 

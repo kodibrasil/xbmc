@@ -3,18 +3,21 @@ DEPS= ../../Makefile.include Makefile
 
 # lib name, version
 LIBNAME=gnutls
-VERSION=3.3.10
+VERSION=3.4.14
 SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.xz
 
 ifeq (darwin, $(findstring darwin, $(HOST)))
 # darwins tar doesn't know about xz - so we need our native version of tar here
 ARCHIVE_TOOL=$(ARCHIVE_TOOL_NATIVE)
+CONFIGURE_HACKS = ac_cv_func_vfork_works=no
+CONFIGURE_HACKS+= ac_cv_func_fork=no
 endif
 
 # configuration settings
 CONFIGURE=cp -f $(CONFIG_SUB) $(CONFIG_GUESS) .; \
-          ./configure --prefix=$(PREFIX) --disable-shared --without-p11-kit --disable-nls --enable-local-libopts
+          ./configure --prefix=$(PREFIX) --disable-shared --without-p11-kit --disable-nls \
+                      --with-included-libtasn1 --enable-local-libopts --disable-doc --disable-tests $(CONFIGURE_HACKS)
 
 LIBDYLIB=$(PLATFORM)/lib/.libs/lib$(LIBNAME).a
 
@@ -30,6 +33,9 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	cd $(PLATFORM); $(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 	cd $(PLATFORM); patch -p0 < ../size-max.patch
 	cd $(PLATFORM); $(CONFIGURE)
+ifeq ($(OS),osx)
+	cd $(PLATFORM); sed -ie "s/HAVE_GETENTROPY/HAVE_GETENTROPY_NOPE/" config.h
+endif
 
 $(LIBDYLIB): $(PLATFORM)
 	$(MAKE) -C $(PLATFORM)

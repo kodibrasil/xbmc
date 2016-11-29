@@ -41,6 +41,9 @@
 #include "utils/URIUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
+#ifdef TARGET_POSIX
+#include "linux/XTimeUtils.h"
+#endif
 
 #include "WakeOnAccess.h"
 
@@ -445,7 +448,7 @@ bool CWakeOnAccess::FindOrTouchHostEntry (const std::string& hostName, WakeUpEnt
     {
       CDateTime now = CDateTime::GetCurrentDateTime();
 
-      if (now > server.nextWake)
+      if (now >= server.nextWake)
       {
         result = server;
         need_wakeup = true;

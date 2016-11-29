@@ -162,8 +162,14 @@ bool CGUIDialogSubtitles::OnMessage(CGUIMessage& message)
 
     CGUIDialog::OnMessage(message);
 
+    return true;
+  }
+  else if (message.GetMessage() == GUI_MSG_WINDOW_RESET)
+  {
+    CGUIDialog::OnMessage(message);
+    
+    // Clear saved subtitles from any previous subtitle search
     ClearSubtitles();
-    ClearServices();
     return true;
   }
   return CGUIDialog::OnMessage(message);
@@ -181,7 +187,10 @@ void CGUIDialogSubtitles::OnInitWindow()
 
   FillServices();
   CGUIWindow::OnInitWindow();
-  Search();
+
+  // Only do a inital search for subtitles if there isn't a saved search
+  if (m_subtitles->IsEmpty())
+    Search();
 }
 
 void CGUIDialogSubtitles::Process(unsigned int currentTime, CDirtyRegionList &dirtyregions)
@@ -231,10 +240,11 @@ void CGUIDialogSubtitles::Process(unsigned int currentTime, CDirtyRegionList &di
 
 void CGUIDialogSubtitles::FillServices()
 {
+  std::string previousService = m_currentService;
   ClearServices();
 
   VECADDONS addons;
-  ADDON::CAddonMgr::GetInstance().GetAddons(ADDON_SUBTITLE_MODULE, addons, true);
+  ADDON::CAddonMgr::GetInstance().GetAddons(addons, ADDON_SUBTITLE_MODULE);
 
   if (addons.empty())
   {
@@ -257,7 +267,8 @@ void CGUIDialogSubtitles::FillServices()
   {
     CFileItemPtr item(CAddonsDirectory::FileItemFromAddon(*addonIt, "plugin://" + (*addonIt)->ID(), false));
     m_serviceItems->Add(item);
-    if ((*addonIt)->ID() == defaultService)
+    // If we don't have used a previous service use the default service, otherwise use the previous service
+    if ((previousService.empty() && (*addonIt)->ID() == defaultService) || (*addonIt)->ID() == previousService)
       service = (*addonIt)->ID();
   }
 
@@ -285,8 +296,11 @@ bool CGUIDialogSubtitles::SetService(const std::string &service)
 
     SET_CONTROL_LABEL(CONTROL_NAMELABEL, currentService->GetLabel());
 
-    std::string icon = URIUtils::AddFileToFolder(currentService->GetProperty("Addon.Path").asString(), "logo.png");
-    SET_CONTROL_FILENAME(CONTROL_NAMELOGO, icon);
+    if (currentService->HasAddonInfo())
+    {
+      std::string icon = URIUtils::AddFileToFolder(currentService->GetAddonInfo()->Path(), "logo.png");
+      SET_CONTROL_FILENAME(CONTROL_NAMELOGO, icon);
+    }
 
     if (g_application.m_pPlayer->GetSubtitleCount() == 0)
       SET_CONTROL_HIDDEN(CONTROL_SUBSEXIST);
@@ -462,9 +476,9 @@ void CGUIDialogSubtitles::OnDownloadComplete(const CFileItemList *items, const s
     if (!subPath.empty())
       strDownloadPath = subPath;
 
-    /* Get item's folder for sub storage, special case for RAR/ZIP items
-       TODO: We need some way to avoid special casing this all over the place
-             for rar/zip (perhaps modify GetDirectory?)
+    /** Get item's folder for sub storage, special case for RAR/ZIP items
+     * @todo We need some way to avoid special casing this all over the place
+     * for rar/zip (perhaps modify GetDirectory?)
      */
     if (URIUtils::IsInRAR(strCurrentFile) || URIUtils::IsInZIP(strCurrentFile))
       strCurrentFilePath = URIUtils::GetDirectory(CURL(strCurrentFile).GetHostName());

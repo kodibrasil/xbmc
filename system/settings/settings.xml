@@ -46,6 +46,21 @@
           </constraints>
           <control type="list" format="string" />
         </setting>
+        <setting id="videoplayer.changerefreshwith" type="integer" parent="videoplayer.adjustrefreshrate" label="55070" help="">
+          <level>1</level>
+          <default>0</default>
+          <constraints>
+            <options>
+              <option label="21475">0</option> <!-- ADJUST_REFRESHRATE_WITH_BOTH -->
+              <option label="55071">1</option> <!-- ADJUST_REFRESHRATE_WITH_DSPLAYER -->
+              <option label="55072">2</option> <!-- ADJUST_REFRESHRATE_WITH_DVDPLAYER -->
+            </options>
+          </constraints>
+          <dependencies>
+            <dependency type="enable" setting="videoplayer.adjustrefreshrate" operator="!is">0</dependency> <!-- ADJUST_REFRESHRATE_OFF -->
+          </dependencies>
+          <control type="list" format="string" />
+        </setting>
         <setting id="videoplayer.usedisplayasclock" type="boolean" label="13510" help="36166">
           <level>1</level>
           <default>false</default>
@@ -59,13 +74,6 @@
             <step>1</step>
             <maximum>20</maximum>
           </constraints>
-<<<<<<< HEAD
-          <dependencies>
-            <dependency type="update" setting="lookandfeel.skin" />
-            <dependency type="enable" setting="dsplayer.definedsarea" operator="is">false</dependency>
-          </dependencies>
-=======
->>>>>>> upstream/master
           <control type="spinner" format="string">
             <formatlabel>14047</formatlabel>
           </control>
@@ -345,51 +353,7 @@
           </constraints>
           <control type="spinner" format="integer" delayed="true"/>
         </setting>
-<<<<<<< HEAD
-        <setting id="videolibrary.tvshowsselectitem" type="integer" label="55067" help="">
-          <level>1</level>
-          <default>0</default> <!-- Never -->
-          <constraints>
-            <options>
-              <option label="20420">0</option> <!-- Never -->
-              <option label="55068">1</option> <!-- Last played TV show -->
-              <option label="55069">2</option> <!-- Last watched TV show -->
-            </options>
-          </constraints>
-          <control type="spinner" format="string" />
-        </setting>
-        <setting id="videolibrary.tvshowsselectfirstunwatcheditem" type="integer" label="21416" help="21466">
-          <level>1</level>
-          <default>0</default> <!-- Never -->
-          <constraints>
-            <options>
-              <option label="20420">0</option> <!-- Never -->
-              <option label="21471">1</option> <!-- On first entry -->
-              <option label="20422">2</option> <!-- Always -->
-            </options>
-          </constraints>
-          <control type="spinner" format="string" />
-        </setting>
-        <setting id="videolibrary.tvshowsincludeallseasonsandspecials" type="integer" parent="videolibrary.tvshowsselectfirstunwatcheditem" label="21472" help="21473">
-          <level>2</level>
-          <default>0</default> <!-- Neither -->
-          <constraints>
-            <options>
-              <option label="21474">0</option> <!-- Neither -->
-              <option label="21475">1</option> <!-- Both -->
-              <option label="21476">2</option> <!-- Just All Seasons -->
-              <option label="21477">3</option> <!-- Just Specials -->
-            </options>
-          </constraints>
-          <dependencies>
-            <dependency type="enable" setting="videolibrary.tvshowsselectfirstunwatcheditem" operator="!is">0</dependency> <!-- Never -->
-          </dependencies>
-          <control type="spinner" format="string" />
-        </setting>
-        <setting id="videolibrary.showallitems" type="boolean" label="38011" help="38012">
-=======
         <setting id="videoplayer.quitstereomodeonstop" type="boolean" label="36526" help="36538">
->>>>>>> upstream/master
           <level>2</level>
           <default>true</default>
           <control type="toggle" />
@@ -448,42 +412,9 @@
           </control>
         </setting>
       </group>
-<<<<<<< HEAD
-      <group id="3">
-        <setting id="videoplayer.adjustrefreshrate" type="integer" label="170" help="36164">
-          <level>2</level>
-          <default>0</default> <!-- ADJUST_REFRESHRATE_OFF -->
-          <constraints>
-            <options>
-              <option label="351">0</option> <!-- ADJUST_REFRESHRATE_OFF -->
-              <option label="36035">1</option> <!-- ADJUST_REFRESHRATE_ALWAYS -->
-              <option label="36036">2</option> <!-- ADJUST_REFRESHRATE_ON_STARTSTOP -->
-            </options>
-          </constraints>
-          <control type="list" format="string" />
-        </setting>
-        <setting id="videoplayer.changerefreshwith" type="integer" parent="videoplayer.adjustrefreshrate" label="55070" help="">
-          <level>2</level>
-          <default>0</default>
-          <constraints>
-            <options>
-              <option label="21475">0</option> <!-- ADJUST_REFRESHRATE_WITH_BOTH -->
-              <option label="55071">1</option> <!-- ADJUST_REFRESHRATE_WITH_DSPLAYER -->
-              <option label="55072">2</option> <!-- ADJUST_REFRESHRATE_WITH_DVDPLAYER -->
-            </options>
-          </constraints>
-          <dependencies>
-            <dependency type="enable" setting="videoplayer.adjustrefreshrate" operator="!is">0</dependency> <!-- ADJUST_REFRESHRATE_OFF -->
-          </dependencies>
-          <control type="list" format="string" />
-        </setting>
-        <setting id="videoplayer.pauseafterrefreshchange" type="integer" parent="videoplayer.adjustrefreshrate" label="13550" help="36165">
-          <level>2</level>
-=======
       <group id="2" label="19177">
         <setting id="musicplayer.crossfade" type="integer" label="13314" help="36271">
           <level>1</level>
->>>>>>> upstream/master
           <default>0</default>
           <constraints>
             <minimum label="351">0</minimum>
@@ -956,37 +887,6 @@
         </setting>
       </group>
     </category>
-  </section>
-  <section id="media" label="14211" help="38101">
-    <category id="library" label="14202" help="39004">
-      <group id="1" label="14226">
-        <setting id="source.videos" type="action" label="14242" help="39005">
-          <level>1</level>
-          <control type="button" format="action" />
-        </setting>
-        <setting id="source.music" type="action" label="14243" help="39006">
-          <level>1</level>
-          <control type="button" format="action" />
-        </setting>
-        <setting id="source.pictures" type="action" label="14244" help="39007">
-          <level>1</level>
-          <control type="button" format="action" />
-        </setting>
-      </group>
-      <group id="2" label="14236">
-        <setting id="videolibrary.updateonstartup" type="boolean" label="14245" help="36146">
-          <level>1</level>
-          <default>false</default>
-          <control type="toggle" />
-        </setting>
-        <setting id="videolibrary.backgroundupdate" type="boolean" label="14246" help="36147">
-          <level>1</level>
-          <default>false</default>
-          <control type="toggle" />
-        </setting>
-<<<<<<< HEAD
-      </group>
-    </category>
     <category id="dsplayer" label="55000" help="90025">
       <group id="1">
         <setting id="dsplayer.defaultvideoplayer" type="boolean" label="55031" help="90000">
@@ -1046,6 +946,14 @@
           <dependencies>
             <dependency type="visible" setting="dsplayer.videorenderer" operator="is">madVR</dependency>
             <dependency type="enable" setting="dsplayer.exclusivemode" operator="is">true</dependency>
+          </dependencies>
+          <control type="toggle" />
+        </setting>
+        <setting id="dsplayer.waitkodirendering" parent="dsplayer.videorenderer" type="boolean" label="55073" help="90027">
+          <level>0</level>
+          <default>false</default>
+          <dependencies>
+            <dependency type="visible" setting="dsplayer.videorenderer" operator="is">madVR</dependency>
           </dependencies>
           <control type="toggle" />
         </setting>
@@ -1190,6 +1098,14 @@
         </setting>
       </group>
       <group id="4">
+        <setting id="dsplayer.prefaudiocodec" type="string" label="55096" help="90028">
+          <level>0</level>
+          <default></default>
+          <constraints>
+            <allowempty>true</allowempty>
+          </constraints>
+          <control type="edit" format="string" />
+        </setting>
         <setting id="dsplayer.exsubtitlelanguage" type="string" label="55085" help="36120">
           <level>0</level>
           <default>original</default>
@@ -1307,20 +1223,37 @@
         </setting>
       </group>
     </category>
-    <category id="scrapers" label="0" help="36197">
-      <visible>false</visible>
-      <group id="1">
-        <setting id="scrapers.moviesdefault" type="addon" label="21413" help="36198">
-          <level>4</level>
-          <default>metadata.themoviedb.org</default>
-          <constraints>
-            <addontype>xbmc.metadata.scraper.movies</addontype>
-          </constraints>
-=======
+  </section>
+  <section id="media" label="14211" help="38101">
+    <category id="library" label="14202" help="39004">
+      <group id="1" label="14226">
+        <setting id="source.videos" type="action" label="14242" help="39005">
+          <level>1</level>
+          <control type="button" format="action" />
+        </setting>
+        <setting id="source.music" type="action" label="14243" help="39006">
+          <level>1</level>
+          <control type="button" format="action" />
+        </setting>
+        <setting id="source.pictures" type="action" label="14244" help="39007">
+          <level>1</level>
+          <control type="button" format="action" />
+        </setting>
+      </group>
+      <group id="2" label="14236">
+        <setting id="videolibrary.updateonstartup" type="boolean" label="14245" help="36146">
+          <level>1</level>
+          <default>false</default>
+          <control type="toggle" />
+        </setting>
+        <setting id="videolibrary.backgroundupdate" type="boolean" label="14246" help="36147">
+          <level>1</level>
+          <default>false</default>
+          <control type="toggle" />
+        </setting>
         <setting id="videolibrary.cleanup" type="action" label="14247" help="36148">
           <level>2</level>
           <control type="button" format="action" />
->>>>>>> upstream/master
         </setting>
         <setting id="videolibrary.export" type="action" label="14248" help="36149">
           <level>2</level>
@@ -1520,6 +1453,18 @@
           <dependencies>
             <dependency type="enable" setting="videolibrary.tvshowsselectfirstunwatcheditem" operator="!is">0</dependency> <!-- Never -->
           </dependencies>
+          <control type="spinner" format="string" />
+        </setting>
+        <setting id="videolibrary.lasttvshowsselect" type="integer" label="55067" help="">
+          <level>1</level>
+          <default>-1</default> <!-- Never -->
+          <constraints>
+            <options>
+              <option label="20420">-1</option> <!-- Never -->
+              <option label="55068">0</option> <!-- Last played TV show -->
+              <option label="55069">1</option> <!-- Last watched TV show -->
+            </options>
+          </constraints>
           <control type="spinner" format="string" />
         </setting>
         <setting id="videolibrary.actorthumbs" type="boolean" label="20402" help="36143">
@@ -2496,7 +2441,7 @@
           <level>1</level>
           <default>true</default>
           <dependencies>
-              <dependency type="enable" setting="videoscreen.screen" operator="!is">-1</dependency> <!-- DM_WINDOWED -->
+            <dependency type="enable" setting="videoscreen.screen" operator="!is">-1</dependency> <!-- DM_WINDOWED -->
           </dependencies>
           <control type="toggle" />
         </setting>
@@ -3538,6 +3483,7 @@
           </constraints>
           <dependencies>
             <dependency type="update" setting="lookandfeel.skin" />
+            <dependency type="enable" setting="dsplayer.definedsarea" operator="is">false</dependency>
           </dependencies>
           <control type="spinner" format="string">
             <formatlabel>14047</formatlabel>

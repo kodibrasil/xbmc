@@ -502,7 +502,7 @@ bool CGUIWindowPVRBase::PlayFile(CFileItem *item, bool bPlayMinimized /* = false
          (channel->IsRadio() == g_PVRManager.IsPlayingRadio()))
       {
 #ifdef HAS_DS_PLAYER
-        if (g_advancedSettings.m_bDSPlayerFastChannelSwitching && g_application.GetCurrentPlayer() == PCID_DSPLAYER)
+        if (g_advancedSettings.m_bDSPlayerFastChannelSwitching && g_application.GetCurrentPlayer() == "DSPlayer")
         {
           /* Workaround for MediaPortal addon, running in ffmpeg mode. */
           // Clear StreamURL field - this will allow fast channel switching 

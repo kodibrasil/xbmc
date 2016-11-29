@@ -31,13 +31,9 @@
 #include "TextureManager.h"
 #include "input/InputManager.h"
 #include "GUIWindowManager.h"
-<<<<<<< HEAD
-#include "video/VideoReferenceClock.h"
 #ifdef HAS_DS_PLAYER
 #include "DSRendererCallback.h"
 #endif
-=======
->>>>>>> upstream/master
 
 using namespace KODI::MESSAGING;
 
@@ -407,28 +403,6 @@ void CGraphicContext::SetVideoResolutionInternal(RESOLUTION res, bool forceUpdat
     return;
   }
 
-<<<<<<< HEAD
-  //only pause when switching monitor resolution/refreshrate,
-  //not when switching between fullscreen and windowed or when resizing the window
-  if ((res != RES_DESKTOP && res != RES_WINDOW) || (lastRes != RES_DESKTOP && lastRes != RES_WINDOW))
-  {
-    //pause the player during the refreshrate change
-    int delay = CSettings::GetInstance().GetInt(CSettings::SETTING_VIDEOPLAYER_PAUSEAFTERREFRESHCHANGE);
-#ifdef HAS_DS_PLAYER
-    if (delay > 0 && CSettings::GetInstance().GetInt(CSettings::SETTING_VIDEOPLAYER_ADJUSTREFRESHRATE) != ADJUST_REFRESHRATE_OFF && g_application.m_pPlayer->IsPlayingVideo() && !g_application.m_pPlayer->IsPausedPlayback() && !CDSRendererCallback::Get()->UsingDS(DIRECTSHOW_RENDERER_MADVR))
-#else
-    if (delay > 0 && CSettings::GetInstance().GetInt(CSettings::SETTING_VIDEOPLAYER_ADJUSTREFRESHRATE) != ADJUST_REFRESHRATE_OFF && g_application.m_pPlayer->IsPlayingVideo() && !g_application.m_pPlayer->IsPausedPlayback())
-#endif
-    {
-      g_application.m_pPlayer->Pause();
-      KODI::MESSAGING::ThreadMessage msg{TMSG_MEDIA_UNPAUSE};
-      CDelayedMessage* pauseMessage = new CDelayedMessage(msg, delay * 100);
-      pauseMessage->Create(true);
-    }
-  }
-
-=======
->>>>>>> upstream/master
   if (res >= RES_DESKTOP)
   {
     g_advancedSettings.m_fullScreen = true;
@@ -790,7 +764,7 @@ void CGraphicContext::GetGUIScaling(const RESOLUTION_INFO &res, float &scaleX, f
     }
 
     if ((g_application.m_pPlayer->IsPlaying()
-      && g_application.m_pPlayer->GetCurrentPlayer() == PCID_DSPLAYER)
+      && g_application.m_pPlayer->GetCurrentPlayer() == "dsplayer")
       && CSettings::GetInstance().GetBool(CSettings::SETTING_DSPLAYER_OSDINTOACTIVEAREA))
     {
       g_guiSkinzoom = 0;

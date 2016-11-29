@@ -620,7 +620,7 @@ LRESULT CALLBACK CWinEventsWin32::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
       break;
     case WM_MOUSEMOVE:
 #ifdef HAS_DS_PLAYER
-      if (g_application.GetCurrentPlayer() == PCID_DSPLAYER)
+      if (g_application.GetCurrentPlayer() == "DSPlayer")
       {
         if (g_application.m_pPlayer && g_application.m_pPlayer->IsInMenu())
         {
@@ -637,7 +637,7 @@ LRESULT CALLBACK CWinEventsWin32::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
       return(0);
     case WM_LBUTTONDOWN:
 #ifdef HAS_DS_PLAYER
-      if (g_application.GetCurrentPlayer() == PCID_DSPLAYER)
+      if (g_application.GetCurrentPlayer() == "DSPlayer")
       {
         if (g_application.m_pPlayer && g_application.m_pPlayer->IsInMenu())
         {
@@ -696,6 +696,10 @@ LRESULT CALLBACK CWinEventsWin32::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
       CLog::Log(LOGDEBUG, __FUNCTION__": display change event");  
       if (g_application.GetRenderGUI() && !g_Windowing.IsAlteringWindow() && GET_X_LPARAM(lParam) > 0 && GET_Y_LPARAM(lParam) > 0)  
       {
+#ifdef HAS_DS_PLAYER
+        if (g_application.m_pPlayer->GetCurrentPlayer() == "DSPlayer")
+          return(0);
+#endif
         g_Windowing.UpdateResolutions();
         if (g_advancedSettings.m_fullScreen)  
         {  

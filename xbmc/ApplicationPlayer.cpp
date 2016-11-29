@@ -687,45 +687,6 @@ void CApplicationPlayer::GetSubtitleCapabilities(std::vector<int> &subCaps)
     player->GetSubtitleCapabilities(subCaps);
 }
 
-int  CApplicationPlayer::SeekChapter(int iChapter)
-{
-  std::shared_ptr<IPlayer> player = GetInternal();
-  if (player)
-    return player->SeekChapter(iChapter);
-  else
-    return 0;
-}
-
-void CApplicationPlayer::SetPlaySpeed(float speed)
-{
-  std::shared_ptr<IPlayer> player = GetInternal();
-  if (!player)
-    return;
-
-  if (!IsPlayingAudio() && !IsPlayingVideo())
-    return ;
-
-  SetSpeed(speed);
-  m_speedUpdate.SetExpired();
-}
-
-float CApplicationPlayer::GetPlaySpeed()
-{
-  if (!m_speedUpdate.IsTimePast())
-    return m_fPlaySpeed;
-
-  std::shared_ptr<IPlayer> player = GetInternal();
-  if (player)
-  {
-    m_fPlaySpeed = player->GetSpeed();
-    m_speedUpdate.Set(1000);
-    return m_fPlaySpeed;
-  }
-  else
-    return 0;
-}
-
-<<<<<<< HEAD
 #ifdef HAS_DS_PLAYER
 int CApplicationPlayer::GetEditionsCount()
 {
@@ -787,11 +748,45 @@ void CApplicationPlayer::ShowEditionDlg(bool playStart)
   }
 }
 #endif
+int  CApplicationPlayer::SeekChapter(int iChapter)
+{
+  std::shared_ptr<IPlayer> player = GetInternal();
+  if (player)
+    return player->SeekChapter(iChapter);
+  else
+    return 0;
+}
 
-void CApplicationPlayer::GetGeneralInfo(std::string& strVideoInfo)
-=======
+void CApplicationPlayer::SetPlaySpeed(float speed)
+{
+  std::shared_ptr<IPlayer> player = GetInternal();
+  if (!player)
+    return;
+
+  if (!IsPlayingAudio() && !IsPlayingVideo())
+    return;
+
+  SetSpeed(speed);
+  m_speedUpdate.SetExpired();
+}
+
+float CApplicationPlayer::GetPlaySpeed()
+{
+  if (!m_speedUpdate.IsTimePast())
+    return m_fPlaySpeed;
+
+  std::shared_ptr<IPlayer> player = GetInternal();
+  if (player)
+  {
+    m_fPlaySpeed = player->GetSpeed();
+    m_speedUpdate.Set(1000);
+    return m_fPlaySpeed;
+  }
+  else
+    return 0;
+}
+
 bool CApplicationPlayer::SupportsTempo()
->>>>>>> upstream/master
 {
   std::shared_ptr<IPlayer> player = GetInternal();
   if (player)
@@ -880,26 +875,6 @@ bool CApplicationPlayer::Supports(EINTERLACEMETHOD method)
     return false;
 }
 
-<<<<<<< HEAD
-  if (!IsPlayingAudio() && !IsPlayingVideo())
-    return;
-  if (m_iPlaySpeed == iSpeed)
-    return;
-  if (!CanSeek())
-    return;
-  if (IsPaused())
-  {
-    if (
-      ((m_iPlaySpeed > 1) && (iSpeed > m_iPlaySpeed)) ||
-      ((m_iPlaySpeed < -1) && (iSpeed < m_iPlaySpeed))
-      )
-    {
-      iSpeed = m_iPlaySpeed; // from pause to ff/rw, do previous ff/rw speed
-    }
-    Pause();
-  }
-  m_iPlaySpeed = iSpeed;
-=======
 EINTERLACEMETHOD CApplicationPlayer::GetDeinterlacingMethodDefault()
 {
   std::shared_ptr<IPlayer> player = GetInternal();
@@ -908,7 +883,6 @@ EINTERLACEMETHOD CApplicationPlayer::GetDeinterlacingMethodDefault()
   else
     return EINTERLACEMETHOD::VS_INTERLACEMETHOD_NONE;
 }
->>>>>>> upstream/master
 
 bool CApplicationPlayer::Supports(ESCALINGMETHOD method)
 {

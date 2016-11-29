@@ -65,11 +65,8 @@ class CApplicationPlayer
   int m_iVideoStream;
   XbmcThreads::EndTime m_subtitleStreamUpdate;
   int m_iSubtitleStream;
-<<<<<<< HEAD
-=======
   XbmcThreads::EndTime m_speedUpdate;
   float m_fPlaySpeed;
->>>>>>> upstream/master
 
 public:
   CApplicationPlayer();
@@ -176,8 +173,10 @@ public:
   void  SetVideoStream(int iStream);
   void  SetVolume(float volume);
   bool  SwitchChannel(const PVR::CPVRChannelPtr &channel);
-<<<<<<< HEAD
-  void  ToFFRW(int iSpeed = 0);
+  void  SetSpeed(float speed);
+  bool SupportsTempo();
+
+  void  SetSpeed(int iSpeed);
 
 #ifdef HAS_DS_PLAYER
   int  GetEditionsCount();
@@ -188,11 +187,7 @@ public:
   void ShowEditionDlg(bool playStart);
 #endif
 
-=======
-  void  SetSpeed(float speed);
-  bool SupportsTempo();
-
+  
   protected:
     std::shared_ptr<IPlayer> GetInternal() const;
->>>>>>> upstream/master
 };

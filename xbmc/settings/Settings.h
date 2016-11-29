@@ -391,11 +391,12 @@ public:
   static const std::string CSettings::SETTING_DSPLAYER_DEFAULTVIDEOPLAYER;
   static const std::string CSettings::SETTING_DSPLAYER_AUTOFILTERSETTINGS;
   static const std::string CSettings::SETTING_DSPLAYER_CHANGEREFRESHWITH;
-  static const std::string CSettings::SETTING_DSPLAYER_TVSHOWSELECTITEM;
+  static const std::string CSettings::SETTING_DSPLAYER_LASTTVSHOWSELECT;
   static const std::string CSettings::SETTING_DSPLAYER_MANAGEMADVRWITHKODI;
   static const std::string CSettings::SETTING_DSPLAYER_DELAYMADVRPLAYBACK;
   static const std::string CSettings::SETTING_DSPLAYER_EXCLUSIVEMODE;
   static const std::string CSettings::SETTING_DSPLAYER_EXITMADVRFULLSCREEN;
+  static const std::string CSettings::SETTING_DSPLAYER_WAITKODIRENDERING;
   static const std::string CSettings::SETTING_DSPLAYER_MINTITLELENGTH;
   static const std::string CSettings::SETTING_DSPLAYER_SHOWBDTITLECHOICE;
   static const std::string CSettings::SETTING_DSPLAYER_BDAUTOLOADINDEX;
@@ -405,6 +406,7 @@ public:
   static const std::string CSettings::SETTING_DSPLAYER_VIDEORENDERER;
   static const std::string CSettings::SETTING_DSPLAYER_AUDIORENDERER;
   static const std::string CSettings::SETTING_DSPLAYER_FILTERSMANAGEMENT;
+  static const std::string CSettings::SETTING_DSPLAYER_PREFAUDIOCODEC;
   static const std::string CSettings::SETTING_DSPLAYER_EXSUBTITLELANGUAGE;
   static const std::string CSettings::SETTING_DSPLAYER_OSDINTOACTIVEAREA;
   static const std::string CSettings::SETTING_DSPLAYER_DEFINEDSAREA;

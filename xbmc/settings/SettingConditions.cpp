@@ -183,14 +183,6 @@ bool ProfileLockMode(const std::string &condition, const std::string &value, con
   return CProfilesManager::GetInstance().GetCurrentProfile().getLockMode() == lock;
 }
 
-<<<<<<< HEAD
-#ifdef HAS_DS_PLAYER  
-bool IsWindowsVersionAtLeast(const std::string &condition, const std::string &value, const CSetting *setting, void *data)
-{
-  return g_sysinfo.IsWindowsVersionAtLeast(CSysInfo::WindowsVersionVista);
-}
-#endif
-=======
 bool GreaterThan(const std::string &condition, const std::string &value, const CSetting *setting, void *data)
 {
   if (setting == NULL)
@@ -258,7 +250,6 @@ bool LessThanOrEqual(const std::string &condition, const std::string &value, con
 
   return lhs <= rhs;
 }
->>>>>>> upstream/master
 
 std::set<std::string> CSettingConditions::m_simpleConditions;
 std::map<std::string, SettingConditionCheck> CSettingConditions::m_complexConditions;
@@ -374,16 +365,10 @@ void CSettingConditions::Initialize()
   m_complexConditions.insert(std::pair<std::string, SettingConditionCheck>("profilelockmode",               ProfileLockMode));
   m_complexConditions.insert(std::pair<std::string, SettingConditionCheck>("aesettingvisible",              CAEFactory::IsSettingVisible));
   m_complexConditions.insert(std::pair<std::string, SettingConditionCheck>("codecoptionvisible",            CDVDVideoCodec::IsSettingVisible));
-<<<<<<< HEAD
-#ifdef HAS_DS_PLAYER  
-  m_complexConditions.insert(std::pair<std::string, SettingConditionCheck>("iswindowsversionatleast",       IsWindowsVersionAtLeast));
-#endif;
-=======
   m_complexConditions.insert(std::pair<std::string, SettingConditionCheck>("gt",                            GreaterThan));
   m_complexConditions.insert(std::pair<std::string, SettingConditionCheck>("gte",                           GreaterThanOrEqual));
   m_complexConditions.insert(std::pair<std::string, SettingConditionCheck>("lt",                            LessThan));
   m_complexConditions.insert(std::pair<std::string, SettingConditionCheck>("lte",                           LessThanOrEqual));
->>>>>>> upstream/master
 }
 
 bool CSettingConditions::Check(const std::string &condition, const std::string &value /* = "" */, const CSetting *setting /* = NULL */)

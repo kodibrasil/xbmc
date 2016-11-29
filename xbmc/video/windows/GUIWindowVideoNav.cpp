@@ -54,6 +54,10 @@
 #include "video/dialogs/GUIDialogVideoInfo.h"
 #include "pvr/recordings/PVRRecording.h"
 
+#ifdef HAS_DS_PLAYER
+#include "DSPlayerDatabase.h"
+#endif
+
 #include <utility>
 
 using namespace XFILE;
@@ -203,35 +207,41 @@ bool CGUIWindowVideoNav::OnMessage(CGUIMessage& message)
 }
 
 #ifdef HAS_DS_PLAYER
+void CGUIWindowVideoNav::OnInitWindow()
+{
+  CGUIWindowVideoBase::OnInitWindow();
+
+  // Check if we should select the last played/watched tvshow
+  int iIndex = GetSettingSelecTvShow();
+  if (iIndex > -1)
+    m_viewControl.SetSelectedItem(iIndex);
+}
+
 int CGUIWindowVideoNav::GetSettingSelecTvShow()
 {
-  int res = -1;
-  int iValue = CSettings::GetInstance().GetInt(CSettings::SETTING_DSPLAYER_TVSHOWSELECTITEM);
+  int iValue = CSettings::GetInstance().GetInt(CSettings::SETTING_DSPLAYER_LASTTVSHOWSELECT);
   
-  if (m_vecItems->IsVideoDb() && iValue > SelectTvShowItem::NOSELECT)
+  if (m_vecItems->IsVideoDb() && iValue > -1)
   {
     bool bIsItemSelected = (m_viewControl.GetSelectedItem() > 0);
     NODE_TYPE nodeType = CVideoDatabaseDirectory::GetDirectoryChildType(m_vecItems->GetPath());
 
     if (nodeType == NODE_TYPE_TITLE_TVSHOWS && !bIsItemSelected)
     {
-      int idShow = m_database.GetLastTvShowId(iValue);
-      int iItems = m_vecItems->Size();
-      if (iItems)
-      {
-        for (int i = 0; i < iItems; i++)
-        {
-          CFileItemPtr pItem = m_vecItems->Get(i);
-          if (idShow == pItem->GetVideoInfoTag()->m_iDbId)
-          {
-            res = i;
-            break;
-          }
-        }
-      }
+       CDSPlayerDatabase dspdb;
+       if (!dspdb.Open())
+         return -1;
+       int idShow = dspdb.GetLastTvShowId(iValue);
+       dspdb.Close();
+
+       for (int i = 0; i < m_vecItems->Size(); ++i)
+       {
+         if (idShow == m_vecItems->Get(i)->GetVideoInfoTag()->m_iDbId)
+           return i;
+       }
     }
   }
-  return res;
+  return -1;
 }
 #endif
 
@@ -321,22 +331,12 @@ bool CGUIWindowVideoNav::Update(const std::string &strDirectory, bool updateFilt
   if (!CGUIWindowVideoBase::Update(strDirectory, updateFilterPath))
     return false;
 
-<<<<<<< HEAD
-#ifdef HAS_DS_PLAYER
-  // Check if we should select the last played/watched tvshow
-  int iIndex = GetSettingSelecTvShow();
-  if (iIndex > -1)
-    m_viewControl.SetSelectedItem(iIndex);
-#endif
-
-=======
   SelectFirstUnwatched();
 
   return true;
 }
 
 void CGUIWindowVideoNav::SelectFirstUnwatched() {
->>>>>>> upstream/master
   // Check if we should select the first unwatched item
   SelectFirstUnwatchedItem selectFirstUnwatched = GetSettingSelectFirstUnwatchedItem();
   if (selectFirstUnwatched != SelectFirstUnwatchedItem::NEVER)

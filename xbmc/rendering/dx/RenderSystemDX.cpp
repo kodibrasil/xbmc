@@ -33,27 +33,21 @@
 #include "threads/SingleLock.h"
 #include "utils/MathUtils.h"
 #include "utils/log.h"
-<<<<<<< HEAD
-#include "win32/WIN32Util.h"
-#include "win32/dxerr.h"
-#ifdef HAS_DS_PLAYER
-#include "DSPlayer.h"
-#endif
-
-=======
 #include "platform/win32/dxerr.h"
 #include "utils/SystemInfo.h"
 #pragma warning(disable: 4091)
 #include <d3d10umddi.h>
 #pragma warning(default: 4091)
 #include <algorithm>
+#ifdef HAS_DS_PLAYER
+#include "DSPlayer.h"
+#endif
 
 #ifndef _M_X64
 #pragma comment(lib, "EasyHook32.lib")
 #else
 #pragma comment(lib, "EasyHook64.lib")
 #endif
->>>>>>> upstream/master
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "dxguid.lib")

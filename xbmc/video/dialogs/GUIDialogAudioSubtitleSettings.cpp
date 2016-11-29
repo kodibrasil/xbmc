@@ -99,13 +99,7 @@ void CGUIDialogAudioSubtitleSettings::FrameMove()
     const CVideoSettings &videoSettings = CMediaSettings::GetInstance().GetCurrentVideoSettings();
 
     // these settings can change on the fly
-<<<<<<< HEAD
-
-
-    // TODO (needs special handling): m_settingsManager->SetInt(SETTING_AUDIO_STREAM, g_application.m_pPlayer->GetAudioStream());
-=======
     //! @todo (needs special handling): m_settingsManager->SetInt(SETTING_AUDIO_STREAM, g_application.m_pPlayer->GetAudioStream());
->>>>>>> upstream/master
     if (!m_dspEnabled) //< The follow settings are on enabled DSP system separated to them and need no update here.
     {
 #ifdef HAS_DS_PLAYER
@@ -120,18 +114,13 @@ void CGUIDialogAudioSubtitleSettings::FrameMove()
 
     //! @todo m_settingsManager->SetBool(SETTING_SUBTITLE_ENABLE, g_application.m_pPlayer->GetSubtitleVisible());
     //   \-> Unless subtitle visibility can change on the fly, while Dialog is up, this code should be removed.
-<<<<<<< HEAD
 #ifdef HAS_DS_PLAYER
     if (m_bIsDSPlayer)
       m_settingsManager->SetNumber(SETTING_SUBTITLE_DELAY, -videoSettings.m_SubtitleDelay);
     else
 #endif
       m_settingsManager->SetNumber(SETTING_SUBTITLE_DELAY, videoSettings.m_SubtitleDelay);
-    // TODO (needs special handling): m_settingsManager->SetInt(SETTING_SUBTITLE_STREAM, g_application.m_pPlayer->GetSubtitle());
-=======
-    m_settingsManager->SetNumber(SETTING_SUBTITLE_DELAY, videoSettings.m_SubtitleDelay);
     //! @todo (needs special handling): m_settingsManager->SetInt(SETTING_SUBTITLE_STREAM, g_application.m_pPlayer->GetSubtitle());
->>>>>>> upstream/master
   }
 
   CGUIDialogSettingsManualBase::FrameMove();
@@ -323,7 +312,7 @@ void CGUIDialogAudioSubtitleSettings::InitializeSettings()
   CGUIDialogSettingsManualBase::InitializeSettings();
 
 #ifdef HAS_DS_PLAYER
-  m_bIsDSPlayer = (g_application.GetCurrentPlayer() == PCID_DSPLAYER);
+  m_bIsDSPlayer = (g_application.GetCurrentPlayer() == "DSPlayer");
 #endif
 
   CSettingCategory *category = AddCategory("audiosubtitlesettings", -1);
@@ -530,7 +519,7 @@ void CGUIDialogAudioSubtitleSettings::AudioStreamsOptionFiller(const CSetting *s
       strItem = StringUtils::Format("%s - %s", strLanguage.c_str(), info.name.c_str());
 
 #ifdef HAS_DS_PLAYER
-    if (g_application.GetCurrentPlayer() == PCID_DSPLAYER)
+    if (g_application.GetCurrentPlayer() == "DSPlayer")
       strItem = info.name;
 #endif
 
@@ -567,7 +556,7 @@ void CGUIDialogAudioSubtitleSettings::SubtitleStreamsOptionFiller(const CSetting
       strItem = StringUtils::Format("%s - %s", strLanguage.c_str(), info.name.c_str());
 
 #ifdef HAS_DS_PLAYER
-    if (g_application.GetCurrentPlayer() == PCID_DSPLAYER)
+    if (g_application.GetCurrentPlayer() == "DSPlayer")
       strItem = info.name;
 #endif
 
@@ -596,7 +585,7 @@ std::string CGUIDialogAudioSubtitleSettings::SettingFormatterDelay(const CSettin
     return StringUtils::Format(g_localizeStrings.Get(22003).c_str(), 0.0);
 
 #ifdef HAS_DS_PLAYER
-  if (g_application.GetCurrentPlayer() == PCID_DSPLAYER)
+  if (g_application.GetCurrentPlayer() == "DSPlayer")
   {
     if (fValue < 0)
       return StringUtils::Format(g_localizeStrings.Get(22005).c_str(), fabs(fValue));
@@ -663,7 +652,7 @@ void CGUIDialogAudioSubtitleSettings::ShowAudioSelector()
   pDlg->SetSelected(selected);
   pDlg->Open();
 
-  selected = pDlg->GetSelectedLabel();
+  selected = pDlg->GetSelectedItem();
 
   if (selected != -1 && g_application.m_pPlayer->GetAudioStream() != selected)
   {
@@ -709,7 +698,7 @@ void CGUIDialogAudioSubtitleSettings::ShowSubsSelector()
   pDlg->EnableButton(true, CMediaSettings::GetInstance().GetCurrentVideoSettings().m_SubtitleOn ? 55058 : 13397);
   pDlg->Open();
 
-  selected = pDlg->GetSelectedLabel();
+  selected = pDlg->GetSelectedItem();
 
   if (selected != -1 && g_application.m_pPlayer->GetSubtitle() != selected)
   {

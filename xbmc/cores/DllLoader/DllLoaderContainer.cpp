@@ -45,22 +45,14 @@
 #define ENV_PARTIAL_PATH \
                  "special://xbmcbin/system/;" \
                  "special://xbmcbin/system/players/mplayer/;" \
-<<<<<<< HEAD
-                 "special://xbmcbin/system/players/dvdplayer/;" \
-                 "special://xbmcbin/system/players/dsplayer/;" \
-=======
                  "special://xbmcbin/system/players/VideoPlayer/;" \
->>>>>>> upstream/master
+                 "special://xbmcbin/system/players/dsplayer/;" \
                  "special://xbmcbin/system/players/paplayer/;" \
                  "special://xbmcbin/system/python/;" \
                  "special://xbmc/system/;" \
                  "special://xbmc/system/players/mplayer/;" \
-<<<<<<< HEAD
-                 "special://xbmc/system/players/dvdplayer/;" \
-                 "special://xbmc/system/players/dsplayer/;" \
-=======
                  "special://xbmc/system/players/VideoPlayer/;" \
->>>>>>> upstream/master
+                 "special://xbmc/system/players/dsplayer/;" \
                  "special://xbmc/system/players/paplayer/;" \
                  "special://xbmc/system/python/"
 #endif

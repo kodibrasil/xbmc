@@ -19924,7 +19924,7 @@ msgid "DVDPlayer"
 msgstr ""
 
 msgctxt "#55073"
-msgid "Wait kodi rendering"
+msgid ""
 msgstr ""
 
 msgctxt "#55074"

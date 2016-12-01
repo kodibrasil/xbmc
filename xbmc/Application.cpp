@@ -471,7 +471,7 @@ bool CApplication::Create()
   //! @todo - move to CPlatformXXX
 #ifndef TARGET_POSIX
   //floating point precision to 24 bits (faster performance)
-  _controlfp(_PC_24, _MCW_PC);
+  //_controlfp(_PC_24, _MCW_PC);
 #endif
 
   //! @todo - move to CPlatformXXX

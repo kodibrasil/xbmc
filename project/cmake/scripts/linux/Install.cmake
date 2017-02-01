@@ -120,16 +120,13 @@ install(FILES ${CORE_SOURCE_DIR}/tools/Linux/packaging/media/icon256x256.png
         RENAME ${APP_NAME_LC}.png
         DESTINATION ${datarootdir}/icons/hicolor/256x256/apps
         COMPONENT kodi)
-install(CODE "execute_process(COMMAND gtk-update-icon-cache -f -q -t
-        $ENV{DESTDIR}${datarootdir}/icons/hicolor ERROR_QUIET)"
-        COMPONENT kodi)
 
 # Install docs
 install(FILES ${CORE_SOURCE_DIR}/copying.txt
               ${CORE_SOURCE_DIR}/LICENSE.GPL
               ${CORE_SOURCE_DIR}/version.txt
               ${CORE_SOURCE_DIR}/docs/README.linux
-        DESTINATION ${datarootdir}/doc/${APP_NAME_LC}
+        DESTINATION ${docdir}
         COMPONENT kodi)
 
 install(FILES ${CORE_SOURCE_DIR}/privacy-policy.txt
@@ -138,7 +135,7 @@ install(FILES ${CORE_SOURCE_DIR}/privacy-policy.txt
 
 # Install kodi-tools-texturepacker
 if(NOT WITH_TEXTUREPACKER)
-  install(PROGRAMS ${CMAKE_BINARY_DIR}/${CORE_BUILD_DIR}/texturepacker/TexturePacker
+  install(PROGRAMS $<TARGET_FILE:TexturePacker::TexturePacker>
           DESTINATION ${bindir}
           COMPONENT kodi-tools-texturepacker)
 endif()
@@ -267,10 +264,12 @@ if(ENABLE_EVENTCLIENTS)
           DESTINATION ${bindir}
           COMPONENT kodi-eventclients-ps3)
 
-  # Install kodi-eventclients-wiiremote
-  install(PROGRAMS ${CMAKE_BINARY_DIR}/${CORE_BUILD_DIR}/WiiRemote/${APP_NAME_LC}-wiiremote
-          DESTINATION ${bindir}
-          COMPONENT kodi-eventclients-wiiremote)
+  if(BLUETOOTH_FOUND)
+    # Install kodi-eventclients-wiiremote
+    install(PROGRAMS ${CMAKE_BINARY_DIR}/${CORE_BUILD_DIR}/WiiRemote/${APP_NAME_LC}-wiiremote
+            DESTINATION ${bindir}
+            COMPONENT kodi-eventclients-wiiremote)
+  endif()
 
   # Install kodi-eventclients-xbmc-send
   install(PROGRAMS "${CORE_SOURCE_DIR}/tools/EventClients/Clients/Kodi Send/kodi-send.py"
@@ -346,7 +345,7 @@ endforeach()
 
 # generate packages? yes please, if everything checks out
 if(CPACK_GENERATOR)
-  if(CPACK_GENERATOR STREQUAL DEB AND CORE_SYSTEM_NAME STREQUAL linux)
+  if(CPACK_GENERATOR STREQUAL DEB AND ( CORE_SYSTEM_NAME STREQUAL linux OR CORE_SYSTEM_NAME STREQUAL rbpi ) )
     if(CMAKE_BUILD_TYPE STREQUAL Debug)
       message(STATUS "DEB Generator: Build type is set to 'Debug'. Packaged binaries will be unstripped.")
     endif()

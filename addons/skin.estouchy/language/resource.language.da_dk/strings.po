@@ -76,6 +76,10 @@ msgctxt "#31045"
 msgid "REWIND"
 msgstr "SPOL TILBAGE"
 
+msgctxt "#31046"
+msgid "Play speed"
+msgstr "Afspilningshastighed"
+
 msgctxt "#31049"
 msgid "End Time"
 msgstr "Sluttidspunkt"
@@ -90,7 +94,7 @@ msgstr "Sorter: Faldende"
 
 msgctxt "#31055"
 msgid "Open playlist"
-msgstr "Åbn afspilningsliste"
+msgstr "Åbn playliste"
 
 msgctxt "#31056"
 msgid "Save playlist"
@@ -98,7 +102,7 @@ msgstr "Gem afspilningsliste"
 
 msgctxt "#31057"
 msgid "Close playlist"
-msgstr "Luk afspilningsliste"
+msgstr "Luk playliste"
 
 msgctxt "#31058"
 msgid "System music files"
@@ -106,7 +110,7 @@ msgstr "Systemmusikfiler"
 
 msgctxt "#31059"
 msgid "Current playlist"
-msgstr "Nuværende afspilningsliste"
+msgstr "Nuværende playliste"
 
 msgctxt "#31200"
 msgid "Back"
@@ -133,8 +137,8 @@ msgid "Data provider"
 msgstr "Dataleverandør"
 
 msgctxt "#31309"
-msgid "Memory Used:"
-msgstr "Hukommelse i brug:"
+msgid "System Memory Used:"
+msgstr "System hukommelse ibrug:"
 
 msgctxt "#31320"
 msgid "Last Logged In"
@@ -172,21 +176,9 @@ msgctxt "#31421"
 msgid "Select your Kodi user Profile[CR]to login and continue"
 msgstr "Vælg din Kodi brugerprofil[CR]for at logge ind og fortsætte"
 
-msgctxt "#31500"
-msgid "Home Menu Catagory Buttons"
-msgstr "Hjemmemenu Kategoriknapper"
-
-msgctxt "#31501"
-msgid "Home Page Add-on Quick Links"
-msgstr "Hurtig-links til Addons på Hjemmeskærm"
-
-msgctxt "#31502"
-msgid "Miscellaneous Options"
-msgstr "Diverse Indstillinger"
-
 msgctxt "#31550"
-msgid "Home Screen Weather Info and button"
-msgstr "Information om og knap til Vejret på Hjemmeskærmen"
+msgid "Backgrounds"
+msgstr "Baggrunde"
 
 msgctxt "#31551"
 msgid "Add-on Shortcut"
@@ -199,6 +191,10 @@ msgstr "Live TV"
 msgctxt "#31557"
 msgid "Hide video background"
 msgstr "Skjul videobaggrund"
+
+msgctxt "#31560"
+msgid "Available groups"
+msgstr "Tilgængelig grupper"
 
 msgctxt "#31561"
 msgid "Add Group"

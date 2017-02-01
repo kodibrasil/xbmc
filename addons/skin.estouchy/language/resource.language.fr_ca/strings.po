@@ -84,6 +84,10 @@ msgctxt "#31045"
 msgid "REWIND"
 msgstr "RETOUR RAPIDE"
 
+msgctxt "#31046"
+msgid "Play speed"
+msgstr "Vitesse de lecture"
+
 msgctxt "#31049"
 msgid "End Time"
 msgstr "Heure de fin"
@@ -141,8 +145,8 @@ msgid "Data provider"
 msgstr "Fournisseur de données"
 
 msgctxt "#31309"
-msgid "Memory Used:"
-msgstr "Mémoire utilisée :"
+msgid "System Memory Used:"
+msgstr "Mémoire système utilisée :"
 
 msgctxt "#31320"
 msgid "Last Logged In"
@@ -190,7 +194,11 @@ msgstr "Gérer les addiciels installés · Parcourir et installer des addiciels 
 
 msgctxt "#31408"
 msgid "Configure actions that can be used during playback · Configure how media content is played"
-msgstr "Configurer les actions pouvant être utilisée pendant la lecture · Configurer la lecture du contenu des médias"
+msgstr "Configurer les actions pouvant être utilisées pendant la lecture · Configurer la lecture du contenu multimédia"
+
+msgctxt "#31409"
+msgid "Configure library sources · Show the media lists display content · Configure how library lists are navigated"
+msgstr "Configurer les sources de la médiathèque · Montrer le contenu d'affichage des listes de médias · Configurer le parcours des listes de la médiathèque"
 
 msgctxt "#31410"
 msgid "Configure skin · Configure region · Configure control · Configure screensaver · Configure master lock"
@@ -206,23 +214,19 @@ msgstr "Afficher les informations du système · Statistiques matérielles · V�
 
 msgctxt "#31421"
 msgid "Select your Kodi user Profile[CR]to login and continue"
-msgstr "Choisissez votre profil d'utilisateur Kodi[CR]pour vous connecter et continuer"
+msgstr "Choisissez votre profil d'utilisateur Kodi[CR]pour vous connecter et poursuivre"
 
-msgctxt "#31500"
-msgid "Home Menu Catagory Buttons"
-msgstr "Boutons de catégorie du menu d'accueil"
+msgctxt "#31548"
+msgid "Home menu"
+msgstr "Menu de l'accueil"
 
-msgctxt "#31501"
-msgid "Home Page Add-on Quick Links"
-msgstr "Liens rapides de l'addiciel sur la page d'accueil"
-
-msgctxt "#31502"
-msgid "Miscellaneous Options"
-msgstr "Options diverses"
+msgctxt "#31549"
+msgid "Home Add-ons"
+msgstr "Addiciels de l'accueil"
 
 msgctxt "#31550"
-msgid "Home Screen Weather Info and button"
-msgstr "Infos météo et bouton Météo de l'écran d'accueil"
+msgid "Backgrounds"
+msgstr "Arrière-plans"
 
 msgctxt "#31551"
 msgid "Add-on Shortcut"

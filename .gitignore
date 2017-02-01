@@ -274,7 +274,6 @@ lib/cpluff/stamp-h1
 /system/EasyHook32.dll
 /system/libcurl.dll
 /system/libeay32.dll
-/system/librtmp.dll
 /system/libexif.dll
 /system/ssh.dll
 /system/sqlite3.dll
@@ -565,3 +564,6 @@ exclude_dll.txt
 
 #certificates
 /system/certs/
+
+#Workaround for autotools right before final Krypton
+xbmc/cores/AudioEngine/AEDefines_override.h

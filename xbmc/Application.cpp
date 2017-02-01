@@ -144,7 +144,6 @@
 
 // Dialog includes
 #include "video/dialogs/GUIDialogVideoBookmarks.h"
-#include "video/dialogs/GUIDialogSubtitles.h"
 #include "dialogs/GUIDialogOK.h"
 #include "dialogs/GUIDialogKaiToast.h"
 #include "dialogs/GUIDialogSubMenu.h"
@@ -972,6 +971,10 @@ bool CApplication::InitDirectoriesOSX()
   else
     userHome = "/root";
 
+  std::string binaddonAltDir;
+  if (getenv("KODI_BINADDON_PATH"))
+    binaddonAltDir = getenv("KODI_BINADDON_PATH");
+
   std::string appPath = CUtil::GetHomePath();
   setenv("KODI_HOME", appPath.c_str(), 0);
 
@@ -990,6 +993,7 @@ bool CApplication::InitDirectoriesOSX()
   {
     // map our special drives
     CSpecialProtocol::SetXBMCBinPath(appPath);
+    CSpecialProtocol::SetXBMCAltBinAddonPath(binaddonAltDir);
     CSpecialProtocol::SetXBMCPath(appPath);
     #if defined(TARGET_DARWIN_IOS)
       std::string appName = CCompileInfo::GetAppName();
@@ -1027,6 +1031,7 @@ bool CApplication::InitDirectoriesOSX()
     URIUtils::AddSlashAtEnd(appPath);
 
     CSpecialProtocol::SetXBMCBinPath(appPath);
+    CSpecialProtocol::SetXBMCAltBinAddonPath(binaddonAltDir);
     CSpecialProtocol::SetXBMCPath(appPath);
     CSpecialProtocol::SetHomePath(URIUtils::AddFileToFolder(appPath, "portable_data"));
     CSpecialProtocol::SetMasterProfilePath(URIUtils::AddFileToFolder(appPath, "portable_data/userdata"));
@@ -1072,6 +1077,7 @@ void CApplication::CreateUserDirs() const
   CDirectory::Create("special://home/");
   CDirectory::Create("special://home/addons");
   CDirectory::Create("special://home/addons/packages");
+  CDirectory::Create("special://home/addons/temp");
   CDirectory::Create("special://home/media");
   CDirectory::Create("special://home/system");
   CDirectory::Create("special://masterprofile/");
@@ -1339,24 +1345,6 @@ bool CApplication::StartServer(enum ESERVERS eServer, bool bStart, bool bWait/* 
   CSettings::GetInstance().Save();
 
   return ret;
-}
-
-void CApplication::StopPVRManager()
-{
-  CLog::Log(LOGINFO, "stopping PVRManager");
-  if (g_PVRManager.IsPlaying())
-    StopPlaying();
-  // stop pvr manager thread and clear all pvr data
-  g_PVRManager.Stop();
-  // stop epg container thread and clear all epg data
-  g_EpgContainer.Stop();
-  g_EpgContainer.Clear();
-}
-
-void CApplication::ReinitPVRManager()
-{
-  CLog::Log(LOGINFO, "restarting PVRManager");
-  g_PVRManager.Reinit();
 }
 
 void CApplication::StartServices()
@@ -2974,7 +2962,6 @@ void CApplication::Stop(int exitCode)
     CLog::Log(LOGNOTICE, "stop player");
     m_pPlayer->ClosePlayer();
 
-    StopPVRManager();
     StopServices();
 
 #ifdef HAS_ZEROCONF
@@ -3978,12 +3965,6 @@ void CApplication::StopPlaying()
 #endif
     m_pPlayer->CloseFile();
 
-    // When playback stops we must clear the saved subtitle search from the SubtitleDialog since the dialog is preserved in memory
-    // Otherwise the next time the dialogs open any previous search from a previous movie will be shown
-    CGUIDialogSubtitles *dialog = (CGUIDialogSubtitles*)g_windowManager.GetWindow(WINDOW_DIALOG_SUBTITLES);
-    CGUIMessage msg(GUI_MSG_WINDOW_RESET, dialog->GetID(), 0);
-    dialog->OnMessage(msg);
-
     // turn off visualisation window when stopping
     if ((iWin == WINDOW_VISUALISATION
     ||  iWin == WINDOW_FULLSCREEN_VIDEO)
@@ -4791,6 +4772,11 @@ void CApplication::Restart(bool bSamePosition)
 const std::string& CApplication::CurrentFile()
 {
   return m_itemCurrentFile->GetPath();
+}
+
+std::shared_ptr<CFileItem> CApplication::CurrentFileItemPtr()
+{
+  return m_itemCurrentFile;
 }
 
 CFileItem& CApplication::CurrentFileItem()

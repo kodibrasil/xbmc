@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="repository.dsplayer" version="1.0.0" name="Kodi DSPlayer Add-on repository" provider-name="Team Kodi DSPlayer">	
+	<extension point="xbmc.addon.repository">
+		<info compressed="false">https://raw.githubusercontent.com/aracnoz/repository.dsplayer/master/addons.xml</info>
+		<checksum>https://raw.githubusercontent.com/aracnoz/repository.dsplayer/master/addons.xml.md5</checksum>
+		<datadir zip="true">https://raw.githubusercontent.com/aracnoz/repository.dsplayer/master/</datadir>
+	</extension>
+	<extension point="xbmc.addon.metadata">
+		<summary lang="en">Kodi DSPlayer Add-on repository</summary>
+		<description lang="en">Kodi DSPlayer Add-on repository</description>
+		<platform>all</platform>
+	</extension>
+</addon>

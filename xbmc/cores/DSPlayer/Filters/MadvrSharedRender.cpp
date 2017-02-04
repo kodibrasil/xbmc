@@ -58,44 +58,43 @@ HRESULT CMadvrSharedRender::Render(DS_RENDER_LAYER layer)
   return (m_bGuiVisible) ? CALLBACK_USER_INTERFACE : CALLBACK_INFO_DISPLAY;
 }
 
-void CMadvrSharedRender::RenderToUnderTexture()
+void CMadvrSharedRender::BeginRender()
 {
-  if (CheckSkipRender())
-    return;
-
   // Wait that madVR complete the rendering
   m_kodiWait.Lock();
   m_kodiWait.Wait(100);
-  {
-    // Lock madVR thread while kodi rendering
-    m_dsWait.Lock();
 
-    CDSRendererCallback::Get()->SetCurrentVideoLayer(RENDER_LAYER_UNDER);
-    CDSRendererCallback::Get()->ResetRenderCount();
+  // Lock madVR thread while kodi rendering
+  m_dsWait.Lock();
 
-    ID3D11DeviceContext* pContext = g_Windowing.Get3D11Context();
-    ID3D11RenderTargetView* pSurface11;
+  // Clear RenderTarget
+  ID3D11RenderTargetView* pSurface11;
+  ID3D11DeviceContext* pContext = g_Windowing.Get3D11Context();
 
-    m_pD3DDeviceKodi->CreateRenderTargetView(m_pKodiUnderTexture, NULL, &pSurface11);
-    pContext->OMSetRenderTargets(1, &pSurface11, 0);
-    pContext->ClearRenderTargetView(pSurface11, m_fColor);
-    pSurface11->Release();
-  }
+  m_pD3DDeviceKodi->CreateRenderTargetView(m_pKodiUnderTexture, NULL, &pSurface11);
+  pContext->ClearRenderTargetView(pSurface11, m_fColor);
+  pSurface11->Release();
+
+  m_pD3DDeviceKodi->CreateRenderTargetView(m_pKodiOverTexture, NULL, &pSurface11);
+  pContext->ClearRenderTargetView(pSurface11, m_fColor);
+  pSurface11->Release();
+
+  // Reset RenderCount
+  CDSRendererCallback::Get()->ResetRenderCount();
 }
 
-void CMadvrSharedRender::RenderToOverTexture()
+void CMadvrSharedRender::RenderToTexture(DS_RENDER_LAYER layer)
 {
   if (CheckSkipRender())
     return;
 
-  CDSRendererCallback::Get()->SetCurrentVideoLayer(RENDER_LAYER_OVER);
+  CDSRendererCallback::Get()->SetCurrentVideoLayer(layer);
 
   ID3D11DeviceContext* pContext = g_Windowing.Get3D11Context();
   ID3D11RenderTargetView* pSurface11;
 
-  m_pD3DDeviceKodi->CreateRenderTargetView(m_pKodiOverTexture, NULL, &pSurface11);
+  m_pD3DDeviceKodi->CreateRenderTargetView(layer == RENDER_LAYER_UNDER ? m_pKodiUnderTexture : m_pKodiOverTexture, NULL, &pSurface11);
   pContext->OMSetRenderTargets(1, &pSurface11, 0);
-  pContext->ClearRenderTargetView(pSurface11, m_fColor);
   pSurface11->Release();
 }
 

@@ -79,9 +79,11 @@ public:
   CMadvrSettings();
   ~CMadvrSettings() {};
 
-  void StoreSettingsAtStart();
+  void StoreAtStartSettings();
   void RestoreDefaultSettings();
+  void RestoreAtStartSettings();
   bool SettingsChanged();
+  void UpdateSettings();
 
   CVariant m_db;
   
@@ -93,8 +95,12 @@ public:
   std::string m_TvShowName;
   bool m_bDebug;
 
+  std::string m_FileStringPo;
+
 private:
   void InitSettings();
+
+  void LoadMadvrXML(const std::string &xmlFile, const std::string &xmlRoot, TiXmlElement* &pNode);
 
   void AddSection(TiXmlNode *pNode, int iSectionId);
   void AddButton(TiXmlNode *pNode, int iSectionId, int iGroupId, int iSubSectionId, const std::string &type, const std::string &name);
@@ -108,9 +114,13 @@ private:
   bool GetFloat(TiXmlElement *pElement, const std::string &attr, float *fValue);
   bool GetString(TiXmlElement *pElement, const std::string &attr, std::string *sValue);
   
+  std::string GetVersionSuffix(const std::string &path);
+
   int m_iSubSectionId;
   std::string m_madvrJsonAtStart;
   CVariant m_dbDefault;
+
+  CXBMCTinyXML m_XML;
 };
 
 //#endif // !defined(AFX_MADVRSETTINGS_H__562A722A_CD2A_4B4A_8A67_32DE8088A7D3__INCLUDED_)

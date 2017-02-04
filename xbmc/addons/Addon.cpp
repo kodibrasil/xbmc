@@ -41,6 +41,10 @@
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
 
+#ifdef HAS_DS_PLAYER
+#include "settings/MediaSettings.h"
+#endif
+
 #ifdef HAS_PYTHON
 #include "interfaces/python/XBPython.h"
 #endif
@@ -409,6 +413,13 @@ void OnPostInstall(const AddonPtr& addon, bool update, bool modal)
 
   if (CAddonMgr::GetInstance().GetAddon(addon->ID(), localAddon, ADDON_REPOSITORY))
     CRepositoryUpdater::GetInstance().ScheduleUpdate(); //notify updater there is a new addon or version
+
+#ifdef HAS_DS_PLAYER
+  if (addon->ID() == "script.madvrsettings") 
+  {
+    CMediaSettings::GetInstance().GetCurrentMadvrSettings().UpdateSettings();
+  }
+#endif
 
   addon->OnPostInstall(update, modal);
 }

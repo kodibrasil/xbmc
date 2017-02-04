@@ -355,7 +355,7 @@ public:
 
   // ID3DResource
   virtual void                        OnLostDevice();
-  virtual void                        OnDestroyDevice();
+  virtual void                        OnDestroyDevice(bool fatal);
   virtual void                        OnCreateDevice();
   virtual void                        OnResetDevice();
 

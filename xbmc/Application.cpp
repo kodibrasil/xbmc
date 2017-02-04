@@ -1934,7 +1934,7 @@ void CApplication::Render()
     return;
 
 #ifdef HAS_DS_PLAYER
-  CDSRendererCallback::Get()->RenderToUnderTexture();
+  CDSRendererCallback::Get()->BeginRender();
 #endif
   CDirtyRegionList dirtyRegions;
 
@@ -1985,9 +1985,6 @@ void CApplication::Render()
     g_infoManager.UpdateFPS();
   }
 
-#ifdef HAS_DS_PLAYER   
-  if (!CDSRendererCallback::Get()->ReadyDS())
-#endif
   g_graphicsContext.Flip(hasRendered, m_pPlayer->IsRenderingVideoLayer());
 
   CTimeUtils::UpdateFrameTime(hasRendered);
@@ -3263,7 +3260,7 @@ PlayBackRet CApplication::PlayFile(CFileItem item, const std::string& player, bo
     CMediaSettings::GetInstance().GetAtStartVideoSettings() = CMediaSettings::GetInstance().GetCurrentVideoSettings();
 
     CMediaSettings::GetInstance().GetCurrentMadvrSettings().RestoreDefaultSettings();
-    CMediaSettings::GetInstance().GetCurrentMadvrSettings().StoreSettingsAtStart();
+    CMediaSettings::GetInstance().GetCurrentMadvrSettings().StoreAtStartSettings();
 #endif
     // see if we have saved options in the database
 
@@ -3894,9 +3891,7 @@ void CApplication::LoadVideoSettings(const CFileItem& item)
 
   CFileItem fileItem = item;
 
-  if (CSettings::GetInstance().GetBool(CSettings::SETTING_MYVIDEOS_EXTRACTFLAGS) 
-    && fileItem.HasVideoInfoTag() 
-    && !fileItem.GetVideoInfoTag()->HasStreamDetails())
+  if (!fileItem.HasVideoInfoTag() || !fileItem.GetVideoInfoTag()->HasStreamDetails())
   {
     CLog::Log(LOGDEBUG, "%s - trying to extract filestream details from video file %s", __FUNCTION__, fileItem.GetPath().c_str());
     CDVDFileInfo::GetFileStreamDetails(&fileItem);
@@ -3935,7 +3930,7 @@ void CApplication::LoadVideoSettings(const CFileItem& item)
     madvrSettings.RestoreDefaultSettings();
   }
 
-  madvrSettings.StoreSettingsAtStart();
+  madvrSettings.StoreAtStartSettings();
 
   dsdbs.Close();
   
@@ -3946,7 +3941,8 @@ void CApplication::StopPlaying()
 {
   int iWin = g_windowManager.GetActiveWindow();
 #ifdef HAS_DS_PLAYER
-  if (GetCurrentPlayer() == "dsplayer" && m_pPlayer->IsPlaying() && !CDSRendererCallback::Get()->ReadyDS())
+  std::string cazz = GetCurrentPlayer();
+  if (GetCurrentPlayer() == "DSPlayer" && m_pPlayer->IsPlaying() && !CDSRendererCallback::Get()->ReadyDS())
   {
     CDSRendererCallback::Get()->SetStop(true);
     return;

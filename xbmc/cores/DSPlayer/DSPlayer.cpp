@@ -87,6 +87,7 @@ CDSPlayer::CDSPlayer(IPlayerCallback& callback)
   m_bEof(false),
   m_renderManager(this)
 {
+  m_canTempo = false;
   m_HasVideo = false;
   m_HasAudio = false;
   m_isMadvr = (CSettings::GetInstance().GetString(CSettings::SETTING_DSPLAYER_VIDEORENDERER) == "madVR");
@@ -415,6 +416,7 @@ bool CDSPlayer::OpenFile(const CFileItem& file, const CPlayerOptions &options)
 
   CFileItem fileItem = file;
   m_PlayerOptions = options;
+  m_canTempo = true;
 
   if (fileItem.IsInternetStream())
   {
@@ -426,6 +428,7 @@ bool CDSPlayer::OpenFile(const CFileItem& file, const CPlayerOptions &options)
   {
     g_pPVRStream = new CDSInputStreamPVRManager(this);
     return g_pPVRStream->Open(fileItem);
+    m_canTempo = false;
   }
 
   return OpenFileInternal(fileItem);
@@ -434,6 +437,10 @@ bool CDSPlayer::OpenFile(const CFileItem& file, const CPlayerOptions &options)
 bool CDSPlayer::CloseFile(bool reopen)
 {
   CSingleLock lock(m_CleanSection);
+
+  // if needed restore the currentrate
+  if (m_pGraphThread.GetCurrentRate() != 1)
+    SetSpeed(1);
 
   // reset intial delay in decoder interface
   if (CStreamsManager::Get()) CStreamsManager::Get()->resetDelayInterface();
@@ -444,6 +451,7 @@ bool CDSPlayer::CloseFile(bool reopen)
   PlayerState = DSPLAYER_CLOSING;
   m_HasVideo = false;
   m_HasAudio = false;
+  m_canTempo = false;
 
   // set the abort request so that other threads can finish up
   m_bEof = g_dsGraph->IsEof();
@@ -466,13 +474,19 @@ bool CDSPlayer::CloseFile(bool reopen)
 void CDSPlayer::GetVideoStreamInfo(int streamId, SPlayerVideoStreamInfo &info)
 {
   CSingleLock lock(m_StateSection);
+  CStdString strStreamName;
+
+  if (CStreamsManager::Get()) CStreamsManager::Get()->GetVideoStreamName(strStreamName);
+  info.name = strStreamName;
   info.width = (GetPictureWidth());
   info.height = (GetPictureHeight());
   info.videoCodecName = (CStreamsManager::Get()) ? CStreamsManager::Get()->GetVideoCodecName() : "";
   info.videoAspectRatio = (float)info.width / (float)info.height;
   CRect viewRect;
   m_renderManager.GetVideoRect(info.SrcRect, info.DestRect, viewRect);
-  info.stereoMode == "";
+  info.stereoMode = (CStreamsManager::Get()) ? CStreamsManager::Get()->GetStereoMode() : "";
+  if (info.stereoMode == "mono")
+    info.stereoMode = "";
 }
 
 void CDSPlayer::GetAudioStreamInfo(int index, SPlayerAudioStreamInfo &info)
@@ -665,7 +679,7 @@ void CDSPlayer::Process()
 void CDSPlayer::DeInitMadvrWindow()
 {
   // remove ourself as user data to ensure we're not called anymore
-  SetWindowLongPtr(m_hWnd, GWL_USERDATA, 0);
+  SetWindowLongPtr(m_hWnd, GWLP_USERDATA, 0);
 
   // destroy the hidden window
   DestroyWindow(m_hWnd);
@@ -719,7 +733,7 @@ bool CDSPlayer::InitMadvrWindow(HWND &hWnd)
   }
 
   if (hWnd)
-    SetWindowLongPtr(hWnd, GWL_USERDATA, NPT_POINTER_TO_LONG(this));
+    SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 
   return true;
 }
@@ -819,7 +833,7 @@ void CDSPlayer::HandleMessages()
       pt.x = GET_X_LPARAM(speMsg->m_value);
       pt.y = GET_Y_LPARAM(speMsg->m_value);
       ULONG pButtonIndex;
-      /**** Didnt found really where dvdplayer are doing it exactly so here it is *****/
+      /**** Didnt found really where VideoPlayer are doing it exactly so here it is *****/
       XBMC_Event newEvent;
       newEvent.type = XBMC_MOUSEMOTION;
       newEvent.motion.x = (uint16_t)pt.x;
@@ -930,6 +944,11 @@ void CDSPlayer::SetSpeed(float iSpeed)
 float CDSPlayer::GetSpeed()
 {
   return m_pGraphThread.GetCurrentRate();
+}
+
+bool CDSPlayer::SupportsTempo()
+{
+  return m_canTempo;
 }
 
 void CDSPlayer::Seek(bool bPlus, bool bLargeStep, bool bChapterOverride)
@@ -1113,19 +1132,80 @@ bool CDSPlayer::OnAction(const CAction &action)
     break;
 
   case ACTION_PLAYER_PROCESS_INFO:
-    
-    if (action.GetID() == ACTION_PLAYER_PROCESS_INFO)
+    if (g_windowManager.GetActiveWindow() != WINDOW_DIALOG_DSPLAYER_PROCESS_INFO)
     {
-      if (g_windowManager.GetActiveWindow() != WINDOW_DIALOG_PLAYER_PROCESS_INFO)
-      {
-        g_windowManager.ActivateWindow(WINDOW_DIALOG_PLAYER_PROCESS_INFO);
-        return true;
-      }
+      g_windowManager.ActivateWindow(WINDOW_DIALOG_DSPLAYER_PROCESS_INFO);
+      return true;
     }
+    break;  
+  case ACTION_DSPLAYER_USERSETTINGS_1:
+    LoadMadvrSettings(1);
+    break;
+  case ACTION_DSPLAYER_USERSETTINGS_2:
+    LoadMadvrSettings(2);
+    break;
+  case ACTION_DSPLAYER_USERSETTINGS_3:
+    LoadMadvrSettings(3);
+    break;
+  case ACTION_DSPLAYER_USERSETTINGS_SD:
+    LoadMadvrSettings(MADVR_RES_SD);
+    break;
+  case ACTION_DSPLAYER_USERSETTINGS_720:
+    LoadMadvrSettings(MADVR_RES_720);
+    break;
+  case ACTION_DSPLAYER_USERSETTINGS_1080:
+    LoadMadvrSettings(MADVR_RES_1080);
+    break;
+  case ACTION_DSPLAYER_USERSETTINGS_2160:
+    LoadMadvrSettings(MADVR_RES_2160);
+    break;
+  case ACTION_DSPLAYER_USERSETTINGS_ATSTART:
+    LoadMadvrSettings(0);
     break;
   }
+
   // return false to inform the caller we didn't handle the message
   return false;
+}
+
+void CDSPlayer::LoadMadvrSettings(int id)
+{
+  if (id < 0 || !m_isMadvr || CSettings::GetInstance().GetInt(CSettings::SETTING_DSPLAYER_MANAGEMADVRWITHKODI) != KODIGUI_LOAD_DSPLAYER)
+    return;
+
+  CMadvrSettings &madvrSettings = CMediaSettings::GetInstance().GetCurrentMadvrSettings();
+
+  if (id != 0)
+  {
+    CDSPlayerDatabase dspdb;
+    if (!dspdb.Open())
+      return;
+    CStdString sId;
+
+    if (id < MADVR_RES_SD)
+    {
+      dspdb.GetUserSettings(id, madvrSettings);
+      sId.Format("User settings #%i", id);
+    }
+    else
+    {
+      dspdb.GetResSettings(id, madvrSettings);
+      sId.Format("Resolution settings %ip", id);
+      if (id == MADVR_RES_SD)
+        sId.Format("Resolution settings SD", id);
+    }
+
+    CDSRendererCallback::Get()->RestoreSettings();
+    dspdb.Close();
+    CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Info, "DSPlayer", sId, TOAST_MESSAGE_TIME, false);
+  }
+  else
+  {
+    madvrSettings.RestoreAtStartSettings();
+    CDSRendererCallback::Get()->RestoreSettings();
+
+    CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Info, "DSPlayer", "Restored original video settings", TOAST_MESSAGE_TIME, false);
+  }
 }
 
 // Time is in millisecond

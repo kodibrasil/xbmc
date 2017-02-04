@@ -467,8 +467,8 @@ HRESULT CFGLoader::LoadFilterRules(const CFileItem& _pFileItem)
     {
       if (CSettings::GetInstance().GetInt(CSettings::SETTING_DSPLAYER_FILTERSMANAGEMENT) == INTERNALFILTERS 
         && CSettings::GetInstance().GetString(CSettings::SETTING_DSPLAYER_VIDEORENDERER) == "EVR"
-        && filter == "xysubfilter_internal")
-        filter = "xyvsfilter_internal";
+        && filter == CGraphFilters::INTERNAL_XYSUBFILTER)
+        filter = CGraphFilters::INTERNAL_XYVSFILTER;
 
       if (FAILED(InsertFilter(filter, CGraphFilters::Get()->Subs)))
         return E_FAIL;
@@ -488,7 +488,7 @@ HRESULT CFGLoader::LoadFilterRules(const CFileItem& _pFileItem)
       // We need to make a copy of our streams details because
       // Reset() delete the streams
       if (CSettings::GetInstance().GetBool(CSettings::SETTING_MYVIDEOS_EXTRACTFLAGS)) // Only warn user if the option is enabled
-        CLog::Log(LOGWARNING, __FUNCTION__" DVDPlayer failed to fetch streams details. Using DirectShow ones");
+        CLog::Log(LOGWARNING, __FUNCTION__" VideoPlayer failed to fetch streams details. Using DirectShow ones");
 
       pFileItem.GetVideoInfoTag()->m_streamDetails.AddStream(
         new CDSStreamDetailVideo((const CDSStreamDetailVideo &)(*CStreamsManager::Get()->GetVideoStreamDetail()))
@@ -586,7 +586,7 @@ HRESULT CFGLoader::LoadFilterRules(const CFileItem& _pFileItem)
     return E_FAIL;
 }
 
-HRESULT CFGLoader::LoadConfig()
+HRESULT CFGLoader::LoadConfig(FILTERSMAN_TYPE filterManager)
 {
   CXBMCTinyXML configXML;
   if (configXML.LoadFile("special://xbmc/system/players/dsplayer/dsplayerconfig.xml"))
@@ -598,8 +598,10 @@ HRESULT CFGLoader::LoadConfig()
     }
   }
   // Two steps
+  if (filterManager == NOFILTERMAN)
+    filterManager = (FILTERSMAN_TYPE)CSettings::GetInstance().GetInt(CSettings::SETTING_DSPLAYER_FILTERSMANAGEMENT);
 
-  if (CSettings::GetInstance().GetInt(CSettings::SETTING_DSPLAYER_FILTERSMANAGEMENT) == MEDIARULES)
+  if (filterManager == MEDIARULES)
   {
     // First, filters
     LoadFilterCoreFactorySettings(CProfilesManager::GetInstance().GetUserDataItem("dsplayer/filtersconfig.xml"), FILTERS, true);
@@ -611,7 +613,7 @@ HRESULT CFGLoader::LoadConfig()
     CGraphFilters::Get()->SetDefaultRulePriority("100");
     LoadFilterCoreFactorySettings("special://xbmc/system/players/dsplayer/mediasconfig.xml", MEDIAS, false);
   }
-  if (CSettings::GetInstance().GetInt(CSettings::SETTING_DSPLAYER_FILTERSMANAGEMENT) == INTERNALFILTERS)
+  else if (filterManager == INTERNALFILTERS)
   {
     CGraphFilters::Get()->SetDefaultRulePriority("0");
     LoadFilterCoreFactorySettings("special://xbmc/system/players/dsplayer/filtersconfig_internal.xml", FILTERS, true);
@@ -637,19 +639,19 @@ HRESULT CFGLoader::InsertFilter(const CStdString& filterName, SFilterInfos& f)
     if (filterName == "lavsplitter_internal" || filterName == "lavsource_internal")
     {
       f.internalFilter = true;
-      CGraphFilters::Get()->SetupLavSettings(LAVSPLITTER, f.pBF);
+      CGraphFilters::Get()->SetupLavSettings(CGraphFilters::INTERNAL_LAVSPLITTER, f.pBF);
     }
-    if (filterName == "lavvideo_internal")
+    if (filterName == CGraphFilters::INTERNAL_LAVVIDEO)
     {
       f.internalFilter = true;
-      CGraphFilters::Get()->SetupLavSettings(LAVVIDEO, f.pBF);
+      CGraphFilters::Get()->SetupLavSettings(CGraphFilters::INTERNAL_LAVVIDEO, f.pBF);
     }
-    if (filterName == "lavaudio_internal")
+    if (filterName == CGraphFilters::INTERNAL_LAVAUDIO)
     {
       f.internalFilter = true;
-      CGraphFilters::Get()->SetupLavSettings(LAVAUDIO, f.pBF);
+      CGraphFilters::Get()->SetupLavSettings(CGraphFilters::INTERNAL_LAVAUDIO, f.pBF);
     }
-    if (filterName == "xysubfilter_internal" || filterName == "xyvsfilter_internal")
+    if (filterName == CGraphFilters::INTERNAL_XYSUBFILTER || filterName == CGraphFilters::INTERNAL_XYVSFILTER)
       f.internalFilter = true;
 
     g_charsetConverter.wToUTF8(filter->GetName(), f.osdname);

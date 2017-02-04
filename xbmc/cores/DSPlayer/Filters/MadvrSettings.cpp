@@ -23,6 +23,7 @@
 
 #include "MadvrSettings.h"
 #include "DSRendererCallback.h"
+#include "utils/JSONVariantParser.h"
 #include "utils/JSONVariantWriter.h"
 #include "Utils/Log.h"
 #include "cores/DSPlayer/Dialogs/GUIDialogDSManager.h"
@@ -47,10 +48,28 @@ CMadvrSettings::CMadvrSettings()
 {
   m_Resolution = -1;
   m_TvShowName = "";
+  m_FileStringPo = "";
   m_madvrJsonAtStart = "";
   m_iSubSectionId = 0;
   m_bDebug = false;
 
+  InitSettings();
+}
+
+void CMadvrSettings::UpdateSettings()
+{
+  m_Resolution = -1;
+  m_TvShowName = "";
+  m_FileStringPo = "";
+  m_madvrJsonAtStart = "";
+  m_iSubSectionId = 0;
+  m_bDebug = false;
+  m_db.clear();
+  m_dbDefault.clear();
+  m_gui.clear();
+  m_sections.clear();
+  m_profiles.clear();
+  g_application.LoadLanguage(true);
   InitSettings();
 }
 
@@ -59,18 +78,40 @@ void CMadvrSettings::InitSettings()
   // Capture Filters Version
   CDSFilterVersion::Get()->InitVersion();
 
-  TiXmlElement *pSettings;
+  // Init Variables
+  std::string sVersionSuffix;
+  std::string sMadvrSettingsXML;
 
-  CLog::Log(LOGNOTICE, "%s trying to load madvrSettings.xml from userdata folder", __FUNCTION__);
-  CGUIDialogDSManager::Get()->LoadDsXML(MADVRSETTINGS, pSettings);
+  // Check For madvrsettings.xml
 
-  if (pSettings == NULL)
+  // UserData DSPlayer
+  if ( XFILE::CFile::Exists(CProfilesManager::GetInstance().GetUserDataItem("dsplayer/madvrsettings.xml"))
+    && XFILE::CFile::Exists(CProfilesManager::GetInstance().GetUserDataItem("dsplayer/strings.po")) )
+  { 
+    sMadvrSettingsXML = CProfilesManager::GetInstance().GetUserDataItem("dsplayer/madvrsettings.xml");
+    m_FileStringPo = CProfilesManager::GetInstance().GetUserDataItem("dsplayer/strings.po");
+    CLog::Log(LOGNOTICE, "%s loading madvrSettings.xml from appdata/kodi/userdata/dsplayer", __FUNCTION__);
+  } 
+  // Appdata addons/script.madvrsettings
+  else if (XFILE::CDirectory::Exists("special://home/addons/script.madvrsettings/")) 
   {
-    CLog::Log(LOGNOTICE, "%s madvrSettings.xml not found in userdata folder", __FUNCTION__);
-    CLog::Log(LOGNOTICE, "%s load madvrSettings.xml from home folder", __FUNCTION__);
-    CGUIDialogDSManager::Get()->LoadDsXML(HOMEMADVRSETTINGS, pSettings);
+    sVersionSuffix = GetVersionSuffix("special://home/addons/script.madvrsettings/resources/");
+    sMadvrSettingsXML = StringUtils::Format("special://home/addons/script.madvrsettings/resources/%s_madvrsettings.xml", sVersionSuffix.c_str());
+    m_FileStringPo = StringUtils::Format("special://home/addons/script.madvrsettings/resources/%s_strings.po", sVersionSuffix.c_str());
+    CLog::Log(LOGNOTICE, "%s loading %s_madvrSettings.xml from appdata/kodi/addons/script.madvrsettings", __FUNCTION__, sVersionSuffix.c_str());
+  }
+  // InstallDir addons/script.madvrsettings
+  else if (XFILE::CDirectory::Exists("special://xbmc/addons/script.madvrsettings/"))
+  {
+    sVersionSuffix = GetVersionSuffix("special://xbmc/addons/script.madvrsettings/resources/");
+    sMadvrSettingsXML = StringUtils::Format("special://xbmc/addons/script.madvrsettings/resources/%s_madvrsettings.xml", sVersionSuffix.c_str());
+    m_FileStringPo = StringUtils::Format("special://xbmc/addons/script.madvrsettings/resources/%s_strings.po", sVersionSuffix.c_str());
+    CLog::Log(LOGNOTICE, "%s loading %s_madvrSettings.xml from kodi/addons/script.madvrsettings", __FUNCTION__, sVersionSuffix.c_str());
   }
 
+  // Load settings strutcture for madVR
+  TiXmlElement *pSettings;
+  LoadMadvrXML(sMadvrSettingsXML, "settings", pSettings);
   if (pSettings)
   {
     AddProfiles(pSettings);
@@ -78,6 +119,27 @@ void CMadvrSettings::InitSettings()
   }
 
   m_dbDefault = m_db;
+}
+
+void CMadvrSettings::LoadMadvrXML(const std::string &xmlFile, const std::string &xmlRoot, TiXmlElement* &pNode)
+{
+  pNode = NULL;
+
+  m_XML.Clear();
+
+  if (!m_XML.LoadFile(xmlFile))
+  {
+    CLog::Log(LOGERROR, "%s Error loading %s, Line %d (%s)", __FUNCTION__, xmlFile.c_str(), m_XML.ErrorRow(), m_XML.ErrorDesc());
+    return;
+  }
+  TiXmlElement *pConfig = m_XML.RootElement();
+  if (!pConfig || strcmpi(pConfig->Value(), xmlRoot.c_str()) != 0)
+  {
+    CLog::Log(LOGERROR, "%s Error loading madvrSettings, no <%s> node", __FUNCTION__, xmlRoot.c_str());
+    return;
+  }
+
+  pNode = pConfig;
 }
 
 void CMadvrSettings::AddProfiles(TiXmlNode *pNode)
@@ -262,7 +324,7 @@ void CMadvrSettings::AddSetting(TiXmlNode *pNode, int iSectionId, int iGroupId)
   m_db[setting->name] = default;
 }
 
-void CMadvrSettings::StoreSettingsAtStart()
+void CMadvrSettings::StoreAtStartSettings()
 {
   m_madvrJsonAtStart = CJSONVariantWriter::Write(m_db, true);
 }
@@ -271,6 +333,12 @@ void CMadvrSettings::RestoreDefaultSettings()
 {
   m_db = m_dbDefault;
 }
+
+void CMadvrSettings::RestoreAtStartSettings()
+{
+  m_db = CJSONVariantParser::Parse(reinterpret_cast<const unsigned char*>(m_madvrJsonAtStart.c_str()), m_madvrJsonAtStart.size());
+}
+
 
 bool CMadvrSettings::SettingsChanged()
 {

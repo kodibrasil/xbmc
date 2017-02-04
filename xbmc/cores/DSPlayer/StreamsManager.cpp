@@ -45,6 +45,8 @@
 #include "guilib/LocalizeStrings.h"
 #include "LangInfo.h"
 #include "DSPlayerDatabase.h"
+#include "guilib/StereoscopicsManager.h"
+
 
 CDSStreamDetail::CDSStreamDetail()
   : IAMStreamSelect_Index(0), flags(0), pObj(NULL), pUnk(NULL), lcid(0),
@@ -769,6 +771,15 @@ bool CStreamsManager::SetAudioInterface()
   return (m_bIsLavAudio || m_bIsFFDSAudio);
 }
 
+DWORD CStreamsManager::GetHWAccel()
+{
+  Com::SmartQIPtr<ILAVVideoSettings> pLAVVideoSettings = CGraphFilters::Get()->Video.pBF;
+  if (!pLAVVideoSettings)
+    return 0;
+
+  return pLAVVideoSettings->GetHWAccel();
+}
+
 void CStreamsManager::SetAVDelay(float fValue, int iDisplayerLatency)
 {
   //delay float secs to int msecs
@@ -1261,6 +1272,15 @@ void CStreamsManager::MediaTypeToStreamDetail(AM_MEDIA_TYPE *pMediaType, CStream
   {
     CDSStreamDetailVideo& infos = static_cast<CDSStreamDetailVideo&>(s);
 
+    // GET STEREO FLAG FROM KODI
+    CFileItem fileItem = g_application.CurrentFileItem();
+    if (fileItem.HasVideoInfoTag() && fileItem.GetVideoInfoTag()->HasStreamDetails())
+    {
+      infos.m_strStereoMode = fileItem.GetVideoInfoTag()->m_streamDetails.GetStereoMode();
+    }
+    if (infos.m_strStereoMode.empty())
+      infos.m_strStereoMode = CStereoscopicsManager::GetInstance().DetectStereoModeByString(g_application.CurrentFileItem().GetPath());
+
     if (pMediaType->formattype == FORMAT_VideoInfo)
     {
       if (pMediaType->cbFormat >= sizeof(VIDEOINFOHEADER))
@@ -1373,6 +1393,11 @@ CStdString CStreamsManager::GetAudioCodecName(int istream)
 CStdString CStreamsManager::GetVideoCodecName()
 {
   return m_videoStream.m_strCodec;
+}
+
+std::string CStreamsManager::GetStereoMode()
+{
+  return m_videoStream.m_strStereoMode;
 }
 
 CDSStreamDetailVideo * CStreamsManager::GetVideoStreamDetail(unsigned int iIndex /*= 0*/)

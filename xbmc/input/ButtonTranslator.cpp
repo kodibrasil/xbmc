@@ -94,6 +94,16 @@ static const ActionMapping actions[] =
     { "playerdebug"              , ACTION_PLAYER_DEBUG },
     { "codecinfo"                , ACTION_PLAYER_PROCESS_INFO },
     { "playerprocessinfo"        , ACTION_PLAYER_PROCESS_INFO },
+#ifdef HAS_DS_PLAYER
+    { "loaddsplayersettings1"       , ACTION_DSPLAYER_USERSETTINGS_1 },
+    { "loaddsplayersettings2"       , ACTION_DSPLAYER_USERSETTINGS_2 },
+    { "loaddsplayersettings3"       , ACTION_DSPLAYER_USERSETTINGS_3 },  
+    { "loaddsplayersettingssd"       , ACTION_DSPLAYER_USERSETTINGS_SD },
+    { "loaddsplayersettings720"      , ACTION_DSPLAYER_USERSETTINGS_720 },
+    { "loaddsplayersettings1080"     , ACTION_DSPLAYER_USERSETTINGS_1080 },
+    { "loaddsplayersettings2160"     , ACTION_DSPLAYER_USERSETTINGS_2160 },
+    { "loaddsplayersettingsatstart" , ACTION_DSPLAYER_USERSETTINGS_ATSTART },
+#endif
     { "nextpicture"              , ACTION_NEXT_PICTURE },
     { "previouspicture"          , ACTION_PREV_PICTURE },
     { "zoomout"                  , ACTION_ZOOM_OUT },
@@ -398,12 +408,13 @@ static const ActionMapping windows[] =
     { "visualisation"            , WINDOW_VISUALISATION },
     { "slideshow"                , WINDOW_SLIDESHOW },
 #ifdef HAS_DS_PLAYER
-    {"dsrulesettings"           , WINDOW_DIALOG_DSRULES},
-    {"dsfiltersettings"         , WINDOW_DIALOG_DSFILTERS},
-    {"dsplayercoresettings"     , WINDOW_DIALOG_DSPLAYERCORE},
-        {"dsplayerlavvideo"         , WINDOW_DIALOG_LAVVIDEO},
-        {"dsplayerlavaudio"         , WINDOW_DIALOG_LAVAUDIO},
-        {"dsplayerlavsplitter"      , WINDOW_DIALOG_LAVSPLITTER},
+    { "dsrulesettings"           , WINDOW_DIALOG_DSRULES },
+    { "dsfiltersettings"         , WINDOW_DIALOG_DSFILTERS },
+    { "dsplayercoresettings"     , WINDOW_DIALOG_DSPLAYERCORE },
+    { "dsplayerlavvideo"         , WINDOW_DIALOG_LAVVIDEO },
+    { "dsplayerlavaudio"         , WINDOW_DIALOG_LAVAUDIO },
+    { "dsplayerlavsplitter"      , WINDOW_DIALOG_LAVSPLITTER },
+    { "dsplayerprocessinfo"      , WINDOW_DIALOG_DSPLAYER_PROCESS_INFO },
 #endif
     { "weather"                  , WINDOW_WEATHER },
     { "screensaver"              , WINDOW_SCREENSAVER },
@@ -634,6 +645,11 @@ bool CButtonTranslator::Load(bool AlwaysLoad)
   if (!success)
     CLog::Log(LOGERROR, "CButtonTranslator::Load - unable to load remote map %s", REMOTEMAP);
   // don't return false - it is to only indicate a fatal error (which this is not)
+#endif
+
+#ifdef HAS_DS_PLAYER
+  if (!m_translatorMap[WINDOW_DIALOG_PLAYER_PROCESS_INFO].empty())
+    m_translatorMap[WINDOW_DIALOG_DSPLAYER_PROCESS_INFO] = m_translatorMap[WINDOW_DIALOG_PLAYER_PROCESS_INFO];
 #endif
 
   // Done!

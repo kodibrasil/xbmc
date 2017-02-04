@@ -2887,7 +2887,7 @@ void CDX9AllocatorPresenter::OnLostDevice()
   BeforeDeviceReset();
 }
 
-void CDX9AllocatorPresenter::OnDestroyDevice()
+void CDX9AllocatorPresenter::OnDestroyDevice(bool fatal)
 {
   // The device is going to be destroyed. Cleanup!
   CLog::Log(LOGDEBUG, "%s Device destroyed, cleaning ressources", __FUNCTION__);
@@ -2933,6 +2933,21 @@ void CDX9AllocatorPresenter::OnPaint(CRect destRect)
   m_VideoRect.top = (long)destRect.y1;
   m_VideoRect.left = (long)destRect.x1;
   m_VideoRect.right = (long)destRect.x2;
+
+  RENDER_STEREO_MODE stereoMode = g_graphicsContext.GetStereoMode();
+  switch (stereoMode)
+  {
+  case RENDER_STEREO_MODE_SPLIT_VERTICAL:
+  {
+    m_VideoRect.right *= 2;
+    break;
+  }
+  case RENDER_STEREO_MODE_SPLIT_HORIZONTAL:
+  {
+    m_VideoRect.bottom *= 2;
+    break;
+  }
+  }
 
   m_pD3DDev->BeginScene();
   m_pD3DDev->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);

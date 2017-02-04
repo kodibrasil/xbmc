@@ -66,6 +66,10 @@ public:
   bool GetResSettings(int resolution, CMadvrSettings &settings);
   void SetResSettings(int resolution, const CMadvrSettings &settings);
   void EraseResSettings(int resolution);
+
+  bool GetUserSettings(int userId, CMadvrSettings &settings);
+  void SetUserSettings(int userId, const CMadvrSettings &settings);
+  void EraseUserSettings(int userId);
   
   bool GetLAVVideoSettings(CLavSettings &settings);
   bool GetLAVAudioSettings(CLavSettings &settings);

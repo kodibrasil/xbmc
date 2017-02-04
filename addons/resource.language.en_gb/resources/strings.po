@@ -19901,7 +19901,7 @@ msgid "DSPlayer filters list..."
 msgstr ""
 
 msgctxt "#55063"
-msgid "Use in fullscreen (exclusive mode)"
+msgid "Fullscreen exclusive mode"
 msgstr ""
 
 msgctxt "#55064"
@@ -20058,6 +20058,74 @@ msgstr ""
 
 msgctxt "#55102"
 msgid "madshi Video Renderer"
+msgstr ""
+
+msgctxt "#55103"
+msgid "Direct3D presentation"
+msgstr ""
+
+msgctxt "#55104"
+msgid "Direct3D 9"
+msgstr ""
+
+msgctxt "#55105"
+msgid "Direct3D 11"
+msgstr ""
+
+msgctxt "#55106"
+msgid "Direct3D 11 (no vsync)"
+msgstr ""
+
+msgctxt "#55107"
+msgid "Pre-Rendered frames in windowed mode"
+msgstr ""
+
+msgctxt "#55108"
+msgid "Pre-Rendered frames in exclusive mode"
+msgstr ""
+
+msgctxt "#55109"
+msgid "1 frame"
+msgstr ""
+
+msgctxt "#55110"
+msgid "2 frames"
+msgstr ""
+
+msgctxt "#55111"
+msgid "3 frames"
+msgstr ""
+
+msgctxt "#55112"
+msgid "4 frames"
+msgstr ""
+
+msgctxt "#55113"
+msgid "6 frames"
+msgstr ""
+
+msgctxt "#55114"
+msgid "8 frames"
+msgstr ""
+
+msgctxt "#55115"
+msgid "10 frames"
+msgstr ""
+
+msgctxt "#55116"
+msgid "12 frames"
+msgstr ""
+
+msgctxt "#55117"
+msgid "14 frames"
+msgstr ""
+
+msgctxt "#55118"
+msgid "16 frames"
+msgstr ""
+
+msgctxt "#55119"
+msgid "(madVR tray icon setting)"
 msgstr ""
 
 msgctxt "#60001"
@@ -20842,7 +20910,15 @@ msgid ""
 msgstr ""
 
 msgctxt "#90028"
-msgid "Force to select the preferred audio track that will match the priority codec string defined in the option (ex. dts|ac3) and the language GUI defined in Kodi"
+msgid "Force to select the preferred audio track that will match the priority codec string defined in the option (ex. dts|ac3) and the language GUI defined in Kodi."
+msgstr ""
+
+msgctxt "#90029"
+msgid "The present queue, a final buffer in DirectX, after madVR sends completed frames to Windows."
+msgstr ""
+
+msgctxt "#90030"
+msgid "Select the Direct3D presentation method to use, Direct3d 11 is required for >8 bit output, with Direct3D 11 (no vsync) madVR only presents new frames when needed, relying on D3D11 to repeat frames for each VSync, this may improve performance but may also cause presentation glitches."
 msgstr ""
 
 msgctxt "#909001"

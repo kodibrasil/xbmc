@@ -224,16 +224,16 @@ CRect CDSRendererCallback::GetMadvrRect()
 }
 
 // IDSRendererPaintCallback
-void CDSRendererCallback::RenderToUnderTexture()
+void CDSRendererCallback::BeginRender()
 {
   if (m_pPaintCallback && ReadyDS())
-    m_pPaintCallback->RenderToUnderTexture();
+    m_pPaintCallback->BeginRender();
 }
 
-void CDSRendererCallback::RenderToOverTexture()
+void CDSRendererCallback::RenderToTexture(DS_RENDER_LAYER layer)
 {
   if (m_pPaintCallback && ReadyDS())
-    m_pPaintCallback->RenderToOverTexture();
+    m_pPaintCallback->RenderToTexture(layer);
 }
 
 void CDSRendererCallback::EndRender()

@@ -123,6 +123,7 @@ public:
   HRESULT Create(IBaseFilter** ppBF);
   CStdString GetXFileType() { return m_xFileType; };
   CStdString GetInternalName() { return m_internalName; };
+  CStdString GetPath() { return m_path; }
 };
 
 interface IDsRenderer;

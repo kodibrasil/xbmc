@@ -77,14 +77,19 @@ void CDSPlayerDatabase::CreateTables()
   CLog::Log(LOGINFO, "create madvr settings for resolution table");
   m_pDS->exec("CREATE TABLE madvrResSettings ( Resolution integer, madvrJson txt)\n");
 
+  CLog::Log(LOGINFO, "create madvr settings for user table");
+  m_pDS->exec("CREATE TABLE madvrUserSettings ( User integer, madvrJson txt)\n");
+
   CStdString strSQL = "CREATE TABLE lavvideoSettings (id integer, bTrayIcon integer, dwStreamAR integer, dwNumThreads integer, ";
   for (int i = 0; i < LAVOutPixFmt_NB; ++i)
     strSQL += PrepareSQL("bPixFmts%i integer, ", i);
   strSQL += "dwRGBRange integer, dwHWAccel integer, dwHWAccelDeviceIndex integer, ";
   for (int i = 0; i < HWCodec_NB; ++i)
     strSQL += PrepareSQL("bHWFormats%i integer, ", i);
+  for (int i = 0; i < Codec_VideoNB; ++i)
+    strSQL += PrepareSQL("bVideoFormats%i integer, ", i);
   strSQL += "dwHWAccelResFlags integer, dwHWDeintMode integer, dwHWDeintOutput integer, dwDeintFieldOrder integer, deintMode integer, dwSWDeintMode integer, "
-    "dwSWDeintOutput integer, dwDitherMode integer"
+    "dwSWDeintOutput integer, dwDitherMode integer, bUseMSWMV9Decoder integer, bDVDVideoSupport integer"
     ")\n";
 
   CLog::Log(LOGINFO, "create lavvideo setting table");
@@ -96,6 +101,8 @@ void CDSPlayerDatabase::CreateTables()
   strSQL += "bDTSHDFraming integer, bAutoAVSync integer, bExpandMono integer, bExpand61 integer, bOutputStandardLayout integer, b51Legacy integer, bAllowRawSPDIF integer, ";
   for (int i = 0; i < SampleFormat_NB; ++i)
     strSQL += PrepareSQL("bSampleFormats%i integer, ", i);
+  for (int i = 0; i < Codec_AudioNB; ++i)
+    strSQL += PrepareSQL("bAudioFormats%i integer, ", i);
   strSQL += "bSampleConvertDither integer, bAudioDelayEnabled integer, iAudioDelay integer, bMixingEnabled integer, dwMixingLayout integer, dwMixingFlags integer, dwMixingMode integer, "
     "dwMixingCenterLevel integer, dwMixingSurroundLevel integer, dwMixingLFELevel integer"
     ")\n";
@@ -132,7 +139,7 @@ void CDSPlayerDatabase::CreateAnalytics()
 
 int CDSPlayerDatabase::GetSchemaVersion() const
 { 
-  return 18; 
+  return 20; 
 }
 
 void CDSPlayerDatabase::UpdateTables(int version)
@@ -902,6 +909,53 @@ void CDSPlayerDatabase::UpdateTables(int version)
   {
     m_pDS->exec("CREATE TABLE settings (file text, extSubTrackName text)\n");
   }
+
+  if (version < 19)
+  {
+    m_pDS->exec("CREATE TABLE madvrUserSettings ( User integer, madvrJson txt)\n");
+  }
+
+  if (version < 20)
+  {
+    CStdString strSQL;
+
+    //lavvideo
+    m_pDS->exec("ALTER TABLE lavvideoSettings ADD bUseMSWMV9Decoder integer");
+    m_pDS->exec("ALTER TABLE lavvideoSettings ADD bDVDVideoSupport integer");
+    m_pDS->query("SELECT * FROM lavvideoSettings");
+    if (m_pDS->num_rows() > 0)
+    {
+      m_pDS->close();
+      m_pDS->exec("UPDATE lavvideoSettings SET bUseMSWMV9Decoder=1, bDVDVideoSupport=1");
+    }
+
+    for (int i = 0; i < 59 /*Codec_VideoNB*/; ++i)
+    {
+      strSQL = PrepareSQL("ALTER TABLE lavvideoSettings ADD bVideoFormats%i integer", i);
+      m_pDS->exec(strSQL);
+      m_pDS->query("SELECT * FROM lavvideoSettings");
+      if (m_pDS->num_rows() > 0)
+      {
+        m_pDS->close();
+        strSQL = PrepareSQL("UPDATE lavvideoSettings SET bVideoFormats%i=1", i);
+        m_pDS->exec(strSQL);
+      }
+    }
+
+    //lavaudio
+    for (int i = 0; i < 26 /*Codec_AudioNB*/; ++i)
+    {
+      strSQL = PrepareSQL("ALTER TABLE lavaudioSettings ADD bAudioFormats%i integer", i);
+      m_pDS->exec(strSQL);
+      m_pDS->query("SELECT * FROM lavaudioSettings");
+      if (m_pDS->num_rows() > 0)
+      {
+        m_pDS->close();
+        strSQL = PrepareSQL("UPDATE lavaudioSettings SET bAudioFormats%i=1", i);
+        m_pDS->exec(strSQL);
+      }
+    }
+  }
 }
 
 bool CDSPlayerDatabase::GetResumeEdition(const CStdString& strFilenameAndPath, CEdition &edition)
@@ -1052,6 +1106,35 @@ bool CDSPlayerDatabase::GetResSettings(int resolution, CMadvrSettings &settings)
   return false;
 }
 
+bool CDSPlayerDatabase::GetUserSettings(int userId, CMadvrSettings &settings)
+{
+  try
+  {
+    if (userId < 1) return false;
+    if (NULL == m_pDB.get()) return false;
+    if (NULL == m_pDS.get()) return false;
+    // ok, now obtain the settings for this file
+
+    std::string strSQL = PrepareSQL("select * from madvrUserSettings where User=%i", userId);
+
+    m_pDS->query(strSQL.c_str());
+    if (m_pDS->num_rows() > 0)
+    { // get the madvr settings info
+      JsonToVariant(m_pDS->fv("madvrJson").get_asString(), settings);
+      m_pDS->close();
+      return true;
+    }
+    else
+
+    m_pDS->close();
+  }
+  catch (...)
+  {
+    CLog::Log(LOGERROR, "%s failed", __FUNCTION__);
+  }
+  return false;
+}
+
 bool CDSPlayerDatabase::GetTvShowSettings(const std::string &tvShowName, CMadvrSettings &settings)
 {
   try
@@ -1150,6 +1233,41 @@ void CDSPlayerDatabase::SetResSettings(int resolution, const CMadvrSettings &set
   }
 }
 
+void CDSPlayerDatabase::SetUserSettings(int userId, const CMadvrSettings &settings)
+{
+  try
+  {
+    if (userId < 1) return;
+    if (NULL == m_pDB.get()) return;
+    if (NULL == m_pDS.get()) return;
+
+    std::string strSQL = PrepareSQL("select * from madvrUserSettings where User=%i", userId);
+    std::string strJson = CJSONVariantWriter::Write(settings.m_db, true);
+
+    m_pDS->query(strSQL.c_str());
+    if (m_pDS->num_rows() > 0)
+    {
+      m_pDS->close();
+      // update the item
+
+      strSQL = PrepareSQL("UPDATE madvrUserSettings set madvrJson='%s' where User=%i", strJson.c_str(), userId);
+      m_pDS->exec(strSQL.c_str());
+      return;
+    }
+    else
+    { // add the items
+      m_pDS->close();
+      strSQL = PrepareSQL("INSERT INTO madvrUserSettings (User, madvrJson) VALUES (%i, '%s')",
+        userId, strJson.c_str());
+      m_pDS->exec(strSQL.c_str());
+    }
+  }
+  catch (...)
+  {
+    CLog::Log(LOGERROR, "%s (%ip) failed", __FUNCTION__, userId);
+  }
+}
+
 void CDSPlayerDatabase::SetTvShowSettings(const std::string &tvShowName, const CMadvrSettings &settings)
 {
   try
@@ -1227,6 +1345,25 @@ void CDSPlayerDatabase::EraseResSettings(int resolution)
   }
 }
 
+void CDSPlayerDatabase::EraseUserSettings(int userId)
+{
+  try
+  {
+    if (userId < 1)
+      return;
+
+    std::string strSQL = PrepareSQL("DELETE FROM madvrUserSettings where User=%i", userId);
+    CLog::Log(LOGINFO, "Deleting madvr settings information for user %i", userId);
+    m_pDS->exec(strSQL);
+
+  }
+  catch (...)
+  {
+    CLog::Log(LOGERROR, "%s failed", __FUNCTION__);
+  }
+}
+
+
 void CDSPlayerDatabase::EraseTvShowSettings(const std::string &tvShowName)
 {
   try
@@ -1268,6 +1405,8 @@ bool CDSPlayerDatabase::GetLAVVideoSettings(CLavSettings &settings)
       settings.video_dwHWAccelDeviceIndex = m_pDS->fv("dwHWAccelDeviceIndex").get_asInt();
       for (int i = 0; i < HWCodec_NB; ++i)
         settings.video_bHWFormats[i] = m_pDS->fv(PrepareSQL("bHWFormats%i", i).c_str()).get_asInt();
+      for (int i = 0; i < Codec_VideoNB; ++i)
+        settings.video_bVideoFormats[i] = m_pDS->fv(PrepareSQL("bVideoFormats%i", i).c_str()).get_asInt();
       settings.video_dwHWAccelResFlags = m_pDS->fv("dwHWAccelResFlags").get_asInt();
       settings.video_dwHWDeintMode = m_pDS->fv("dwHWDeintMode").get_asInt();
       settings.video_dwHWDeintOutput = m_pDS->fv("dwHWDeintOutput").get_asInt();
@@ -1276,6 +1415,8 @@ bool CDSPlayerDatabase::GetLAVVideoSettings(CLavSettings &settings)
       settings.video_dwSWDeintMode = m_pDS->fv("dwSWDeintMode").get_asInt();
       settings.video_dwSWDeintOutput = m_pDS->fv("dwSWDeintOutput").get_asInt();
       settings.video_dwDitherMode = m_pDS->fv("dwDitherMode").get_asInt();
+      settings.video_bUseMSWMV9Decoder = m_pDS->fv("bUseMSWMV9Decoder").get_asInt();
+      settings.video_bDVDVideoSupport = m_pDS->fv("bDVDVideoSupport").get_asInt();
 
       m_pDS->close();
       return true;
@@ -1316,6 +1457,8 @@ bool CDSPlayerDatabase::GetLAVAudioSettings(CLavSettings &settings)
       settings.audio_bAllowRawSPDIF = m_pDS->fv("bAllowRawSPDIF").get_asInt();
       for (int i = 0; i < SampleFormat_NB; ++i)
         settings.audio_bSampleFormats[i] = m_pDS->fv(PrepareSQL("bSampleFormats%i", i).c_str()).get_asInt();
+      for (int i = 0; i < Codec_AudioNB; ++i)
+        settings.audio_bAudioFormats[i] = m_pDS->fv(PrepareSQL("bAudioFormats%i", i).c_str()).get_asInt();
       settings.audio_bSampleConvertDither = m_pDS->fv("bSampleConvertDither").get_asInt();
       settings.audio_bAudioDelayEnabled = m_pDS->fv("bAudioDelayEnabled").get_asInt();
       settings.audio_iAudioDelay = m_pDS->fv("iAudioDelay").get_asInt();
@@ -1412,6 +1555,8 @@ void CDSPlayerDatabase::SetLAVVideoSettings(CLavSettings &settings)
       strSQL += PrepareSQL("dwHWAccelDeviceIndex=%i, ", settings.video_dwHWAccelDeviceIndex);
       for (int i = 0; i < HWCodec_NB; ++i)
         strSQL += PrepareSQL("bHWFormats%i=%i, ", i, settings.video_bHWFormats[i]);
+      for (int i = 0; i < Codec_VideoNB; ++i)
+        strSQL += PrepareSQL("bVideoFormats%i=%i, ", i, settings.video_bVideoFormats[i]);
       strSQL += PrepareSQL("dwHWAccelResFlags=%i, ", settings.video_dwHWAccelResFlags);
       strSQL += PrepareSQL("dwHWDeintMode=%i, ", settings.video_dwHWDeintMode);
       strSQL += PrepareSQL("dwHWDeintOutput=%i, ", settings.video_dwHWDeintOutput);
@@ -1419,7 +1564,9 @@ void CDSPlayerDatabase::SetLAVVideoSettings(CLavSettings &settings)
       strSQL += PrepareSQL("deintMode=%i, ", settings.video_deintMode);
       strSQL += PrepareSQL("dwSWDeintMode=%i, ", settings.video_dwSWDeintMode);
       strSQL += PrepareSQL("dwSWDeintOutput=%i, ", settings.video_dwSWDeintOutput);
-      strSQL += PrepareSQL("dwDitherMode=%i ", settings.video_dwDitherMode);
+      strSQL += PrepareSQL("dwDitherMode=%i, ", settings.video_dwDitherMode);
+      strSQL += PrepareSQL("bUseMSWMV9Decoder=%i, ", settings.video_bUseMSWMV9Decoder);
+      strSQL += PrepareSQL("bDVDVideoSupport=%i ", settings.video_bDVDVideoSupport);
       strSQL += "where id=0";
       m_pDS->exec(strSQL.c_str());
       return;
@@ -1434,8 +1581,10 @@ void CDSPlayerDatabase::SetLAVVideoSettings(CLavSettings &settings)
       strSQL += "dwRGBRange, dwHWAccel, dwHWAccelDeviceIndex, ";
       for (int i = 0; i < HWCodec_NB; ++i)
         strSQL += PrepareSQL("bHWFormats%i, ", i);
+      for (int i = 0; i < Codec_VideoNB; ++i)
+        strSQL += PrepareSQL("bVideoFormats%i, ", i);
       strSQL += "dwHWAccelResFlags, dwHWDeintMode, dwHWDeintOutput, dwDeintFieldOrder, deintMode, dwSWDeintMode, "
-        "dwSWDeintOutput, dwDitherMode"
+        "dwSWDeintOutput, dwDitherMode, bUseMSWMV9Decoder, bDVDVideoSupport"
         ") VALUES (0, ";
 
       strSQL += PrepareSQL("%i, ", settings.video_bTrayIcon);
@@ -1448,6 +1597,8 @@ void CDSPlayerDatabase::SetLAVVideoSettings(CLavSettings &settings)
       strSQL += PrepareSQL("%i, ", settings.video_dwHWAccelDeviceIndex);
       for (int i = 0; i < HWCodec_NB; ++i)
         strSQL += PrepareSQL("%i, ", settings.video_bHWFormats[i]);
+      for (int i = 0; i < Codec_VideoNB; ++i)
+        strSQL += PrepareSQL("%i, ", settings.video_bVideoFormats[i]);
       strSQL += PrepareSQL("%i, ", settings.video_dwHWAccelResFlags);
       strSQL += PrepareSQL("%i, ", settings.video_dwHWDeintMode);
       strSQL += PrepareSQL("%i, ", settings.video_dwHWDeintOutput);
@@ -1455,7 +1606,9 @@ void CDSPlayerDatabase::SetLAVVideoSettings(CLavSettings &settings)
       strSQL += PrepareSQL("%i, ", settings.video_deintMode);
       strSQL += PrepareSQL("%i, ", settings.video_dwSWDeintMode);
       strSQL += PrepareSQL("%i, ", settings.video_dwSWDeintOutput);
-      strSQL += PrepareSQL("%i ", settings.video_dwDitherMode);
+      strSQL += PrepareSQL("%i, ", settings.video_dwDitherMode);
+      strSQL += PrepareSQL("%i, ", settings.video_bUseMSWMV9Decoder);
+      strSQL += PrepareSQL("%i ", settings.video_bDVDVideoSupport);
       strSQL += ")";
 
       m_pDS->exec(strSQL.c_str());
@@ -1496,6 +1649,8 @@ void CDSPlayerDatabase::SetLAVAudioSettings(CLavSettings &settings)
       strSQL += PrepareSQL("bAllowRawSPDIF=%i, ", settings.audio_bAllowRawSPDIF);
       for (int i = 0; i < SampleFormat_NB; ++i)
         strSQL += PrepareSQL("bSampleFormats%i=%i, ", i, settings.audio_bSampleFormats[i]);
+      for (int i = 0; i < Codec_AudioNB; ++i)
+        strSQL += PrepareSQL("bAudioFormats%i=%i, ", i, settings.audio_bAudioFormats[i]);
       strSQL += PrepareSQL("bSampleConvertDither=%i, ", settings.audio_bSampleConvertDither);
       strSQL += PrepareSQL("bAudioDelayEnabled=%i, ", settings.audio_bAudioDelayEnabled);
       strSQL += PrepareSQL("iAudioDelay=%i, ", settings.audio_iAudioDelay);
@@ -1520,6 +1675,8 @@ void CDSPlayerDatabase::SetLAVAudioSettings(CLavSettings &settings)
       strSQL += "bDTSHDFraming, bAutoAVSync, bExpandMono, bExpand61, bOutputStandardLayout, b51Legacy, bAllowRawSPDIF, ";
       for (int i = 0; i < SampleFormat_NB; ++i)
         strSQL += PrepareSQL("bSampleFormats%i, ", i);
+      for (int i = 0; i < Codec_AudioNB; ++i)
+        strSQL += PrepareSQL("bAudioFormats%i, ", i);
       strSQL += "bSampleConvertDither, bAudioDelayEnabled, iAudioDelay, bMixingEnabled, dwMixingLayout, dwMixingFlags, dwMixingMode, "
         "dwMixingCenterLevel, dwMixingSurroundLevel, dwMixingLFELevel"
         ") VALUES (0, ";
@@ -1537,7 +1694,9 @@ void CDSPlayerDatabase::SetLAVAudioSettings(CLavSettings &settings)
       strSQL += PrepareSQL("%i, ", settings.audio_b51Legacy);
       strSQL += PrepareSQL("%i, ", settings.audio_bAllowRawSPDIF);
       for (int i = 0; i < SampleFormat_NB; ++i)
-        strSQL += PrepareSQL("%i, ", i, settings.audio_bSampleFormats[i]);
+        strSQL += PrepareSQL("%i, ", settings.audio_bSampleFormats[i]);
+      for (int i = 0; i < Codec_AudioNB; ++i)
+        strSQL += PrepareSQL("%i, ", settings.audio_bAudioFormats[i]);
       strSQL += PrepareSQL("%i, ", settings.audio_bSampleConvertDither);
       strSQL += PrepareSQL("%i, ", settings.audio_bAudioDelayEnabled);
       strSQL += PrepareSQL("%i, ", settings.audio_iAudioDelay);

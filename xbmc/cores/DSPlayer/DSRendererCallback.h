@@ -45,6 +45,13 @@ enum MADVR_GUI_SETTINGS
   KODIGUI_LOAD_MADVR
 };
 
+enum MADVR_D3D_MODE
+{
+  MADVR_D3D9,
+  MADVR_D3D11_VSYNC,
+  MADVR_D3D11_NOVSYNC,
+};
+
 enum MADVR_RES_SETTINGS
 {
   MADVR_RES_SD = 480,
@@ -52,7 +59,9 @@ enum MADVR_RES_SETTINGS
   MADVR_RES_1080 = 1080,
   MADVR_RES_2160 = 2160,
   MADVR_RES_ALL = 0,
+  MADVR_RES_USER = 1,
   MADVR_RES_TVSHOW,
+  MADVR_RES_ATSTART,
   MADVR_RES_DEFAULT
 };
 
@@ -84,8 +93,8 @@ class IDSRendererPaintCallback
 public:
   virtual ~IDSRendererPaintCallback() {};
 
-  virtual void RenderToUnderTexture(){};
-  virtual void RenderToOverTexture(){};
+  virtual void BeginRender(){};
+  virtual void RenderToTexture(DS_RENDER_LAYER layer){};
   virtual void EndRender(){};
 };
 
@@ -128,8 +137,8 @@ public:
   virtual CRect GetMadvrRect();
 
   // IDSRendererPaintCallback
-  virtual void RenderToUnderTexture();
-  virtual void RenderToOverTexture();
+  virtual void BeginRender();
+  virtual void RenderToTexture(DS_RENDER_LAYER layer);
   virtual void EndRender();
 
   // IMadvrSettingCallback

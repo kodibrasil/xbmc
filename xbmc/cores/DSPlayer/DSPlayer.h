@@ -150,7 +150,7 @@ public:
   virtual void SetAudioStream(int iStream) override;
 
   //virtual int GetVideoStream() {} const override;
-  //virtual int GetVideoStreamCount() const override;
+  virtual int GetVideoStreamCount() const override { return 1; }
   virtual void GetVideoStreamInfo(int streamId, SPlayerVideoStreamInfo &info) override;
   //virtual void SetVideoStream(int iStream);
 
@@ -166,6 +166,7 @@ public:
   virtual __int64 GetTotalTime() override { CSingleLock lock(m_StateSection); return llrint(DS_TIME_TO_MSEC(g_dsGraph->GetTotalTime())); }
   virtual void SetSpeed(float iSpeed) override;
   virtual float GetSpeed() override;
+  virtual bool SupportsTempo() override;
   virtual bool OnAction(const CAction &action) override;
   virtual bool HasMenu() const override { return g_dsGraph->IsDvd(); };
   bool IsInMenu() const override { return g_dsGraph->IsInMenu(); };
@@ -312,6 +313,7 @@ protected:
 
   bool SelectChannel(bool bNext);
   bool SwitchChannel(unsigned int iChannelNumber);
+  void LoadMadvrSettings(int id);
 
   // CThread
   virtual void OnStartup() override;
@@ -320,6 +322,8 @@ protected:
 
   bool m_HasVideo;
   bool m_HasAudio;
+
+  std::atomic_bool m_canTempo;
 
   CRenderDSManager m_renderManager;
 };

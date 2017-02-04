@@ -130,13 +130,12 @@ void CDSGraph::UpdateProcessInfo(int index)
 
   //VIDEO
   m_processInfo->SetVideoDimensions(m_width, m_height);
-  m_processInfo->SetVideoDecoderName(CStreamsManager::Get() ? CStreamsManager::Get()->GetVideoCodecName() : "", false);
+  m_processInfo->SetVideoDecoderName(CStreamsManager::Get() ? CStreamsManager::Get()->GetVideoCodecName() : "", CStreamsManager::Get()->GetHWAccel() > 0);
   m_processInfo->SetVideoDAR((float)m_width / (float)m_height);
   m_processInfo->SetVideoFps(m_fps);
 
   CServiceBroker::GetDataCacheCore().SignalAudioInfoChange();
   CServiceBroker::GetDataCacheCore().SignalVideoInfoChange();
-
 }
 
 void CDSGraph::SetAudioCodeDelayInfo(int index)
@@ -513,6 +512,14 @@ HRESULT CDSGraph::HandleGraphEvent()
   LONG evCode;
   LONG_PTR evParam1, evParam2;
   HRESULT hr = S_OK;
+
+  if (CDSRendererCallback::Get()->ReadyDS() && CDSRendererCallback::Get()->GetStop())
+  {
+    CDSRendererCallback::Get()->SetStop(false);
+    CApplicationMessenger::GetInstance().SendMsg(TMSG_MEDIA_STOP);
+    CLog::Log(LOGDEBUG, "%s Playback stopped at start", __FUNCTION__);
+  }
+
   // Make sure that we don't access the media event interface
   // after it has already been released.
   if (!m_pMediaEvent)
@@ -522,13 +529,6 @@ HRESULT CDSGraph::HandleGraphEvent()
   while ((CDSPlayer::PlayerState != DSPLAYER_CLOSING && CDSPlayer::PlayerState != DSPLAYER_CLOSED)
     && SUCCEEDED(m_pMediaEvent->GetEvent(&evCode, &evParam1, &evParam2, 0)))
   {
-    if (CDSRendererCallback::Get()->ReadyDS() && CDSRendererCallback::Get()->GetStop())
-    {
-      CLog::Log(LOGDEBUG, "%s Playback stopped at start", __FUNCTION__);
-      CApplicationMessenger::GetInstance().SendMsg(TMSG_MEDIA_STOP);
-      break;
-    }
-
     switch (evCode)
     {
     case EC_STEP_COMPLETE:

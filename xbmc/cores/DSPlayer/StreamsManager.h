@@ -223,6 +223,10 @@ public:
   void SetEdition(int iEdition);
   bool IsMatroskaEditions(){ return m_mkveditions; };
 
+  std::string GetStereoMode();
+
+  DWORD GetHWAccel();
+
   /** Wait until the graph is ready. If a stream is being changed, the
    * function waits. Otherwise, simply returns.
    */

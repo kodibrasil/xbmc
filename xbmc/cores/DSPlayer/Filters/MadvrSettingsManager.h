@@ -62,6 +62,7 @@ public:
   virtual void ListSettings(const std::string &path);
 
   void SetBool(const std::string &path, bool bValue, bool bNegate = false, const std::string &type = "");
+  void SetInt(const std::string &path, int iValue, const std::string &type = "");
 private:
 
   BOOL GetSettings(MADVR_SETTINGS_TYPE type, LPCWSTR path, int enumIndex, LPCWSTR sValue, BOOL* bValue, int* iValue, int *bufSize);
@@ -85,7 +86,6 @@ private:
   std::string GetCustom(const std::string &path, const std::string &type);
 
   void        SetStr(const std::string &path, const std::string &str, const std::string &type = "");
-  void        SetInt(const std::string &path, int iValue, const std::string &type = "");
   void        SetFloat(const std::string &path, float fValue, const std::string &format = "%1.2F", const std::string &type = "");
   void        SetBoolInt(const std::string &path, const std::string &path2, int iValue, bool bNegate, const std::string &type);
   void        SetBoolBool(const std::string &path, const std::string &path2, int iValue, bool bNegate, const std::string &type);

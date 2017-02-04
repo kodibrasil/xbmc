@@ -159,6 +159,8 @@
 #include "cores/DSPlayer/Dialogs/GUIDialogLAVAudio.h"
 #include "cores/DSPlayer/Dialogs/GUIDialogLAVSplitter.h"
 #include "cores/DSPlayer/Dialogs/GUIDIalogMadvrSettings.h"
+#include "cores/DSPlayer/DSRendererCallback.h"
+#include "cores/DSPlayer/Dialogs/GUIDialogDSPlayerProcessInfo.h"
 #endif
 
 using namespace PVR;
@@ -243,6 +245,7 @@ void CGUIWindowManager::CreateWindows()
   Add(new CGUIDialogLAVAudio);
   Add(new CGUIDialogLAVSplitter);
   Add(new CGUIDialogMadvrSettings);
+  Add(new CGUIDialogDSPlayerProcessInfo);
 #endif
   Add(new CGUIDialogVideoBookmarks);
   // Don't add the filebrowser dialog - it's created and added when it's needed
@@ -367,6 +370,7 @@ bool CGUIWindowManager::DestroyWindows()
     Delete(WINDOW_DIALOG_LAVVIDEO);
     Delete(WINDOW_DIALOG_LAVAUDIO);
     Delete(WINDOW_DIALOG_LAVSPLITTER);
+    Delete(WINDOW_DIALOG_DSPLAYER_PROCESS_INFO);
 #endif
     Delete(WINDOW_DIALOG_VIDEO_BOOKMARKS);
     Delete(WINDOW_DIALOG_CONTENT_SETTINGS);
@@ -1115,6 +1119,10 @@ bool CGUIWindowManager::Render()
   assert(g_application.IsCurrentThread());
   CSingleExit lock(g_graphicsContext);
 
+#ifdef HAS_DS_PLAYER
+  CDSRendererCallback::Get()->RenderToTexture(RENDER_LAYER_UNDER);
+#endif
+
   CDirtyRegionList dirtyRegions = m_tracker.GetDirtyRegions();
 
   bool hasRendered = false;
@@ -1475,6 +1483,10 @@ int CGUIWindowManager::GetFocusedWindow() const
 
 bool CGUIWindowManager::IsWindowActive(int id, bool ignoreClosing /* = true */) const
 {
+#ifdef HAS_DS_PLAYER
+  if (id == WINDOW_DIALOG_PLAYER_PROCESS_INFO && IsWindowActive(WINDOW_DIALOG_DSPLAYER_PROCESS_INFO, ignoreClosing))
+    return true;
+#endif
   // mask out multiple instances of the same window
   id &= WINDOW_ID_MASK;
   if ((GetActiveWindow() & WINDOW_ID_MASK) == id) return true;

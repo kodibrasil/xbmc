@@ -39,6 +39,15 @@
 #include "Utils/AudioEnumerator.h"
 #include "settings/AdvancedSettings.h"
 
+#pragma comment(lib , "version.lib")
+
+const std::string CGraphFilters::INTERNAL_LAVVIDEO = "lavvideo_internal";
+const std::string CGraphFilters::INTERNAL_LAVAUDIO = "lavaudio_internal";
+const std::string CGraphFilters::INTERNAL_LAVSPLITTER = "lavsource_internal";
+const std::string CGraphFilters::INTERNAL_XYVSFILTER = "xyvsfilter_internal";
+const std::string CGraphFilters::INTERNAL_XYSUBFILTER ="xysubfilter_internal";
+const std::string CGraphFilters::MADSHI_VIDEO_RENDERER = "madVR";
+
 CGraphFilters *CGraphFilters::m_pSingleton = NULL;
 
 CGraphFilters::CGraphFilters() :
@@ -48,6 +57,8 @@ m_isDVD(false), m_UsingDXVADecoder(false), m_hsubfilter(false)
   m_defaultRulePriority = "0";
   m_pD3DDevice = NULL;
   m_auxAudioDelay = false;
+  m_bDialogProcessInfo = false;
+
 }
 
 CGraphFilters::~CGraphFilters()
@@ -64,7 +75,7 @@ CGraphFilters* CGraphFilters::Get()
   return (m_pSingleton) ? m_pSingleton : (m_pSingleton = new CGraphFilters());
 }
 
-void CGraphFilters::ShowInternalPPage(LAVFILTERS_TYPE type, bool showPropertyPage)
+void CGraphFilters::ShowInternalPPage(const std::string &type, bool showPropertyPage)
 {
   m_pBF = NULL;
 
@@ -85,11 +96,11 @@ void CGraphFilters::ShowInternalPPage(LAVFILTERS_TYPE type, bool showPropertyPag
   }
   else
   {
-    if (type == LAVVIDEO)
+    if (type == INTERNAL_LAVVIDEO)
       g_windowManager.ActivateWindow(WINDOW_DIALOG_LAVVIDEO);
-    if (type == LAVAUDIO)
+    if (type == INTERNAL_LAVAUDIO)
       g_windowManager.ActivateWindow(WINDOW_DIALOG_LAVAUDIO);
-    if (type == LAVSPLITTER)
+    if (type == INTERNAL_LAVSPLITTER)
       g_windowManager.ActivateWindow(WINDOW_DIALOG_LAVSPLITTER);
   }
 }
@@ -115,17 +126,11 @@ bool CGraphFilters::ShowOSDPPage(IBaseFilter *pBF)
   return false;
 }
 
-void CGraphFilters::CreateInternalFilter(LAVFILTERS_TYPE type, IBaseFilter **ppBF)
+void CGraphFilters::CreateInternalFilter(const std::string &type, IBaseFilter **ppBF)
 {
-  std::string filterName;
-  if (type == LAVVIDEO)
-    filterName = "lavvideo_internal";
-  if (type == LAVAUDIO)
-    filterName = "lavaudio_internal";
-  if (type == LAVSPLITTER)
-    filterName = "lavsource_internal";
-  if (type == XYSUBFILTER)
-    CSettings::GetInstance().GetString(CSettings::SETTING_DSPLAYER_VIDEORENDERER) == "EVR" ? filterName = "xyvsfilter_internal" : filterName = "xysubfilter_internal";
+  std::string filterName = type;
+  if (type == INTERNAL_XYSUBFILTER && CSettings::GetInstance().GetString(CSettings::SETTING_DSPLAYER_VIDEORENDERER) == "EVR") 
+    filterName = CGraphFilters::INTERNAL_XYVSFILTER;
 
   CFGLoader *pLoader = new CFGLoader();
   pLoader->LoadConfig();
@@ -140,43 +145,43 @@ void CGraphFilters::CreateInternalFilter(LAVFILTERS_TYPE type, IBaseFilter **ppB
   SetupLavSettings(type, *ppBF);
 }
 
-void CGraphFilters::GetInternalFilter(LAVFILTERS_TYPE type, IBaseFilter **ppBF)
+void CGraphFilters::GetInternalFilter(const std::string &type, IBaseFilter **ppBF)
 {
   *ppBF = m_pBF;
 
-  if (type == LAVVIDEO && Video.pBF && Video.internalFilter)
+  if (type == INTERNAL_LAVVIDEO && Video.pBF && Video.internalFilter)
     *ppBF = Video.pBF;
 
-  if (type == LAVAUDIO && Audio.pBF && Audio.internalFilter)
+  if (type == INTERNAL_LAVAUDIO && Audio.pBF && Audio.internalFilter)
     *ppBF = Audio.pBF;
 
-  if (type == LAVSPLITTER && Splitter.pBF && Splitter.internalFilter)
+  if (type == INTERNAL_LAVSPLITTER && Splitter.pBF && Splitter.internalFilter)
     *ppBF = Splitter.pBF;
 
-  if (type == LAVSPLITTER && Source.pBF && Source.internalFilter)
+  if (type == INTERNAL_LAVSPLITTER && Source.pBF && Source.internalFilter)
     *ppBF = Source.pBF;
 
-  if (type == XYSUBFILTER && Subs.pBF && Subs.internalFilter)
+  if (type == INTERNAL_XYSUBFILTER && Subs.pBF && Subs.internalFilter)
     *ppBF = Subs.pBF;
 }
 
-LAVFILTERS_TYPE CGraphFilters::GetInternalType(IBaseFilter *pBF)
+std::string CGraphFilters::GetInternalType(IBaseFilter *pBF)
 {
   if (Video.pBF == pBF && Video.internalFilter)
-    return LAVVIDEO;
+    return INTERNAL_LAVVIDEO;
   if (Audio.pBF == pBF && Audio.internalFilter)
-    return LAVAUDIO;
+    return INTERNAL_LAVAUDIO;
   if ((Source.pBF == pBF && Source.internalFilter) || (Splitter.pBF == pBF && Splitter.internalFilter))
-    return LAVSPLITTER;
+    return INTERNAL_LAVSPLITTER;
   if ((Subs.pBF == pBF && Subs.internalFilter))
-    return XYSUBFILTER;
+    return INTERNAL_XYSUBFILTER;
 
-  return NOINTERNAL;
+  return "";
 }
 
-void CGraphFilters::SetupLavSettings(LAVFILTERS_TYPE type, IBaseFilter* pBF)
+void CGraphFilters::SetupLavSettings(const std::string &type, IBaseFilter* pBF)
 {
-  if (type != LAVVIDEO && type != LAVAUDIO && type != LAVSPLITTER)
+  if (type != INTERNAL_LAVVIDEO && type != INTERNAL_LAVAUDIO && type != INTERNAL_LAVSPLITTER)
     return;
 
   // Set LavFilters in RunTimeConfig to have personal settings only for DSPlayer
@@ -196,22 +201,22 @@ void CGraphFilters::SetupLavSettings(LAVFILTERS_TYPE type, IBaseFilter* pBF)
   }
 }
 
-bool CGraphFilters::SetLavInternal(LAVFILTERS_TYPE type, IBaseFilter *pBF)
+bool CGraphFilters::SetLavInternal(const std::string &type, IBaseFilter *pBF)
 {
-  if (type != LAVVIDEO && type != LAVAUDIO && type != LAVSPLITTER)
+  if (type != INTERNAL_LAVVIDEO && type != INTERNAL_LAVAUDIO && type != INTERNAL_LAVSPLITTER)
     return false;
 
-  if (type == LAVVIDEO)
+  if (type == INTERNAL_LAVVIDEO)
   {
     Com::SmartQIPtr<ILAVVideoSettings> pLAVVideoSettings = pBF;
     pLAVVideoSettings->SetRuntimeConfig(TRUE);
   }
-  else if (type == LAVAUDIO)
+  else if (type == INTERNAL_LAVAUDIO)
   {
     Com::SmartQIPtr<ILAVAudioSettings> pLAVAudioSettings = pBF;
     pLAVAudioSettings->SetRuntimeConfig(TRUE);
   }
-  else if (type == LAVSPLITTER)
+  else if (type == INTERNAL_LAVSPLITTER)
   {
     Com::SmartQIPtr<ILAVFSettings> pLAVFSettings = pBF;
     pLAVFSettings->SetRuntimeConfig(TRUE);
@@ -220,12 +225,12 @@ bool CGraphFilters::SetLavInternal(LAVFILTERS_TYPE type, IBaseFilter *pBF)
   return true;
 }
 
-bool CGraphFilters::GetLavSettings(LAVFILTERS_TYPE type, IBaseFilter* pBF)
+bool CGraphFilters::GetLavSettings(const std::string &type, IBaseFilter* pBF)
 {
-  if (type != LAVVIDEO && type != LAVAUDIO && type != LAVSPLITTER)
+  if (type != INTERNAL_LAVVIDEO && type != INTERNAL_LAVAUDIO && type != INTERNAL_LAVSPLITTER)
     return false;
 
-  if (type == LAVVIDEO)
+  if (type == INTERNAL_LAVVIDEO)
   {
     Com::SmartQIPtr<ILAVVideoSettings> pLAVVideoSettings = pBF;
 
@@ -251,11 +256,16 @@ bool CGraphFilters::GetLavSettings(LAVFILTERS_TYPE type, IBaseFilter* pBF)
     for (int i = 0; i < HWCodec_NB; ++i) {
       lavSettings.video_bHWFormats[i] = pLAVVideoSettings->GetHWAccelCodec((LAVVideoHWCodec)i);
     }
+    for (int i = 0; i < Codec_VideoNB; ++i) {
+      lavSettings.video_bVideoFormats[i] = pLAVVideoSettings->GetFormatConfiguration((LAVVideoCodec)i);
+    }
     lavSettings.video_dwHWAccelResFlags = pLAVVideoSettings->GetHWAccelResolutionFlags();
     lavSettings.video_dwHWDeintMode = pLAVVideoSettings->GetHWAccelDeintMode();
     lavSettings.video_dwHWDeintOutput = pLAVVideoSettings->GetHWAccelDeintOutput();
+    lavSettings.video_bUseMSWMV9Decoder = pLAVVideoSettings->GetUseMSWMV9Decoder();
+    lavSettings.video_bDVDVideoSupport = pLAVVideoSettings->GetDVDVideoSupport();
   } 
-  if (type == LAVAUDIO)
+  if (type == INTERNAL_LAVAUDIO)
   {
     Com::SmartQIPtr<ILAVAudioSettings> pLAVAudioSettings = pBF;
 
@@ -285,9 +295,12 @@ bool CGraphFilters::GetLavSettings(LAVFILTERS_TYPE type, IBaseFilter* pBF)
     for (int i = 0; i < SampleFormat_Bitstream; ++i) {
       lavSettings.audio_bSampleFormats[i] = pLAVAudioSettings->GetSampleFormat((LAVAudioSampleFormat)i);
     }
+    for (int i = 0; i < Codec_AudioNB; ++i) {
+      lavSettings.audio_bAudioFormats[i] = pLAVAudioSettings->GetFormatConfiguration((LAVAudioCodec)i);
+    }
     lavSettings.audio_bSampleConvertDither = pLAVAudioSettings->GetSampleConvertDithering();
   }
-  if (type == LAVSPLITTER)
+  if (type == INTERNAL_LAVSPLITTER)
   {
     Com::SmartQIPtr<ILAVFSettings> pLAVFSettings = pBF;
 
@@ -335,12 +348,12 @@ bool CGraphFilters::GetLavSettings(LAVFILTERS_TYPE type, IBaseFilter* pBF)
   return true;
 }
 
-bool CGraphFilters::SetLavSettings(LAVFILTERS_TYPE type, IBaseFilter* pBF)
+bool CGraphFilters::SetLavSettings(const std::string &type, IBaseFilter* pBF)
 {
-  if (type != LAVVIDEO && type != LAVAUDIO && type != LAVSPLITTER)
+  if (type != INTERNAL_LAVVIDEO && type != INTERNAL_LAVAUDIO && type != INTERNAL_LAVSPLITTER)
     return false;
 
-  if (type == LAVVIDEO)
+  if (type == INTERNAL_LAVVIDEO)
   {
     Com::SmartQIPtr<ILAVVideoSettings> pLAVVideoSettings = pBF;
 
@@ -366,15 +379,20 @@ bool CGraphFilters::SetLavSettings(LAVFILTERS_TYPE type, IBaseFilter* pBF)
     for (int i = 0; i < HWCodec_NB; ++i) {
       pLAVVideoSettings->SetHWAccelCodec((LAVVideoHWCodec)i, lavSettings.video_bHWFormats[i]);
     }
+    for (int i = 0; i < Codec_VideoNB; ++i) {
+      pLAVVideoSettings->SetFormatConfiguration((LAVVideoCodec)i, lavSettings.video_bVideoFormats[i]);
+    }
     pLAVVideoSettings->SetHWAccelResolutionFlags(lavSettings.video_dwHWAccelResFlags);
     pLAVVideoSettings->SetHWAccelDeintMode((LAVHWDeintModes)lavSettings.video_dwHWDeintMode);
     pLAVVideoSettings->SetHWAccelDeintOutput((LAVDeintOutput)lavSettings.video_dwHWDeintOutput);
+    pLAVVideoSettings->SetUseMSWMV9Decoder(lavSettings.video_bUseMSWMV9Decoder);
+    pLAVVideoSettings->SetDVDVideoSupport(lavSettings.video_bDVDVideoSupport);
 
     // Custom interface
     if (Com::SmartQIPtr<ILAVVideoSettingsDSPlayerCustom> pLAVFSettingsDSPlayerCustom = pLAVVideoSettings)
       pLAVFSettingsDSPlayerCustom->SetPropertyPageCallback(PropertyPageCallback);
   }
-  if (type == LAVAUDIO)
+  if (type == INTERNAL_LAVAUDIO)
   {
     Com::SmartQIPtr<ILAVAudioSettings> pLAVAudioSettings = pBF;
 
@@ -403,6 +421,9 @@ bool CGraphFilters::SetLavSettings(LAVFILTERS_TYPE type, IBaseFilter* pBF)
     for (int i = 0; i < SampleFormat_Bitstream; ++i) {
       pLAVAudioSettings->SetSampleFormat((LAVAudioSampleFormat)i, lavSettings.audio_bSampleFormats[i]);
     }
+    for (int i = 0; i < Codec_AudioNB; ++i) {
+      pLAVAudioSettings->SetFormatConfiguration((LAVAudioCodec)i, lavSettings.audio_bAudioFormats[i]);
+    }
     pLAVAudioSettings->SetSampleConvertDithering(lavSettings.audio_bSampleConvertDither);
 
     // The internal LAV Audio Decoder will not be registered to handle WMA formats
@@ -416,7 +437,7 @@ bool CGraphFilters::SetLavSettings(LAVFILTERS_TYPE type, IBaseFilter* pBF)
     if (Com::SmartQIPtr<ILAVAudioSettingsDSPlayerCustom> pLAVFSettingsDSPlayerCustom = pLAVAudioSettings)
       pLAVFSettingsDSPlayerCustom->SetPropertyPageCallback(PropertyPageCallback);
   }
-  if (type == LAVSPLITTER)
+  if (type == INTERNAL_LAVSPLITTER)
   {
     Com::SmartQIPtr<ILAVFSettings> pLAVFSettings = pBF;
 
@@ -449,9 +470,9 @@ bool CGraphFilters::SetLavSettings(LAVFILTERS_TYPE type, IBaseFilter* pBF)
   return true;
 }
 
-bool CGraphFilters::SaveLavSettings(LAVFILTERS_TYPE type)
+bool CGraphFilters::SaveLavSettings(const std::string &type)
 {
-  if (type != LAVVIDEO && type != LAVAUDIO && type != LAVSPLITTER)
+  if (type != INTERNAL_LAVVIDEO && type != INTERNAL_LAVAUDIO && type != INTERNAL_LAVSPLITTER)
     return false;
 
   CLavSettings &lavSettings = CMediaSettings::GetInstance().GetCurrentLavSettings();
@@ -459,11 +480,11 @@ bool CGraphFilters::SaveLavSettings(LAVFILTERS_TYPE type)
   CDSPlayerDatabase dsdbs;
   if (dsdbs.Open())
   {
-    if (type == LAVVIDEO)
+    if (type == INTERNAL_LAVVIDEO)
       dsdbs.SetLAVVideoSettings(lavSettings);
-    if (type == LAVAUDIO)
+    if (type == INTERNAL_LAVAUDIO)
       dsdbs.SetLAVAudioSettings(lavSettings);
-    if (type == LAVSPLITTER)
+    if (type == INTERNAL_LAVSPLITTER)
       dsdbs.SetLAVSplitterSettings(lavSettings);
     dsdbs.Close();
   }
@@ -471,9 +492,9 @@ bool CGraphFilters::SaveLavSettings(LAVFILTERS_TYPE type)
   return true;
 }
 
-bool CGraphFilters::LoadLavSettings(LAVFILTERS_TYPE type)
+bool CGraphFilters::LoadLavSettings(const std::string &type)
 {
-  if (type != LAVVIDEO && type != LAVAUDIO && type != LAVSPLITTER)
+  if (type != INTERNAL_LAVVIDEO && type != INTERNAL_LAVAUDIO && type != INTERNAL_LAVSPLITTER)
     return false;
 
   CLavSettings &lavSettings = CMediaSettings::GetInstance().GetCurrentLavSettings();
@@ -481,11 +502,11 @@ bool CGraphFilters::LoadLavSettings(LAVFILTERS_TYPE type)
   CDSPlayerDatabase dsdbs;
   if (dsdbs.Open())
   {
-    if (type == LAVVIDEO)
+    if (type == INTERNAL_LAVVIDEO)
       result = dsdbs.GetLAVVideoSettings(lavSettings);
-    if (type == LAVAUDIO)
+    if (type == INTERNAL_LAVAUDIO)
       result = dsdbs.GetLAVAudioSettings(lavSettings);
-    if (type == LAVSPLITTER)
+    if (type == INTERNAL_LAVSPLITTER)
       result = dsdbs.GetLAVSplitterSettings(lavSettings);
 
     dsdbs.Close();
@@ -493,19 +514,19 @@ bool CGraphFilters::LoadLavSettings(LAVFILTERS_TYPE type)
   return result;
 }
 
-void CGraphFilters::EraseLavSetting(LAVFILTERS_TYPE type)
+void CGraphFilters::EraseLavSetting(const std::string &type)
 {
-  if (type != LAVVIDEO && type != LAVAUDIO && type != LAVSPLITTER)
+  if (type != INTERNAL_LAVVIDEO && type != INTERNAL_LAVAUDIO && type != INTERNAL_LAVSPLITTER)
     return;
 
   CDSPlayerDatabase dsdbs;
   if (dsdbs.Open())
   {
-    if (type == LAVVIDEO)
+    if (type == INTERNAL_LAVVIDEO)
       dsdbs.EraseLAVVideo();
-    if (type == LAVAUDIO)
+    if (type == INTERNAL_LAVAUDIO)
       dsdbs.EraseLAVAudio();
-    if (type == LAVSPLITTER)
+    if (type == INTERNAL_LAVSPLITTER)
       dsdbs.EraseLAVSplitter();
 
     dsdbs.Close();
@@ -518,26 +539,6 @@ HRESULT CGraphFilters::PropertyPageCallback(IUnknown* pBF)
   pDSPropertyPage->Initialize();
 
   return S_OK;
-}
-
-bool CGraphFilters::IsRegisteredFilter(const std::string filter)
-{
-  CDSFilterEnumerator p_dsfilter;
-  std::vector<DSFiltersInfo> dsfilterList;
-  p_dsfilter.GetDSFilters(dsfilterList);
-  std::vector<DSFiltersInfo>::const_iterator iter = dsfilterList.begin();
-
-  for (int i = 1; iter != dsfilterList.end(); i++)
-  {
-    DSFiltersInfo dev = *iter;
-    if (dev.lpstrName == filter)
-    {
-      return true;
-      break;
-    }
-    ++iter;
-  }
-  return false;
 }
 
 void CGraphFilters::SetAuxAudioDelay()

@@ -45,30 +45,33 @@ HRESULT CEvrSharedRender::Render(DS_RENDER_LAYER layer)
   return S_OK;
 }
 
-void CEvrSharedRender::RenderToUnderTexture()
+void CEvrSharedRender::BeginRender()
 {
-  CDSRendererCallback::Get()->SetCurrentVideoLayer(RENDER_LAYER_UNDER);
-  CDSRendererCallback::Get()->ResetRenderCount();
-
+  // Clear RenderTarget
   ID3D11DeviceContext* pContext = g_Windowing.Get3D11Context();
   ID3D11RenderTargetView* pSurface11;
 
   m_pD3DDeviceKodi->CreateRenderTargetView(m_pKodiUnderTexture, NULL, &pSurface11);
-  pContext->OMSetRenderTargets(1, &pSurface11, 0);
   pContext->ClearRenderTargetView(pSurface11, m_fColor);
   pSurface11->Release();
+
+  m_pD3DDeviceKodi->CreateRenderTargetView(m_pKodiOverTexture, NULL, &pSurface11);
+  pContext->ClearRenderTargetView(pSurface11, m_fColor);
+  pSurface11->Release();
+
+  // Reset RenderCount
+  CDSRendererCallback::Get()->ResetRenderCount();
 }
 
-void CEvrSharedRender::RenderToOverTexture()
+void CEvrSharedRender::RenderToTexture(DS_RENDER_LAYER layer)
 {
-  CDSRendererCallback::Get()->SetCurrentVideoLayer(RENDER_LAYER_OVER);
+  CDSRendererCallback::Get()->SetCurrentVideoLayer(layer);
 
   ID3D11DeviceContext* pContext = g_Windowing.Get3D11Context();
   ID3D11RenderTargetView* pSurface11;
 
-  m_pD3DDeviceKodi->CreateRenderTargetView(m_pKodiOverTexture, NULL, &pSurface11);
+  m_pD3DDeviceKodi->CreateRenderTargetView(layer == RENDER_LAYER_UNDER ? m_pKodiUnderTexture : m_pKodiOverTexture, NULL, &pSurface11);
   pContext->OMSetRenderTargets(1, &pSurface11, 0);
-  pContext->ClearRenderTargetView(pSurface11, m_fColor);
   pSurface11->Release();
 }
 

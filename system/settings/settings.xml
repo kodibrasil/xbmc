@@ -956,6 +956,68 @@
           </dependencies>
           <control type="toggle" />
         </setting>
+        <setting id="dsplayer.d3dpresentation" parent="dsplayer.videorenderer" type="integer" label="55103" help="90030">
+          <level>0</level>
+          <default>0</default> <!-- Direct3D 9 -->
+          <constraints>
+            <options>
+              <option label="55119">-1</option> <!-- madVR decide -->
+              <option label="55104">0</option> <!-- Direct3D 9 -->
+              <option label="55105">1</option> <!-- Direct3D 11 -->
+              <option label="55106">2</option> <!-- Direct3D 11 (no vsync) -->
+            </options>
+          </constraints>
+          <dependencies>
+            <dependency type="visible" setting="dsplayer.videorenderer" operator="is">madVR</dependency>
+          </dependencies>
+          <control type="list" format="string" />
+        </setting>
+        <setting id="dsplayer.numpresentwindowed" parent="dsplayer.videorenderer" type="integer" label="55107" help="90029">
+          <level>0</level>
+          <default>8</default> <!-- 8 frames -->
+          <constraints>
+            <options>
+              <option label="55119">-1</option> <!-- madVR decide -->
+              <option label="55109">1</option> <!-- 1 frame -->
+              <option label="55110">2</option> <!-- 2 frames -->
+              <option label="55111">3</option> <!-- 3 frames -->
+              <option label="55112">4</option> <!-- 4 frames -->
+              <option label="55113">6</option> <!-- 6 frames -->
+              <option label="55114">8</option> <!-- 8 frames -->
+              <option label="55115">10</option> <!-- 10 frames -->
+              <option label="55116">12</option> <!-- 12 frames -->
+              <option label="55117">14</option> <!-- 14 frames -->
+              <option label="55118">16</option> <!-- 16 frames -->
+            </options>
+          </constraints>
+          <dependencies>
+            <dependency type="visible" setting="dsplayer.videorenderer" operator="is">madVR</dependency>
+          </dependencies>
+          <control type="list" format="string" />
+        </setting>
+        <setting id="dsplayer.numpresentexclusive" parent="dsplayer.videorenderer" type="integer" label="55108" help="90029">
+          <level>0</level>
+          <default>8</default> <!-- 8 frames -->
+          <constraints>
+            <options>
+              <option label="55119">-1</option> <!-- madVR decide -->
+              <option label="55109">1</option> <!-- 1 frame -->
+              <option label="55110">2</option> <!-- 2 frames -->
+              <option label="55111">3</option> <!-- 3 frames -->
+              <option label="55112">4</option> <!-- 4 frames -->
+              <option label="55113">6</option> <!-- 6 frames -->
+              <option label="55114">8</option> <!-- 8 frames -->
+              <option label="55115">10</option> <!-- 10 frames -->
+              <option label="55116">12</option> <!-- 12 frames -->
+              <option label="55117">14</option> <!-- 14 frames -->
+              <option label="55118">16</option> <!-- 16 frames -->
+            </options>
+          </constraints>
+          <dependencies>
+            <dependency type="visible" setting="dsplayer.videorenderer" operator="is">madVR</dependency>
+          </dependencies>
+          <control type="list" format="string" />
+        </setting>
         <setting id="dsplayer.audiorenderer" type="string" label="55003" help="90007">
           <level>0</level>
           <default>System Default</default>

@@ -43,15 +43,20 @@
 
 using namespace KODI::MESSAGING;
 
-CRenderDSManager::CRenderDSManager(IRenderDSMsg *player)
+CRenderDSManager::CRenderDSManager(IRenderDSMsg *player) :
+  m_pRenderer(nullptr),
+  m_bTriggerUpdateResolution(false),
+  m_renderDebug(false),
+  m_renderState(STATE_UNCONFIGURED),
+  m_displayLatency(0.0),
+  m_width(0),
+  m_height(0),
+  m_dwidth(0),
+  m_dheight(0),
+  m_fps(0.0f),
+  m_presentstep(PRESENT_IDLE),
+  m_playerPort(player)
 {
-  m_pRenderer = nullptr;
-  m_renderState = STATE_UNCONFIGURED;
-  m_presentstep = PRESENT_IDLE;
-  m_bTriggerUpdateResolution = false;
-  m_displayLatency = 0.0f;
-  m_playerPort = player;
-  m_renderDebug = false;
 }
 
 CRenderDSManager::~CRenderDSManager()

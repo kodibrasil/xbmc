@@ -657,7 +657,7 @@ bool CEVRAllocatorPresenter::GetState(DWORD dwMilliSecsTimeout, FILTER_STATE *St
 
   if (m_bSignaledStarvation)
   {
-    unsigned int nSamples = std::max(m_nNbDXSurface / 2, 1U);
+    unsigned int nSamples = std::max<uint32_t>(m_nNbDXSurface / 2, 1U);
     if ((m_ScheduledSamples.GetCount() < nSamples || m_LastSampleOffset < -m_rtTimePerFrame * 2) && !g_bNoDuration)
     {
       *State = (FILTER_STATE)Paused;

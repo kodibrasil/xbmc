@@ -45,7 +45,7 @@ public:
   CFGLoader();
   virtual ~CFGLoader();
 
-  HRESULT    LoadConfig();
+  HRESULT    LoadConfig(FILTERSMAN_TYPE filterManager = NOFILTERMAN);
   bool	     IsAutoRender(){ return m_bIsAutoRender; };
   bool       LoadFilterCoreFactorySettings(const CStdString& item, ESettingsType type, bool clear);
 

@@ -147,7 +147,7 @@ HRESULT CFGManager2::RenderFileXbmc(const CFileItem& pFileItem)
 
   if (!hasStreamDetails) {
     if (CSettings::GetInstance().GetBool(CSettings::SETTING_MYVIDEOS_EXTRACTFLAGS)) // Only warn user if the option is enabled
-      CLog::Log(LOGWARNING, __FUNCTION__" DVDPlayer failed to fetch streams details. Using DirectShow ones");
+      CLog::Log(LOGWARNING, __FUNCTION__" VideoPlayer failed to fetch streams details. Using DirectShow ones");
 
     FileItem.GetVideoInfoTag()->m_streamDetails.AddStream(new CDSStreamDetailVideo((const CDSStreamDetailVideo &)(*CStreamsManager::Get()->GetVideoStreamDetail())));
 

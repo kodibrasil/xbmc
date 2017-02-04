@@ -160,14 +160,17 @@ void CmadVRAllocatorPresenter::EnableExclusive(bool bEnable)
 
 void CmadVRAllocatorPresenter::ConfigureMadvr()
 {
+  // Disable SeekBar
   if (Com::SmartQIPtr<IMadVRCommand> pMadVrCmd = m_pDXR)
     pMadVrCmd->SendCommandBool("disableSeekbar", true);
 
+  // Delay Playback
   m_pSettingsManager->SetBool("delayPlaybackStart2", CSettings::GetInstance().GetBool(CSettings::SETTING_DSPLAYER_DELAYMADVRPLAYBACK));
 
   if (Com::SmartQIPtr<IMadVRExclusiveModeCallback> pEXL = m_pDXR)
     pEXL->Register(m_exclusiveCallback, this);
 
+  // Exclusive Mode
   if (CSettings::GetInstance().GetBool(CSettings::SETTING_DSPLAYER_EXCLUSIVEMODE))
   {
       m_pSettingsManager->SetBool("exclusiveDelay", true);
@@ -178,6 +181,39 @@ void CmadVRAllocatorPresenter::ConfigureMadvr()
     if (Com::SmartQIPtr<IMadVRCommand> pMadVrCmd = m_pDXR)
       pMadVrCmd->SendCommandBool("disableExclusiveMode", true);
   }
+
+  // Direct3D Mode
+  int iD3DMode = CSettings::GetInstance().GetInt(CSettings::SETTING_DSPLAYER_D3DPRESNTATION);
+  switch (iD3DMode)
+  {
+  case MADVR_D3D9:
+  {
+    m_pSettingsManager->SetBool("useD3d11", false);
+    break;
+  }
+  case MADVR_D3D11_VSYNC:
+  {
+    m_pSettingsManager->SetBool("useD3d11", true);
+    m_pSettingsManager->SetBool("d3d11noDelay", true);
+    break;
+  }
+  case MADVR_D3D11_NOVSYNC:
+  {
+    m_pSettingsManager->SetBool("useD3d11", true);
+    m_pSettingsManager->SetBool("d3d11noDelay", false);
+    break;
+  }
+  }
+
+  // Pre-Presented Frames
+  int iNumPresentWindowed = CSettings::GetInstance().GetInt(CSettings::SETTING_DSPLAYER_NUMPRESENTWINDOWED);
+  int iNumPresentExclusive = CSettings::GetInstance().GetInt(CSettings::SETTING_DSPLAYER_NUMPRESENTEXCLUSIVE);
+
+  if (iNumPresentWindowed > 0)
+    m_pSettingsManager->SetInt("preRenderFramesWindowed", iNumPresentWindowed);
+
+  if (iNumPresentExclusive > 0)
+    m_pSettingsManager->SetInt("preRenderFrames", iNumPresentExclusive);
 }
 
 bool CmadVRAllocatorPresenter::ParentWindowProc(HWND hWnd, UINT uMsg, WPARAM *wParam, LPARAM *lParam, LRESULT *ret)
@@ -412,19 +448,37 @@ void CmadVRAllocatorPresenter::SetMadvrPosition(CRect wndRect, CRect videoRect)
 
 STDMETHODIMP_(void) CmadVRAllocatorPresenter::SetPosition(RECT w, RECT v)
 {
+  if (!g_graphicsContext.IsFullScreenVideo())
+  {
+    w.left = 0;
+    w.top = 0;
+    w.right = g_graphicsContext.GetWidth();
+    w.bottom = g_graphicsContext.GetHeight();
+  }
+
+  RENDER_STEREO_MODE stereoMode = g_graphicsContext.GetStereoMode();
+  switch (stereoMode)
+  {
+  case RENDER_STEREO_MODE_SPLIT_VERTICAL:
+  {
+    w.right *= 2;
+    v.right *= 2;
+    break;
+  }
+  case RENDER_STEREO_MODE_SPLIT_HORIZONTAL:
+  {
+    w.bottom *= 2;
+    v.bottom *= 2;
+    break;
+  }
+  }
+
   if (Com::SmartQIPtr<IBasicVideo> pBV = m_pDXR) {
     pBV->SetDefaultSourcePosition();
     pBV->SetDestinationPosition(v.left, v.top, v.right - v.left, v.bottom - v.top);
   }
 
   if (Com::SmartQIPtr<IVideoWindow> pVW = m_pDXR) {
-    if (!g_graphicsContext.IsFullScreenVideo())
-    {
-      w.left = 0;
-      w.top = 0;
-      w.right = g_graphicsContext.GetWidth();
-      w.bottom = g_graphicsContext.GetHeight();
-    }
     pVW->SetWindowPosition(w.left, w.top, w.right - w.left, w.bottom - w.top);
   }
 }

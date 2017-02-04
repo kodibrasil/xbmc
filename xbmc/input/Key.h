@@ -220,6 +220,16 @@
 
 #define ACTION_PLAY                   68  //!< Unused at the moment
 #define ACTION_PLAYER_PROCESS_INFO    69 //!< show player process info (video decoder, pixel format, pvr signal strength and the like
+#ifdef HAS_DS_PLAYER
+#define ACTION_DSPLAYER_USERSETTINGS_ATSTART 900
+#define ACTION_DSPLAYER_USERSETTINGS_1       901
+#define ACTION_DSPLAYER_USERSETTINGS_2       902
+#define ACTION_DSPLAYER_USERSETTINGS_3       903
+#define ACTION_DSPLAYER_USERSETTINGS_SD      904
+#define ACTION_DSPLAYER_USERSETTINGS_720     905
+#define ACTION_DSPLAYER_USERSETTINGS_1080    906
+#define ACTION_DSPLAYER_USERSETTINGS_2160    907
+#endif
 #define ACTION_SMALL_STEP_BACK        76  //!< jumps a few seconds back during playback of movie. Can b used in videoFullScreen.xml window id=2005
 
 #define ACTION_PLAYER_FORWARD         77  //!< FF in current file played. global action, can be used anywhere

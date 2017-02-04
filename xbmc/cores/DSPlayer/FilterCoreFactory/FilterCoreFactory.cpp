@@ -109,7 +109,7 @@ HRESULT CFilterCoreFactory::GetSourceFilter(const CFileItem& pFileItem, CStdStri
   {
     if (pFileItem.IsInternetStream())
     {
-      filter = "lavsource_internal";
+      filter = CGraphFilters::INTERNAL_LAVSPLITTER;
       return S_OK;
     }
     return E_FAIL;

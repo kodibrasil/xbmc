@@ -44,6 +44,7 @@ public:
   DWORD video_dwHWAccel;
   DWORD video_dwHWAccelDeviceIndex;
   BOOL video_bHWFormats[HWCodec_NB];
+  BOOL video_bVideoFormats[Codec_VideoNB];
   DWORD video_dwHWAccelResFlags;
   DWORD video_dwHWDeintMode;
   DWORD video_dwHWDeintOutput;
@@ -52,6 +53,8 @@ public:
   DWORD video_dwSWDeintMode;
   DWORD video_dwSWDeintOutput;
   DWORD video_dwDitherMode;
+  BOOL video_bUseMSWMV9Decoder;
+  BOOL video_bDVDVideoSupport;
 
   BOOL audio_bTrayIcon;
   BOOL audio_bDRCEnabled;
@@ -65,6 +68,7 @@ public:
   BOOL audio_b51Legacy;
   BOOL audio_bAllowRawSPDIF;
   BOOL audio_bSampleFormats[SampleFormat_NB];
+  BOOL audio_bAudioFormats[Codec_AudioNB];
   BOOL audio_bSampleConvertDither;
   BOOL audio_bAudioDelayEnabled = FALSE;
   int  audio_iAudioDelay = 0;

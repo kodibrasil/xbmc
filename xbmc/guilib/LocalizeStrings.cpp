@@ -31,7 +31,8 @@
 #include "threads/SingleLock.h"
 #include "utils/StringUtils.h"
 #ifdef HAS_DS_PLAYER
-#include "profiles/ProfilesManager.h"
+#include "settings/MediaSettings.h"
+#include "cores/DSPlayer/Filters/MadvrSettings.h"
 #endif
 
 
@@ -141,7 +142,7 @@ static bool LoadPO(const std::string &filename, std::map<uint32_t, LocStr>& stri
 #ifdef HAS_DS_PLAYER
   if (filename.find("resource.language.en_gb") != filename.npos)
   {
-    LoadPO(CProfilesManager::GetInstance().GetUserDataItem("dsplayer/strings.po"), strings, encoding, offset, bSourceLanguage);
+    LoadPO(CMediaSettings::GetInstance().GetCurrentMadvrSettings().m_FileStringPo, strings, encoding, offset, bSourceLanguage);
   }
 #endif
   CLog::Log(LOGDEBUG, "LocalizeStrings: loaded %i strings from file %s", counter, filename.c_str());

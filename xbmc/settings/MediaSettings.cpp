@@ -347,13 +347,13 @@ void CMediaSettings::OnSettingAction(const CSetting *setting)
   else if (settingId == CSettings::SETTING_DSPLAYER_PLAYCORE)
     CGUIDialogDSPlayercoreFactory::ShowDSPlayercoreFactory();
   else if (settingId == CSettings::SETTING_DSPLAYER_LAVSPLITTER)
-    CGraphFilters::Get()->ShowInternalPPage(LAVSPLITTER, false);
+    CGraphFilters::Get()->ShowInternalPPage(CGraphFilters::INTERNAL_LAVSPLITTER, false);
   else if (settingId == CSettings::SETTING_DSPLAYER_LAVVIDEO)
-    CGraphFilters::Get()->ShowInternalPPage(LAVVIDEO, false);
+    CGraphFilters::Get()->ShowInternalPPage(CGraphFilters::INTERNAL_LAVVIDEO, false);
   else if (settingId == CSettings::SETTING_DSPLAYER_LAVAUDIO)
-    CGraphFilters::Get()->ShowInternalPPage(LAVAUDIO, false);
+    CGraphFilters::Get()->ShowInternalPPage(CGraphFilters::INTERNAL_LAVAUDIO, false);
   else if (settingId == CSettings::SETTING_DSPLAYER_XYSUBFILTER || settingId == CSettings::SETTING_DSPLAYER_XYVSFILTER)
-    CGraphFilters::Get()->ShowInternalPPage(XYSUBFILTER, true);
+    CGraphFilters::Get()->ShowInternalPPage(CGraphFilters::INTERNAL_XYSUBFILTER, true);
   else if (settingId == CSettings::SETTING_DSPLAYER_DSAREARESET)
   {
     CSettings::GetInstance().SetInt(CSettings::SETTING_DSPLAYER_DSAREALEFT, 0);

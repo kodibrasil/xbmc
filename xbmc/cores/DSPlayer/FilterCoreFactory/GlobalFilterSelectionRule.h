@@ -86,6 +86,10 @@ public:
     if (CompileRegExp(m_fileName, regExp) && !MatchesRegExp(pFileItem.GetPath(), regExp)) return false;
     if (CompileRegExp(m_Protocols, regExp) && !MatchesRegExp(url.GetProtocol(), regExp)) return false;
     if (CompileRegExp(m_videoCodec, regExp) && !MatchesRegExp(streamDetails.GetVideoCodec(), regExp)) return false;
+    CStdString audioCodec = streamDetails.GetAudioCodec();
+    if (audioCodec == "dca")
+      audioCodec = "dts";
+    if (CompileRegExp(m_audioCodec, regExp) && !MatchesRegExp(audioCodec, regExp)) return false;
 
     return true;
   }
@@ -143,6 +147,7 @@ private:
   CStdString m_fileTypes;
   CStdString m_Protocols;
   CStdString m_videoCodec;
+  CStdString m_audioCodec;
   CStdString m_priority;
   CFilterSelectionRule * m_pSource;
   CFilterSelectionRule * m_pSplitter;
@@ -182,7 +187,8 @@ private:
     m_fileName = pRule->Attribute("filename");
     m_Protocols = pRule->Attribute("protocols");
     m_videoCodec = pRule->Attribute("videocodec");
-    m_bStreamDetails = m_videoCodec.length() > 0;
+    m_audioCodec = pRule->Attribute("audiocodec");
+    m_bStreamDetails = m_videoCodec.length() > 0 || m_audioCodec.length() > 0;
 
     m_priority = pRule->Attribute("priority");
     if (m_priority.length() <= 0)

@@ -30,8 +30,8 @@ public:
   CEvrSharedRender();
   virtual ~CEvrSharedRender();
 
-  virtual void RenderToUnderTexture();
-  virtual void RenderToOverTexture();
+  virtual void BeginRender();
+  virtual void RenderToTexture(DS_RENDER_LAYER layer);
   virtual void EndRender();
 
   HRESULT Render(DS_RENDER_LAYER layer);  

@@ -71,7 +71,7 @@ RESOLUTION CResolutionUtils::ChooseBestResolution(float fps, int width, bool is3
   int iValue = CSettings::GetInstance().GetInt(CSettings::SETTING_DSPLAYER_CHANGEREFRESHWITH);
   if (iValue != ADJUST_REFRESHRATE_WITH_BOTH)
   {
-    if ((g_application.GetCurrentPlayer() == "DSPlayer" && iValue == ADJUST_REFRESHRATE_WITH_DVDPLAYER)
+    if ((g_application.GetCurrentPlayer() == "DSPlayer" && iValue == ADJUST_REFRESHRATE_WITH_VIDEOPLAYER)
       || (g_application.GetCurrentPlayer() == "VideoPlayer" && iValue == ADJUST_REFRESHRATE_WITH_DSPLAYER))
       return res;
   }

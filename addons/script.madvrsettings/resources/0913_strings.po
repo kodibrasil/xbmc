@@ -980,62 +980,6 @@ msgctxt "#1072000"
 msgid "Rendering..."
 msgstr ""
 
-msgctxt "#1072001"
-msgid "Use Direct3D 11 for presentation"
-msgstr ""
-
-msgctxt "#1072002"
-msgid "present a frame for every VSync"
-msgstr ""
-
-msgctxt "#1072003"
-msgid "Number of pre-presented frames (windowed mode)"
-msgstr ""
-
-msgctxt "#1072004"
-msgid "Number of pre-presented frames (exclusive mode)"
-msgstr ""
-
-msgctxt "#1072005"
-msgid "1 frame"
-msgstr ""
-
-msgctxt "#1072006"
-msgid "2 frames"
-msgstr ""
-
-msgctxt "#1072007"
-msgid "3 frames"
-msgstr ""
-
-msgctxt "#1072008"
-msgid "4 frames"
-msgstr ""
-
-msgctxt "#1072009"
-msgid "6 frames"
-msgstr ""
-
-msgctxt "#1072010"
-msgid "8 frames"
-msgstr ""
-
-msgctxt "#1072011"
-msgid "10 frames"
-msgstr ""
-
-msgctxt "#1072012"
-msgid "12 frames"
-msgstr ""
-
-msgctxt "#1072013"
-msgid "14 frames"
-msgstr ""
-
-msgctxt "#1072014"
-msgid "16 frames"
-msgstr ""
-
 msgctxt "#1073000"
 msgid "Image enhancements..."
 msgstr ""

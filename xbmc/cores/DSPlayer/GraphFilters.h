@@ -112,20 +112,12 @@ struct SDVDFilters
   Com::SmartQIPtr<IDvdInfo2> dvdInfo; ///< Pointer to IDvdInfo2 interface. May be NULL
 };
 
-enum LAVFILTERS_TYPE
-{
-  LAVSPLITTER,
-  LAVVIDEO,
-  LAVAUDIO,
-  XYSUBFILTER,
-  NOINTERNAL
-};
-
 enum FILTERSMAN_TYPE
 {
   INTERNALFILTERS,
   MEDIARULES,
   DSMERITS,
+  NOFILTERMAN
 };
 
 /** @brief Centralize graph filters management
@@ -135,6 +127,13 @@ enum FILTERSMAN_TYPE
 class CGraphFilters
 {
 public:
+  static const std::string INTERNAL_LAVVIDEO;
+  static const std::string INTERNAL_LAVAUDIO;
+  static const std::string INTERNAL_LAVSPLITTER;
+  static const std::string INTERNAL_XYVSFILTER;
+  static const std::string INTERNAL_XYSUBFILTER;
+  static const std::string MADSHI_VIDEO_RENDERER;
+
   /// Retrieve singleton instance
   static CGraphFilters* Get();
   /// Destroy singleton instance
@@ -182,26 +181,29 @@ public:
   void SetDefaultRulePriority(std::string sValue) { m_defaultRulePriority = sValue; }
 
   // Internal Filters
-  void ShowInternalPPage(LAVFILTERS_TYPE type, bool showPropertyPage);
+  void ShowInternalPPage(const std::string &type, bool showPropertyPage);
   bool ShowOSDPPage(IBaseFilter *pBF);
-  void CreateInternalFilter(LAVFILTERS_TYPE type, IBaseFilter **ppBF);
-  void GetInternalFilter(LAVFILTERS_TYPE type, IBaseFilter **ppBF);
-  LAVFILTERS_TYPE GetInternalType(IBaseFilter *pBF);
-  void SetupLavSettings(LAVFILTERS_TYPE type, IBaseFilter *pBF);
-  bool SetLavInternal(LAVFILTERS_TYPE type, IBaseFilter *pBF);
-  bool GetLavSettings(LAVFILTERS_TYPE type, IBaseFilter *pBF);
-  bool SetLavSettings(LAVFILTERS_TYPE type, IBaseFilter *pBF);
-  bool LoadLavSettings(LAVFILTERS_TYPE type);
-  bool SaveLavSettings(LAVFILTERS_TYPE type);
-  void EraseLavSetting(LAVFILTERS_TYPE type);
+  void CreateInternalFilter(const std::string &type, IBaseFilter **ppBF);
+  void GetInternalFilter(const std::string &type, IBaseFilter **ppBF);
+  std::string GetInternalType(IBaseFilter *pBF);
+  void SetupLavSettings(const std::string &type, IBaseFilter *pBF);
+  bool SetLavInternal(const std::string &type, IBaseFilter *pBF);
+  bool GetLavSettings(const std::string &type, IBaseFilter *pBF);
+  bool SetLavSettings(const std::string &type, IBaseFilter *pBF);
+  bool LoadLavSettings(const std::string &type);
+  bool SaveLavSettings(const std::string &type);
+  void EraseLavSetting(const std::string &type);
   static HRESULT PropertyPageCallback(IUnknown* pBF);
-  bool IsRegisteredFilter(const std::string filter);
 
   bool HasSubFilter() { return m_hsubfilter; }
   void SetHasSubFilter(bool b) { m_hsubfilter = b; }
   void SetKodiRealFS(bool b) { m_isKodiRealFS = b; }
   void SetAuxAudioDelay();
   bool GetAuxAudioDelay() { return m_auxAudioDelay; }
+
+  bool IsDialogProcessInfo() { return m_bDialogProcessInfo; };
+  void SetDialogProcessInfo(bool dialogProcessInfo) { m_bDialogProcessInfo = dialogProcessInfo; };
+
   bool UsingMediaPortalTsReader() 
   { 
     return ((Splitter.guid != GUID_NULL) && !(StringFromGUID(Splitter.guid).compare(L"{B9559486-E1BB-45D3-A2A2-9A7AFE49B23F}"))); 
@@ -220,6 +222,9 @@ private:
   bool m_isDVD;
   bool m_UsingDXVADecoder;
   bool m_auxAudioDelay;
+
+  bool m_bDialogProcessInfo = false;
+
   std::string m_defaultRulePriority;
   Com::SmartPtr<IBaseFilter> m_pBF;
   IDirect3DDevice9 * m_pD3DDevice;

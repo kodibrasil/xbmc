@@ -7,7 +7,7 @@
 <settings>
   <dsprofile path="processing" folder="deinterlacing|artifactRemoval|enhancements|zoomControl" />
   <dsprofile path="scalingParent" folder="chromaUp|lumaUp|lumaDown|upRefine" />
-  <dsprofile path="rendering" folder="smoothMotion|dithering" />
+  <dsprofile path="rendering" folder="smoothMotion|dithering|tradeQuality" />
   <group>
     <!-- <debug path="processing|scalingParent|rendering" label="1069999" /> -->
     <section label="1071000">
@@ -753,38 +753,6 @@
           <option value="avoidJudder" label="1070301" />
           <option value="almostAlways" label="1070302" />
           <option value="always" label="1070303" />
-        </setting>
-      </group>
-      <group>
-        <setting name="useD3d11" type="bool" label="1072001" default="false" />
-        <setting name="d3d11noDelay" type="bool" label="1072002" parent="useD3d11" default="true">
-          <dependencies>
-            <dependency type="enable" setting="useD3d11" operator="is">true</dependency>
-          </dependencies>
-        </setting>
-        <setting name="preRenderFramesWindowed" type="list_int" label="1072003" default="8">
-          <option value="1" label="1072005" />
-          <option value="2" label="1072006" />
-          <option value="3" label="1072007" />
-          <option value="4" label="1072008" />
-          <option value="6" label="1072009" />
-          <option value="8" label="1072010" />
-          <option value="10" label="1072011" />
-          <option value="12" label="1072012" />
-          <option value="14" label="1072013" />
-          <option value="16" label="1072014" />
-        </setting>
-        <setting name="preRenderFrames" type="list_int" label="1072004" default="8">
-          <option value="1" label="1072005" />
-          <option value="2" label="1072006" />
-          <option value="3" label="1072007" />
-          <option value="4" label="1072008" />
-          <option value="6" label="1072009" />
-          <option value="8" label="1072010" />
-          <option value="10" label="1072011" />
-          <option value="12" label="1072012" />
-          <option value="14" label="1072013" />
-          <option value="16" label="1072014" />
         </setting>
       </group>
       <!-- end rendering -->

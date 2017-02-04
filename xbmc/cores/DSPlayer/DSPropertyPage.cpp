@@ -57,10 +57,10 @@ LONG GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, LONG *height)
 }
 
 
-CDSPropertyPage::CDSPropertyPage(IBaseFilter* pBF, LAVFILTERS_TYPE type)
+CDSPropertyPage::CDSPropertyPage(IBaseFilter* pBF, const std::string &type)
   : m_pBF(pBF), m_type(type), CThread("CDSPropertyPage thread")
 {
-  if (m_type == NOINTERNAL)
+  if (m_type.empty())
     m_type = CGraphFilters::Get()->GetInternalType(pBF);
 }
 
@@ -95,7 +95,7 @@ static INT_PTR CALLBACK prop_sheet_proc(HWND hwnd, UINT msg, WPARAM wparam,
     if (result == S_OK) {
       result = opf->propPage->Show(SW_SHOW);
       if (result == S_OK) {
-        SetWindowLongPtr(hwnd, DWLP_USER, (LONG)opf);
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(opf));
       }
     }
     BringWindowToTop(hwnd);
@@ -103,17 +103,17 @@ static INT_PTR CALLBACK prop_sheet_proc(HWND hwnd, UINT msg, WPARAM wparam,
   }
   case WM_DESTROY:
   {
-    OLEPropertyFrame *opf = (OLEPropertyFrame *)GetWindowLongPtr(hwnd, DWLP_USER);
+    OLEPropertyFrame *opf = (OLEPropertyFrame *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     if (opf) {
       opf->propPage->Show(SW_HIDE);
       opf->propPage->Deactivate();
-      SetWindowLongPtr(hwnd, DWLP_USER, (LONG)NULL);
+      SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);
     }
     break;
   }
   case WM_NOTIFY:
   {
-    OLEPropertyFrame *opf = (OLEPropertyFrame *)GetWindowLongPtr(hwnd, DWLP_USER);
+    OLEPropertyFrame *opf = (OLEPropertyFrame *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     NMHDR *nmhdr = (NMHDR *)lparam;
     if (!opf)
       break;
@@ -159,7 +159,7 @@ void CDSPropertyPage::Process()
   {
     pProp->GetPages(&pPages);
 
-    if (m_type == NOINTERNAL)
+    if (m_type.empty())
     {
       hr = OleCreatePropertyFrame(g_Windowing.GetHwnd(), 0, 0, GetFilterName(m_pBF).c_str(),
         1, (LPUNKNOWN *)&m_pBF, pPages.cElems,
@@ -263,7 +263,7 @@ void CDSPropertyPage::Process()
 void CDSPropertyPage::OnExit()
 {
   // if internal filter save lavsettings
-  if (m_type == LAVVIDEO || m_type == LAVAUDIO || m_type == LAVSPLITTER)
+  if (m_type == CGraphFilters::INTERNAL_LAVVIDEO || m_type == CGraphFilters::INTERNAL_LAVAUDIO || m_type == CGraphFilters::INTERNAL_LAVSPLITTER)
   {
     CGraphFilters::Get()->GetLavSettings(m_type, m_pBF);
     CGraphFilters::Get()->SaveLavSettings(m_type);

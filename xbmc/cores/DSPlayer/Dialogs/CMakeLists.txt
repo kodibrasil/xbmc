@@ -1,6 +1,7 @@
 set(SOURCES GUIDialogDSFilters.cpp
             GUIDialogDSManager.cpp
             GUIDialogDSPlayercoreFactory.cpp
+            GUIDialogDSPlayerProcessInfo.cpp
             GUIDialogDSRules.cpp
             GUIDialogLAVAudio.cpp
             GUIDialogLAVSplitter.cpp
@@ -11,6 +12,7 @@ set(SOURCES GUIDialogDSFilters.cpp
 set(HEADERS GUIDialogDSFilters.h
             GUIDialogDSManager.h
             GUIDialogDSPlayercoreFactory.h
+            GUIDialogDSPlayerProcessInfo.h
             GUIDialogDSRules.h
             GUIDialogLAVAudio.h
             GUIDialogLAVSplitter.h

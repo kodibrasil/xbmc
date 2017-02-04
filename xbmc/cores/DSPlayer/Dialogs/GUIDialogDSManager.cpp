@@ -132,18 +132,6 @@ void CGUIDialogDSManager::GetPath(xmlType type, CStdString &xmlFile, CStdString 
     xmlRoot = "playercorefactory";
     xmlNode = "rules";
   }
-
-  if (type == HOMEMADVRSETTINGS)
-  {
-    xmlFile = "special://xbmc/system/players/dsplayer/madvrsettings.xml";
-    xmlRoot = "settings";
-  }
-
-  if (type == MADVRSETTINGS)
-  {
-    xmlFile = CProfilesManager::GetInstance().GetUserDataItem("dsplayer/madvrsettings.xml");
-    xmlRoot = "settings";
-  }
 }
 
 void CGUIDialogDSManager::SaveDsXML(xmlType type)
@@ -204,9 +192,7 @@ void CGUIDialogDSManager::LoadDsXML(xmlType type, TiXmlElement* &pNode, bool for
     || type == HOMEFILTERSCONFIG)
     pNode = pConfig->FirstChildElement(xmlNode.c_str());
 
-  if (type == SHADERS 
-    || type == MADVRSETTINGS 
-    || type == HOMEMADVRSETTINGS)
+  if (type == SHADERS)
     pNode = pConfig;
 
   if (type == PLAYERCOREFACTORY) {

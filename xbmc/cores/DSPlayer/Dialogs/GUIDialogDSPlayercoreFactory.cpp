@@ -68,27 +68,11 @@ void CGUIDialogDSPlayercoreFactory::OnInitWindow()
 
 void CGUIDialogDSPlayercoreFactory::OnDeinitWindow(int nextWindowID)
 {
+  if (m_bEdited)
+    m_dsmanager->GetNew() ? ActionInternal(SETTING_RULE_ADD) : ActionInternal(SETTING_RULE_SAVE);
+
   CGUIDialogSettingsManualBase::OnDeinitWindow(nextWindowID);
   ShowDSPlayercoreFactory();
-}
-
-bool CGUIDialogDSPlayercoreFactory::OnBack(int actionID)
-{
-  if (m_bEdited)
-  {
-    if (CGUIDialogYesNo::ShowAndGetInput(61001, 61002, 0, 0))
-    {
-      CSetting *setting;
-      if (!m_dsmanager->GetNew())
-        setting = GetSetting(SETTING_RULE_SAVE);
-      else
-        setting = GetSetting(SETTING_RULE_ADD);
-
-      OnSettingAction(setting);
-    }
-  }
-
-  return CGUIDialogSettingsManualBase::OnBack(actionID);
 }
 
 void CGUIDialogDSPlayercoreFactory::Save()
@@ -192,13 +176,8 @@ void CGUIDialogDSPlayercoreFactory::InitializeSettings()
       AddToggle(group, it->m_setting, it->m_label, 0, it->GetBoolValue());
   }
 
-  if (m_dsmanager->GetNew())
-    AddButton(groupSave, SETTING_RULE_ADD, 60015, 0);
-  else
-  {
-    AddButton(groupSave, SETTING_RULE_SAVE, 60016, 0);
+  if (!m_dsmanager->GetNew())
     AddButton(groupSave, SETTING_RULE_DEL, 60017, 0);
-  }
 }
 
 void CGUIDialogDSPlayercoreFactory::OnSettingChanged(const CSetting *setting)
@@ -228,15 +207,23 @@ void CGUIDialogDSPlayercoreFactory::OnSettingAction(const CSetting *setting)
   if (setting == NULL)
     return;
 
+  // Init variables
+  CGUIDialogSettingsManualBase::OnSettingAction(setting);
+  const std::string &settingId = setting->GetId();
+
+  ActionInternal(settingId);
+}
+
+void CGUIDialogDSPlayercoreFactory::ActionInternal(const std::string &settingId)
+{
+  if (settingId == "")
+    return;
+
   // Load userdata playercorefactory.xml
   TiXmlElement *pRules;
   m_dsmanager->LoadDsXML(PLAYERCOREFACTORY, pRules, true);
   if (!pRules)
     return;
-
-  // Init variables
-  CGUIDialogSettingsManualBase::OnSettingAction(setting);
-  const std::string &settingId = setting->GetId();
 
   // Del Rule
   if (settingId == SETTING_RULE_DEL)
@@ -268,7 +255,7 @@ void CGUIDialogDSPlayercoreFactory::OnSettingAction(const CSetting *setting)
         pRule.SetAttribute(it->m_attr.c_str(), it->m_value.c_str());
     }
 
-    pRule.SetAttribute("player", "DVDPlayer");
+    pRule.SetAttribute("player", "VideoPlayer");
 
     // SAVE
     if (settingId == SETTING_RULE_SAVE)
@@ -341,9 +328,9 @@ void CGUIDialogDSPlayercoreFactory::ShowDSPlayercoreFactory()
       }
     }
 
-    // Load only dvdplayer rules
+    // Load only VideoPlayer rules
     value = pRule->Attribute("player");
-    if (value.ToLower() == "dvdplayer")
+    if (value.ToLower() == "videoplayer")
       pDlg->Add(strLabel);
 
     pRule = pRule->NextSiblingElement("rule");

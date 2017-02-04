@@ -70,6 +70,7 @@
 #ifdef HAS_DS_PLAYER
 #define VIDEO_SETTINGS_DS_STATS           "video.dsstats"
 #define VIDEO_SETTINGS_DS_FILTERS         "video.dsfilters"
+#define SETTING_VIDEO_LOAD                "video.load"
 #endif
 
 #define SETTING_VIDEO_STEREOSCOPICMODE    "video.stereoscopicmode"
@@ -225,6 +226,8 @@ void CGUIDialogVideoSettings::OnSettingAction(const CSetting *setting)
   else if (settingId == SETTING_VIDEO_MAKE_DEFAULT)
 #ifdef HAS_DS_PLAYER
     m_bMadvr ? SaveMadvrSettings() : Save();
+  else if (settingId == SETTING_VIDEO_LOAD)
+    LoadMadvrSettings();
 #else
     Save();
 #endif

@@ -48,6 +48,7 @@
 #include "DSPlayerDatabase.h"
 
 #define SETTING_VIDEO_MAKE_DEFAULT        "video.save"
+#define SETTING_VIDEO_LOAD                "video.load"
 
 using namespace std;
 
@@ -112,8 +113,15 @@ void CGUIDialogMadvrSettingsBase::InitializeSettings()
       CLog::Log(LOGERROR, "CGUIDialogMadvrSettings: unable to setup settings");
       return;
     }
-    //SAVE DEFAULT SETTINGS...
-    AddButton(groupMadvrSave, SETTING_VIDEO_MAKE_DEFAULT, 70600, 0);
+    
+    if (CSettings::GetInstance().GetInt(CSettings::SETTING_DSPLAYER_MANAGEMADVRWITHKODI) == KODIGUI_LOAD_DSPLAYER)
+    {
+      //LOAD SETTINGS...
+      AddButton(groupMadvrSave, SETTING_VIDEO_LOAD, 70611, 0);
+
+      //SAVE SETTINGS...
+      AddButton(groupMadvrSave, SETTING_VIDEO_MAKE_DEFAULT, 70600, 0);
+    }
   }
 
   std::map<int, CSettingGroup *> groups;
@@ -219,6 +227,116 @@ void CGUIDialogMadvrSettingsBase::OnSettingAction(const CSetting *setting)
   }
 }
 
+void CGUIDialogMadvrSettingsBase::LoadMadvrSettings()
+{
+  CGUIDialogSelect *pDlg = (CGUIDialogSelect *)g_windowManager.GetWindow(WINDOW_DIALOG_SELECT);
+  if (!pDlg)
+    return;
+
+  CMadvrSettings &madvrSettings = CMediaSettings::GetInstance().GetCurrentMadvrSettings();
+
+  pDlg->Add(g_localizeStrings.Get(70616).c_str());
+  pDlg->Add(g_localizeStrings.Get(70617).c_str());
+  pDlg->Add(g_localizeStrings.Get(70618).c_str());
+  pDlg->Add(g_localizeStrings.Get(70612).c_str());
+  pDlg->Add(g_localizeStrings.Get(70613).c_str());
+  pDlg->Add(g_localizeStrings.Get(70614).c_str());
+  pDlg->Add(g_localizeStrings.Get(70615).c_str());
+  pDlg->Add(g_localizeStrings.Get(70619).c_str());
+  pDlg->Add(g_localizeStrings.Get(70620).c_str());
+
+  pDlg->SetHeading(70611);
+  pDlg->Open();
+
+  if (pDlg->GetSelectedItem() < 0)
+    return;
+
+  int selected = -1;
+  int userId = 0;
+  std::string strSelected = pDlg->GetSelectedFileItem()->GetLabel();
+
+  //SD
+  if (strSelected == g_localizeStrings.Get(70612))
+  {
+    selected = MADVR_RES_SD;
+  }
+  //720
+  else if (strSelected == g_localizeStrings.Get(70613))
+  {
+    selected = MADVR_RES_720;
+  }
+  //1080
+  else if (strSelected == g_localizeStrings.Get(70614))
+  {
+    selected = MADVR_RES_1080;
+  }
+  //2160
+  else if (strSelected == g_localizeStrings.Get(70615))
+  {
+    selected = MADVR_RES_2160;
+  }
+  //USER1
+  else if (strSelected == g_localizeStrings.Get(70616))
+  {
+    selected = MADVR_RES_USER;
+    userId = 1;
+  }
+  //USER2
+  else if (strSelected == g_localizeStrings.Get(70617))
+  {
+    selected = MADVR_RES_USER;
+    userId = 2;
+  }
+  //USER3
+  else if (strSelected == g_localizeStrings.Get(70618))
+  {
+    selected = MADVR_RES_USER;
+    userId = 3;
+  }
+  //DEFAULT
+  else if (strSelected == g_localizeStrings.Get(70619))
+  {
+    selected = MADVR_RES_DEFAULT;
+  }
+  //RESTORE ATSTART SETTINGS
+  else if (strSelected == g_localizeStrings.Get(70620))
+  {
+    selected = MADVR_RES_ATSTART;
+  }
+  if (selected > -1)
+  {
+    CDSPlayerDatabase dspdb;
+    if (!dspdb.Open())
+      return;
+
+    if (selected == MADVR_RES_DEFAULT)
+    {
+      CMediaSettings::GetInstance().GetCurrentMadvrSettings().RestoreDefaultSettings();
+      CDSRendererCallback::Get()->RestoreSettings();
+      Close();
+    }
+    else if (selected == MADVR_RES_USER)
+    {
+      dspdb.GetUserSettings(userId, madvrSettings);
+      CDSRendererCallback::Get()->RestoreSettings();
+      Close();
+    }
+    else if (selected == MADVR_RES_ATSTART)
+    {
+      madvrSettings.RestoreAtStartSettings();
+      CDSRendererCallback::Get()->RestoreSettings();
+      Close();
+    }
+    else
+    {
+      dspdb.GetResSettings(selected, madvrSettings);
+      CDSRendererCallback::Get()->RestoreSettings();
+      Close();
+    }
+    dspdb.Close();
+  }
+}
+
 void CGUIDialogMadvrSettingsBase::SaveMadvrSettings()
 {
   CGUIDialogSelect *pDlg = (CGUIDialogSelect *)g_windowManager.GetWindow(WINDOW_DIALOG_SELECT);
@@ -235,6 +353,9 @@ void CGUIDialogMadvrSettingsBase::SaveMadvrSettings()
   pDlg->Add(g_localizeStrings.Get(70603).c_str());
   pDlg->Add(g_localizeStrings.Get(70604).c_str());
   pDlg->Add(g_localizeStrings.Get(70606).c_str());
+  pDlg->Add(g_localizeStrings.Get(70608).c_str());
+  pDlg->Add(g_localizeStrings.Get(70609).c_str());
+  pDlg->Add(g_localizeStrings.Get(70610).c_str());
   pDlg->Add(g_localizeStrings.Get(70607).c_str());
 
   pDlg->SetHeading(70600);
@@ -245,6 +366,7 @@ void CGUIDialogMadvrSettingsBase::SaveMadvrSettings()
 
   int label;
   int selected = -1;
+  int userId = 0;
   std::string strSelected = pDlg->GetSelectedFileItem()->GetLabel();
 
   //TVSHOW
@@ -289,6 +411,27 @@ void CGUIDialogMadvrSettingsBase::SaveMadvrSettings()
     selected = MADVR_RES_DEFAULT;
     label = 70607;
   }
+  //USER1
+  else if (strSelected == g_localizeStrings.Get(70608))
+  {
+    selected = MADVR_RES_USER;
+    label = 70608;
+    userId = 1;
+  }
+  //USER2
+  else if (strSelected == g_localizeStrings.Get(70609))
+  {
+    selected = MADVR_RES_USER;
+    label = 70609;
+    userId = 2;
+  }
+  //USER3
+  else if (strSelected == g_localizeStrings.Get(70610))
+  {
+    selected = MADVR_RES_USER;
+    label = 70610;
+    userId = 3;
+  }
 
   if (selected > -1)
   {
@@ -311,9 +454,17 @@ void CGUIDialogMadvrSettingsBase::SaveMadvrSettings()
       else if (selected == MADVR_RES_DEFAULT)
       {
         dspdb.EraseVideoSettings();
+        dspdb.EraseUserSettings(1);
+        dspdb.EraseUserSettings(2);
+        dspdb.EraseUserSettings(3);
         CMediaSettings::GetInstance().GetCurrentMadvrSettings().RestoreDefaultSettings();
         CDSRendererCallback::Get()->RestoreSettings();
         Close();
+      }
+      else if (selected == MADVR_RES_USER)
+      {
+        dspdb.EraseUserSettings(userId);
+        dspdb.SetUserSettings(userId, madvrSettings);
       }
       else
       {

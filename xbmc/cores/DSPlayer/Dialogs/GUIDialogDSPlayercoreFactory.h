@@ -42,7 +42,6 @@ protected:
   virtual void OnSettingAction(const CSetting *setting);
   virtual void OnInitWindow();
   virtual void OnDeinitWindow(int nextWindowID);
-  virtual bool OnBack(int actionID);
 
   // specialization of CGUIDialogSettingsBase
   virtual bool AllowResettingSettings() const { return false; }
@@ -57,4 +56,7 @@ protected:
 
   std::vector<DSConfigList *> m_ruleList;
   CGUIDialogDSManager* m_dsmanager;
+
+private:
+  void ActionInternal(const std::string &settingId);
 };

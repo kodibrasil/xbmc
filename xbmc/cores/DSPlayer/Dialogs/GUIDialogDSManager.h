@@ -47,9 +47,7 @@ enum xmlType {
   FILTERSCONFIG,
   HOMEFILTERSCONFIG,
   SHADERS,
-  PLAYERCOREFACTORY,
-  MADVRSETTINGS,
-  HOMEMADVRSETTINGS
+  PLAYERCOREFACTORY
 };
 
 class DSConfigList
@@ -109,5 +107,4 @@ protected:
   bool m_bNew;
   int m_iIndex;
   CXBMCTinyXML m_XML;
-
 };

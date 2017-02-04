@@ -201,8 +201,8 @@ void CGUIDialogLAVAudio::InitializeSettings()
 
   // Get settings from the current running filter
   IBaseFilter *pBF;
-  CGraphFilters::Get()->GetInternalFilter(LAVAUDIO, &pBF);
-  CGraphFilters::Get()->GetLavSettings(LAVAUDIO, pBF);
+  CGraphFilters::Get()->GetInternalFilter(CGraphFilters::INTERNAL_LAVAUDIO, &pBF);
+  CGraphFilters::Get()->GetLavSettings(CGraphFilters::INTERNAL_LAVAUDIO, pBF);
 
   StaticIntegerSettingOptions entries;
   CLavSettings &lavSettings = CMediaSettings::GetInstance().GetCurrentLavSettings();
@@ -327,13 +327,13 @@ void CGUIDialogLAVAudio::OnSettingChanged(const CSetting *setting)
 
   // Get current running filter
   IBaseFilter *pBF;
-  CGraphFilters::Get()->GetInternalFilter(LAVAUDIO, &pBF);
+  CGraphFilters::Get()->GetInternalFilter(CGraphFilters::INTERNAL_LAVAUDIO, &pBF);
 
   // Set settings changes into the running filter
-  CGraphFilters::Get()->SetLavSettings(LAVAUDIO, pBF);
+  CGraphFilters::Get()->SetLavSettings(CGraphFilters::INTERNAL_LAVAUDIO, pBF);
 
   // Save new settings into DSPlayer DB
-  CGraphFilters::Get()->SaveLavSettings(LAVAUDIO);
+  CGraphFilters::Get()->SaveLavSettings(CGraphFilters::INTERNAL_LAVAUDIO);
 }
 
 void CGUIDialogLAVAudio::OnSettingAction(const CSetting *setting)
@@ -346,7 +346,7 @@ void CGUIDialogLAVAudio::OnSettingAction(const CSetting *setting)
 
   if (settingId == LAVAUDIO_PROPERTYPAGE)
   {
-    CGraphFilters::Get()->ShowInternalPPage(LAVAUDIO, true);
+    CGraphFilters::Get()->ShowInternalPPage(CGraphFilters::INTERNAL_LAVAUDIO, true);
     this->Close();
   }
 
@@ -355,7 +355,7 @@ void CGUIDialogLAVAudio::OnSettingAction(const CSetting *setting)
     if (!CGUIDialogYesNo::ShowAndGetInput(10041, 10042, 0, 0))
       return;
 
-    CGraphFilters::Get()->EraseLavSetting(LAVAUDIO);
+    CGraphFilters::Get()->EraseLavSetting(CGraphFilters::INTERNAL_LAVAUDIO);
     this->Close();
   }
 }

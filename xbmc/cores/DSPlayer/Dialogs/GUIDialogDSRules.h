@@ -34,6 +34,7 @@ public:
   CStdString strfileName;
   CStdString strfileTypes;
   CStdString strVideoCodec;
+  CStdString strAudioCodec;
   CStdString strProtocols;
   CStdString strPriority;
   CStdString strRule;
@@ -55,7 +56,6 @@ protected:
   virtual void OnSettingAction(const CSetting *setting);
   virtual void OnInitWindow();
   virtual void OnDeinitWindow(int nextWindowID);
-  virtual bool OnBack(int actionID);
 
   // specialization of CGUIDialogSettingsBase
   virtual bool AllowResettingSettings() const { return false; }
@@ -85,4 +85,6 @@ private:
     StringUtils::ToLower(strLine2);
     return strcmp(strLine1.c_str(), strLine2.c_str()) < 0;
   }
+
+  void ActionInternal(const std::string &settingId);
 };

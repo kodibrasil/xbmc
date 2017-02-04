@@ -69,33 +69,17 @@ void CGUIDialogDSRules::OnInitWindow()
 
 void CGUIDialogDSRules::OnDeinitWindow(int nextWindowID)
 {
+  if (m_bEdited)
+    m_dsmanager->GetNew() ? ActionInternal (SETTING_RULE_ADD) : ActionInternal (SETTING_RULE_SAVE);
+
   CGUIDialogSettingsManualBase::OnDeinitWindow(nextWindowID);
   ShowDSRulesList();
 }
 
-bool CGUIDialogDSRules::OnBack(int actionID)
-{
-  if (m_bEdited)
-  {
-    if (CGUIDialogYesNo::ShowAndGetInput(61001, 61002, 0, 0))
-    {
-      CSetting *setting;
-      if (!m_dsmanager->GetNew())
-        setting = GetSetting(SETTING_RULE_SAVE);
-      else
-        setting = GetSetting(SETTING_RULE_ADD);
-
-      OnSettingAction(setting);
-    }
-  }
-
-  return CGUIDialogSettingsManualBase::OnBack(actionID);
-}
-
 void CGUIDialogDSRules::Save()
 {
-
 }
+
 void CGUIDialogDSRules::SetupView()
 {
   CGUIDialogSettingsManualBase::SetupView();
@@ -106,8 +90,6 @@ void CGUIDialogDSRules::SetupView()
   SET_CONTROL_HIDDEN(CONTROL_SETTINGS_CUSTOM_BUTTON);
   SET_CONTROL_LABEL(CONTROL_SETTINGS_CANCEL_BUTTON, 15067);
 }
-
-
 
 void CGUIDialogDSRules::SetVisible(CStdString id, bool visible, ConfigType subType, bool isChild /* = false */)
 {
@@ -242,6 +224,7 @@ void CGUIDialogDSRules::InitializeSettings()
     m_dsmanager->InitConfig(m_ruleList, EDITATTR, "rules.filetypes", 60003, "filetypes");
     m_dsmanager->InitConfig(m_ruleList, EDITATTR, "rules.filename", 60004, "filename");
     m_dsmanager->InitConfig(m_ruleList, EDITATTR, "rules.videocodec", 60020, "videocodec");
+    m_dsmanager->InitConfig(m_ruleList, EDITATTR, "rules.audiocodec", 60022, "audiocodec");
     m_dsmanager->InitConfig(m_ruleList, EDITATTR, "rules.protocols", 60005, "protocols");
     m_dsmanager->InitConfig(m_ruleList, BOOLATTR, "rules.url", 60006, "url");
 
@@ -393,13 +376,8 @@ void CGUIDialogDSRules::InitializeSettings()
   }
 
 
-  if (m_dsmanager->GetNew())
-    AddButton(groupSave, SETTING_RULE_ADD, 60015, 0);
-  else
-  {
-    AddButton(groupSave, SETTING_RULE_SAVE, 60016, 0);
+  if (!m_dsmanager->GetNew())
     AddButton(groupSave, SETTING_RULE_DEL, 60017, 0);
-  }
 }
 
 void CGUIDialogDSRules::OnSettingChanged(const CSetting *setting)
@@ -429,6 +407,18 @@ void CGUIDialogDSRules::OnSettingChanged(const CSetting *setting)
 void CGUIDialogDSRules::OnSettingAction(const CSetting *setting)
 {
   if (setting == NULL)
+    return;  
+  
+  // Init variables
+  CGUIDialogSettingsManualBase::OnSettingAction(setting);
+  const std::string &settingId = setting->GetId();
+
+  ActionInternal(settingId);
+}
+
+void CGUIDialogDSRules::ActionInternal(const std::string &settingId)
+{
+  if (settingId == "")
     return;
 
   // Load userdata Mediaseconfig.xml
@@ -436,10 +426,6 @@ void CGUIDialogDSRules::OnSettingAction(const CSetting *setting)
   m_dsmanager->LoadDsXML(MEDIASCONFIG, pRules, true);
   if (!pRules)
     return;
-
-  // Init variables
-  CGUIDialogSettingsManualBase::OnSettingAction(setting);
-  const std::string &settingId = setting->GetId();
 
   // Del Rule
   if (settingId == SETTING_RULE_DEL)
@@ -564,6 +550,7 @@ void CGUIDialogDSRules::ShowDSRulesList()
     rule->strfileTypes = pRule->Attribute("filetypes");
     rule->strfileName = pRule->Attribute("filename");
     rule->strVideoCodec = pRule->Attribute("videocodec");
+    rule->strAudioCodec = pRule->Attribute("audiocodec");
     rule->strProtocols = pRule->Attribute("protocols");
     rule->strPriority = pRule->Attribute("priority");
     if (rule->strPriority.length() <= 0)
@@ -586,6 +573,8 @@ void CGUIDialogDSRules::ShowDSRulesList()
       rules[i]->strfileName.Format("Filename=%s", rules[i]->strfileName);
     if (rules[i]->strVideoCodec != "")
       rules[i]->strVideoCodec.Format("Videocodec=%s", rules[i]->strVideoCodec);
+    if (rules[i]->strVideoCodec != "")
+      rules[i]->strVideoCodec.Format("Audiocodec=%s", rules[i]->strAudioCodec);
     if (rules[i]->strProtocols != "")
       rules[i]->strProtocols.Format("Protocols=%s", rules[i]->strProtocols);
 
@@ -593,7 +582,7 @@ void CGUIDialogDSRules::ShowDSRulesList()
       strRule = rules[i]->strName;
     else
     {
-      strRule.Format("%s %s %s %s", rules[i]->strfileTypes, rules[i]->strfileName, rules[i]->strVideoCodec, rules[i]->strProtocols);
+      strRule.Format("%s %s %s %s %s", rules[i]->strfileTypes, rules[i]->strfileName, rules[i]->strVideoCodec, rules[i]->strAudioCodec, rules[i]->strProtocols);
       strRule.Trim();
     }
 
@@ -614,9 +603,9 @@ void CGUIDialogDSRules::ShowDSRulesList()
   if (selected > -1 && selected < rules.size()) 
     selectedId = rules[selected]->id;
 
-  CGUIDialogDSManager::Get()->SetConfig(selected == count, selected);
+  CGUIDialogDSManager::Get()->SetConfig(selected == count, selectedId);
 
-  if (selected > -1) 
+  if (selected > -1)
     g_windowManager.ActivateWindow(WINDOW_DIALOG_DSRULES);
 }
 

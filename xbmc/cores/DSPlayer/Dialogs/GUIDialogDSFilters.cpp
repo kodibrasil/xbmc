@@ -68,36 +68,17 @@ void CGUIDialogDSFilters::OnInitWindow()
 
 void CGUIDialogDSFilters::OnDeinitWindow(int nextWindowID)
 {
+  if (m_bEdited)
+    m_dsmanager->GetNew() ? ActionInternal(SETTING_FILTER_ADD) : ActionInternal(SETTING_FILTER_SAVE);
+
   CGUIDialogSettingsManualBase::OnDeinitWindow(nextWindowID);
   ShowDSFiltersList();
 }
 
-bool CGUIDialogDSFilters::OnBack(int actionID)
-{
-  if (m_bEdited)
-  {
-    if (CGUIDialogYesNo::ShowAndGetInput(61001, 61002, 0, 0))
-    {
-      CSetting *setting;
-      if (!m_dsmanager->GetNew())
-        setting = GetSetting(SETTING_FILTER_SAVE);
-      else
-        setting = GetSetting(SETTING_FILTER_ADD);
-
-      OnSettingAction(setting);
-
-      if (m_bEdited)
-        return false;
-    }
-  }
-
-  return CGUIDialogSettingsManualBase::OnBack(actionID);
-}
-
 void CGUIDialogDSFilters::Save()
 {
-
 }
+
 void CGUIDialogDSFilters::SetupView()
 {
   CGUIDialogSettingsManualBase::SetupView();
@@ -121,15 +102,15 @@ void CGUIDialogDSFilters::InitializeSettings()
   }
 
   // get all necessary setting groups
-  CSettingGroup *group = AddGroup(category);
-  if (group == NULL)
+  CSettingGroup *groupSystem = AddGroup(category);
+  if (groupSystem == NULL)
   {
     CLog::Log(LOGERROR, "CGUIDialogDSFilters: unable to setup settings");
     return;
   }
 
-  CSettingGroup *groupSystem = AddGroup(category);
-  if (groupSystem == NULL)
+  CSettingGroup *group = AddGroup(category);
+  if (group == NULL)
   {
     CLog::Log(LOGERROR, "CGUIDialogDSFilters: unable to setup settings");
     return;
@@ -185,23 +166,18 @@ void CGUIDialogDSFilters::InitializeSettings()
   // Stamp Button
   for (const auto &it : m_filterList)
   {
+    if (it->m_configType == FILTERSYSTEM)
+      AddList(groupSystem, it->m_setting, it->m_label, 0, it->m_value, it->m_filler, it->m_label);
+
     if (it->m_configType == EDITATTR || it->m_configType == OSDGUID)
       AddEdit(group, it->m_setting, it->m_label, 0, it->m_value, true);
 
     if (it->m_configType == FILTER)
       AddList(group, it->m_setting, it->m_label, 0, it->m_value, it->m_filler, it->m_label);
-
-    if (it->m_configType == FILTERSYSTEM)
-      AddList(groupSystem, it->m_setting, it->m_label, 0, it->m_value, it->m_filler, it->m_label);
   }
 
-  if (m_dsmanager->GetNew())
-    AddButton(groupSave, SETTING_FILTER_ADD, 65007, 0);
-  else
-  {
-    AddButton(groupSave, SETTING_FILTER_SAVE, 65008, 0);
+  if (!m_dsmanager->GetNew())
     AddButton(groupSave, SETTING_FILTER_DEL, 65009, 0);
-  }
 }
 
 void CGUIDialogDSFilters::OnSettingChanged(const CSetting *setting)
@@ -252,15 +228,23 @@ void CGUIDialogDSFilters::OnSettingAction(const CSetting *setting)
   if (setting == NULL)
     return;
 
+  // Init variables
+  CGUIDialogSettingsManualBase::OnSettingAction(setting);
+  const std::string &settingId = setting->GetId();
+
+  ActionInternal(settingId);
+}
+
+void CGUIDialogDSFilters::ActionInternal(const std::string &settingId)
+{
+  if (settingId == "")
+    return;
+
   // Load userdata Filteseconfig.xml
   TiXmlElement *pFilters;
   m_dsmanager->LoadDsXML(FILTERSCONFIG, pFilters, true);
   if (!pFilters)
     return;
-
-  // Init variables
-  CGUIDialogSettingsManualBase::OnSettingAction(setting);
-  const std::string &settingId = setting->GetId();
 
   // Del Filter
   if (settingId == SETTING_FILTER_DEL)
@@ -284,7 +268,7 @@ void CGUIDialogDSFilters::OnSettingAction(const CSetting *setting)
     {
       if (it->m_value == "" || it->m_value == "[null]")
       {
-        CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Info, g_localizeStrings.Get(65001), g_localizeStrings.Get(65012), 2000, false, 300);
+        CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Error, g_localizeStrings.Get(65001), g_localizeStrings.Get(65012), 2000, false, 300);
         return;
       }
 

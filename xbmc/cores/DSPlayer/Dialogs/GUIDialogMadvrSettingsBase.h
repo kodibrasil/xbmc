@@ -44,6 +44,7 @@ protected:
   static int m_iSectionId;
   static int m_label;
 
+  void LoadMadvrSettings();
   void SaveMadvrSettings();
 
   CSettingCategory *m_category;

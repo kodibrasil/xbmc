@@ -174,8 +174,8 @@ void CGUIDialogLAVSplitter::InitializeSettings()
 
   // Get settings from the current running filter
   IBaseFilter *pBF;
-  CGraphFilters::Get()->GetInternalFilter(LAVSPLITTER, &pBF);
-  CGraphFilters::Get()->GetLavSettings(LAVSPLITTER, pBF);
+  CGraphFilters::Get()->GetInternalFilter(CGraphFilters::INTERNAL_LAVSPLITTER, &pBF);
+  CGraphFilters::Get()->GetLavSettings(CGraphFilters::INTERNAL_LAVSPLITTER, pBF);
 
   StaticIntegerSettingOptions entries;
   CLavSettings &lavSettings = CMediaSettings::GetInstance().GetCurrentLavSettings();
@@ -274,13 +274,13 @@ void CGUIDialogLAVSplitter::OnSettingChanged(const CSetting *setting)
 
   // Get current running filter
   IBaseFilter *pBF;
-  CGraphFilters::Get()->GetInternalFilter(LAVSPLITTER, &pBF);
+  CGraphFilters::Get()->GetInternalFilter(CGraphFilters::INTERNAL_LAVSPLITTER, &pBF);
 
   // Set settings changes into the running filter
-  CGraphFilters::Get()->SetLavSettings(LAVSPLITTER, pBF);
+  CGraphFilters::Get()->SetLavSettings(CGraphFilters::INTERNAL_LAVSPLITTER, pBF);
 
   // Save new settings into DSPlayer DB
-  CGraphFilters::Get()->SaveLavSettings(LAVSPLITTER);
+  CGraphFilters::Get()->SaveLavSettings(CGraphFilters::INTERNAL_LAVSPLITTER);
 }
 
 void CGUIDialogLAVSplitter::OnSettingAction(const CSetting *setting)
@@ -293,7 +293,7 @@ void CGUIDialogLAVSplitter::OnSettingAction(const CSetting *setting)
 
   if (settingId == LAVSPLITTER_PROPERTYPAGE)
   {
-    CGraphFilters::Get()->ShowInternalPPage(LAVSPLITTER, true);
+    CGraphFilters::Get()->ShowInternalPPage(CGraphFilters::INTERNAL_LAVSPLITTER, true);
     this->Close();
   }
 
@@ -302,7 +302,7 @@ void CGUIDialogLAVSplitter::OnSettingAction(const CSetting *setting)
     if (!CGUIDialogYesNo::ShowAndGetInput(10041, 10042, 0, 0))
       return;
 
-    CGraphFilters::Get()->EraseLavSetting(LAVSPLITTER);
+    CGraphFilters::Get()->EraseLavSetting(CGraphFilters::INTERNAL_LAVSPLITTER);
     this->Close();
   }
 }

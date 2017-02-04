@@ -28,6 +28,12 @@
 #include "cores/DSPlayer/Dialogs/GUIDialogDSManager.h"
 #include "utils/StringUtils.h"
 #include "utils/RegExp.h"
+#include "filesystem/Directory.h"
+#include "filesystem/File.h"
+#include "profiles/ProfilesManager.h"
+#include "DSFilterVersion.h"
+#include "FileItem.h"
+#include "Application.h"
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -50,7 +56,8 @@ CMadvrSettings::CMadvrSettings()
 
 void CMadvrSettings::InitSettings()
 {
-  //Load settings strutcture from dsplayer/madvrsettings.xml
+  // Capture Filters Version
+  CDSFilterVersion::Get()->InitVersion();
 
   TiXmlElement *pSettings;
 
@@ -382,4 +389,45 @@ bool CMadvrSettings::GetString(TiXmlElement *pElement, const std::string &attr, 
   *sValue = std::string(str);
 
   return true;
+}
+
+std::string CMadvrSettings::GetVersionSuffix(const std::string &path)
+{
+  if (path.empty())
+    return "";
+  
+  std::string sVersion;
+
+  TiXmlElement *pVersions;
+  LoadMadvrXML(path+"versions.xml", "versions", pVersions);
+  if (pVersions)
+  {
+    TiXmlElement *pVersion = pVersions->FirstChildElement("version");
+    while (pVersion)
+    {
+      std::string sMin, sMax;
+      unsigned int iMin, iMax;
+      GetString(pVersion, "min", &sMin);
+      GetString(pVersion, "max", &sMax);
+      std::vector<std::string> vecMin = StringUtils::Split(sMin, ".");
+      std::vector<std::string> vecMax = StringUtils::Split(sMax, ".");
+
+      if (vecMin.size() != 4 || vecMax.size() != 4)
+        continue;
+
+      iMin = (atoi(vecMin[0].c_str()) << 24 | atoi(vecMin[1].c_str()) << 16 | atoi(vecMin[2].c_str()) << 8 | atoi(vecMin[3].c_str()));
+      iMax = (atoi(vecMax[0].c_str()) << 24 | atoi(vecMax[1].c_str()) << 16 | atoi(vecMax[2].c_str()) << 8 | atoi(vecMax[3].c_str()));
+      unsigned int iCurrentVersion = CDSFilterVersion::Get()->GetIntVersion(CGraphFilters::MADSHI_VIDEO_RENDERER);
+
+      if (iCurrentVersion >= iMin && iCurrentVersion <= iMax)
+      {
+        GetString(pVersion, "id", &sVersion);
+        break;
+      }
+
+      pVersion = pVersion->NextSiblingElement("version");
+    }
+  }
+
+  return sVersion;
 }

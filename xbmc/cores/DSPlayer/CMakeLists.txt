@@ -1,4 +1,5 @@
 set(SOURCES ChaptersManager.cpp
+            DSFilterVersion.cpp
             DSGraph.cpp
             DSInputStreamPVRManager.cpp
             DSPlayer.cpp
@@ -18,7 +19,8 @@ set(SOURCES ChaptersManager.cpp
             StreamsManager.cpp
             subtitles/ILogImpl.cpp)
 
-set(HEADERS ChaptersManager
+set(HEADERS ChaptersManager.h
+            DSFilterVersion.h
             DSGraph.h
             DSInputStreamPVRManager.h
             DSMessage.h

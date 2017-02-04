@@ -28,6 +28,9 @@
 #include "utils/StringUtils.h"
 #include "storage/MediaManager.h"
 #include "guiinfo/GUIInfoLabels.h"
+#ifdef HAS_DS_PLAYER
+#include "DSFilterVersion.h"
+#endif
 
 #define CONTROL_TB_POLICY   30
 #define CONTROL_BT_STORAGE  94
@@ -151,6 +154,16 @@ void CGUIWindowSystemInfo::FrameMove()
 #if !defined(__arm__) && !defined(__aarch64__) && !defined(HAS_DX)
     SetControlLabel(i++, "%s %s", 22010, SYSTEM_GPU_TEMPERATURE);
 #endif
+#ifdef HAS_DS_PLAYER
+    SetControlLabel(i++, "%s: %s", 55102, CDSFilterVersion::Get()->GetStringVersion(CGraphFilters::MADSHI_VIDEO_RENDERER));
+    SetControlLabel(i++, "%s: %s", 55097, CDSFilterVersion::Get()->GetStringVersion(CGraphFilters::INTERNAL_LAVSPLITTER));
+    SetControlLabel(i++, "%s: %s", 55098, CDSFilterVersion::Get()->GetStringVersion(CGraphFilters::INTERNAL_LAVVIDEO));
+    SetControlLabel(i++, "%s: %s", 55099, CDSFilterVersion::Get()->GetStringVersion(CGraphFilters::INTERNAL_LAVAUDIO));
+    if (CSettings::GetInstance().GetString(CSettings::SETTING_DSPLAYER_VIDEORENDERER) == "madVR")
+      SetControlLabel(i++, "%s: %s", 55100, CDSFilterVersion::Get()->GetStringVersion(CGraphFilters::INTERNAL_XYSUBFILTER));
+    else
+      SetControlLabel(i++, "%s: %s", 55101, CDSFilterVersion::Get()->GetStringVersion(CGraphFilters::INTERNAL_XYVSFILTER));
+#endif
   }
 
   else if (m_section == CONTROL_BT_HARDWARE)
@@ -214,3 +227,13 @@ void CGUIWindowSystemInfo::SetControlLabel(int id, const char *format, int label
       g_infoManager.GetLabel(info).c_str());
   SET_CONTROL_LABEL(id, tmpStr);
 }
+
+#ifdef HAS_DS_PLAYER
+void CGUIWindowSystemInfo::SetControlLabel(int id, const char *format, int label, const std::string &info)
+{
+  std::string tmpStr = StringUtils::Format(format, g_localizeStrings.Get(label).c_str(),
+    info.c_str());
+  SET_CONTROL_LABEL(id, tmpStr);
+}
+
+#endif

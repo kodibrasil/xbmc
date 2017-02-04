@@ -65,6 +65,7 @@
 #include "DSRendererCallback.h"
 #include "ServiceBroker.h"
 #include "cores/DataCacheCore.h"
+#include "DSFilterVersion.h"
 
 using namespace PVR;
 using namespace std;
@@ -393,7 +394,7 @@ bool CDSPlayer::OpenFileInternal(const CFileItem& file)
 
 bool CDSPlayer::OpenFile(const CFileItem& file, const CPlayerOptions &options)
 {
-  if (m_isMadvr && !CGraphFilters::Get()->IsRegisteredFilter(MADVR_FILTERSTR))
+  if (m_isMadvr && !CDSFilterVersion::Get()->IsRegisteredFilter(MADVR_FILTERSTR))
   {
     CLog::Log(LOGDEBUG, "%s - madVR it's not installed on the system pls download it before to use it with DSPlayer", __FUNCTION__);
 

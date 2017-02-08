@@ -66,6 +66,7 @@
 #include "ServiceBroker.h"
 #include "cores/DataCacheCore.h"
 #include "DSFilterVersion.h"
+#include "DVDFileInfo.h"
 
 using namespace PVR;
 using namespace std;
@@ -393,6 +394,60 @@ bool CDSPlayer::OpenFileInternal(const CFileItem& file)
   }
 }
 
+void CDSPlayer::LoadVideoSettings(const CFileItem& file)
+{
+  CMediaSettings::GetInstance().GetAtStartVideoSettings() = CMediaSettings::GetInstance().GetCurrentVideoSettings();
+
+  CDSPlayerDatabase dsdbs;
+  if (!dsdbs.Open())
+    return;
+
+  CFileItem fileItem = file;
+
+  if (!fileItem.HasVideoInfoTag() || !fileItem.GetVideoInfoTag()->HasStreamDetails())
+  {
+    CLog::Log(LOGDEBUG, "%s - trying to extract filestream details from video file %s", __FUNCTION__, fileItem.GetPath().c_str());
+    CDVDFileInfo::GetFileStreamDetails(&fileItem);
+  }
+
+  CStreamDetails streamDetails = fileItem.GetVideoInfoTag()->m_streamDetails;
+  CMadvrSettings &madvrSettings = CMediaSettings::GetInstance().GetCurrentMadvrSettings();
+
+  madvrSettings.m_Resolution = CDSRendererCallback::Get()->VideoDimsToResolution(streamDetails.GetVideoWidth(), streamDetails.GetVideoHeight());
+  madvrSettings.m_TvShowName = fileItem.GetVideoInfoTag()->m_strShowTitle;
+
+  // Load stored files settings
+  if (dsdbs.GetVideoSettings(fileItem.GetPath().c_str(), madvrSettings))
+  {
+    CLog::Log(LOGDEBUG, "Loaded madVR for file settings for %s", fileItem.GetPath().c_str());
+  }
+  // if not present Load stored TvShowName settings
+  else if (dsdbs.GetTvShowSettings(madvrSettings.m_TvShowName, madvrSettings))
+  {
+    CLog::Log(LOGDEBUG, "Loaded madVR for tvshow %s settings for %s", madvrSettings.m_TvShowName.c_str(), fileItem.GetPath().c_str());
+  }
+  // if not present Load stored Resolution settings
+  else if (dsdbs.GetResSettings(madvrSettings.m_Resolution, madvrSettings))
+  {
+    CLog::Log(LOGDEBUG, "Loaded madVR for resolution %ip settings for %s", madvrSettings.m_Resolution, fileItem.GetPath().c_str());
+  }
+  // if not present Load stored for all setting
+  else if (dsdbs.GetResSettings(MADVR_RES_ALL, madvrSettings))
+  {
+    CLog::Log(LOGDEBUG, "Loaded madVR for all settings for %s", fileItem.GetPath().c_str());
+  }
+  // restore default settings
+  else
+  {
+    CLog::Log(LOGDEBUG, "Restored madVR default settings for %s", fileItem.GetPath().c_str());
+    madvrSettings.RestoreDefaultSettings();
+  }
+
+  madvrSettings.StoreAtStartSettings();
+
+  dsdbs.Close();
+}
+
 bool CDSPlayer::OpenFile(const CFileItem& file, const CPlayerOptions &options)
 {
   if (m_isMadvr && !CDSFilterVersion::Get()->IsRegisteredFilter(MADVR_FILTERSTR))
@@ -413,6 +468,8 @@ bool CDSPlayer::OpenFile(const CFileItem& file, const CPlayerOptions &options)
   CGraphFilters::Get()->SetAuxAudioDelay();
 
   CLog::Log(LOGNOTICE, "%s - DSPlayer: Opening: %s", __FUNCTION__, file.GetPath().c_str());
+
+  LoadVideoSettings(file);
 
   CFileItem fileItem = file;
   m_PlayerOptions = options;

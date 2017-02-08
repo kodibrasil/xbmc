@@ -227,6 +227,7 @@ public:
   bool OpenFileInternal(const CFileItem& file);
   void UpdateApplication();
   void UpdateChannelSwitchSettings();
+  void LoadVideoSettings(const CFileItem& file);
   
   //madVR Window
   static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

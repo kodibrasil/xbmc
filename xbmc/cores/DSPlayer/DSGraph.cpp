@@ -79,7 +79,7 @@ CDSGraph::CDSGraph(IPlayerCallback& callback, CRenderDSManager& renderManager)
   m_iCurrentFrameRefreshCycle(0),
   m_callback(callback),
   m_canSeek(-1),
-  m_currentVolume(0.0f),
+  m_currentVolume(-1.0f),
   m_renderManager(renderManager)
 {
   m_width = 0;

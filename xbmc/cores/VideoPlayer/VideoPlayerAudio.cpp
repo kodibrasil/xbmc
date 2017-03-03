@@ -69,7 +69,6 @@ CVideoPlayerAudio::CVideoPlayerAudio(CDVDClock* pClock, CDVDMessageQueue& parent
   m_stalled = true;
   m_paused = false;
   m_syncState = IDVDStreamPlayer::SYNC_STARTING;
-  m_silence = false;
   m_synctype = SYNC_DISCON;
   m_setsynctype = SYNC_DISCON;
   m_prevsynctype = -1;
@@ -137,6 +136,8 @@ void CVideoPlayerAudio::OpenStream(CDVDStreamInfo &hints, CDVDAudioCodec* codec)
   if (hints.samplerate != m_streaminfo.samplerate)
     SwitchCodecIfNeeded();
 
+  m_codecname = m_pAudioCodec->GetName();
+
   m_audioClock = 0;
   m_stalled = m_messageQueue.GetPacketCount(CDVDMsg::DEMUXER_PACKET) == 0;
 
@@ -150,7 +151,6 @@ void CVideoPlayerAudio::OpenStream(CDVDStreamInfo &hints, CDVDAudioCodec* codec)
   m_prevsynctype = -1;
 
   m_prevskipped = false;
-  m_silence = false;
 
   m_maxspeedadjust = 5.0;
 
@@ -209,8 +209,9 @@ void CVideoPlayerAudio::UpdatePlayerInfo()
 {
   std::ostringstream s;
   s << "aq:"     << std::setw(2) << std::min(99,m_messageQueue.GetLevel()) << "%";
+  s << ", ac:"   << m_codecname;
   s << ", Kb/s:" << std::fixed << std::setprecision(2) << (double)GetAudioBitrate() / 1024.0;
-
+  s << ", " << m_streaminfo.channels << " channel, " << m_streaminfo.samplerate/1000 << " kHz";
   //print the inverse of the resample ratio, since that makes more sense
   //if the resample ratio is 0.5, then we're playing twice as fast
   if (m_synctype == SYNC_RESAMPLE)
@@ -345,12 +346,6 @@ void CVideoPlayerAudio::Process()
       }
       m_speed = speed;
     }
-    else if (pMsg->IsType(CDVDMsg::AUDIO_SILENCE))
-    {
-      m_silence = static_cast<CDVDMsgBool*>(pMsg)->m_value;
-      CLog::Log(LOGDEBUG, "CVideoPlayerAudio - CDVDMsg::AUDIO_SILENCE(%f, %d)"
-                , m_audioClock, m_silence);
-    }
     else if (pMsg->IsType(CDVDMsg::GENERAL_STREAMCHANGE))
     {
       CDVDMsgAudioCodecChange* msg(static_cast<CDVDMsgAudioCodecChange*>(pMsg));
@@ -455,14 +450,6 @@ void CVideoPlayerAudio::Process()
           m_processInfo.SetAudioBitsPerSample(audioframe.bits_per_sample);
 
           m_messageParent.Put(new CDVDMsg(CDVDMsg::PLAYER_AVCHANGE));
-        }
-
-        // Zero out the frame data if we are supposed to silence the audio
-        if (m_silence)
-        {
-          int size = audioframe.nb_frames * audioframe.framesize / audioframe.planes;
-          for (unsigned int i=0; i<audioframe.planes; i++)
-            memset(audioframe.data[i], 0, size);
         }
 
         SetSyncType(audioframe.passthrough);
@@ -607,6 +594,7 @@ bool CVideoPlayerAudio::SwitchCodecIfNeeded()
 
   delete m_pAudioCodec;
   m_pAudioCodec = codec;
+  m_codecname = m_pAudioCodec->GetName();
 
   return true;
 }

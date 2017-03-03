@@ -28,6 +28,7 @@
 #include "cores/VideoPlayer/DVDCodecs/DVDCodecs.h"
 
 #include "Video/DVDVideoCodecFFmpeg.h"
+#include "Video/MFXCodec.h"
 #include "Video/DVDVideoCodecOpenMax.h"
 #if defined(HAS_IMXVPU)
 #include "Video/DVDVideoCodecIMX.h"
@@ -149,6 +150,16 @@ CDVDVideoCodec* CDVDFactoryCodec::CreateVideoCodec(CDVDStreamInfo &hint, CProces
     pCodec = OpenCodec(new CDVDVideoCodecOpenMax(processInfo), hint, options);
 #elif defined(HAS_MMAL)
     pCodec = OpenCodec(new CMMALVideo(processInfo), hint, options);
+#elif defined(HAVE_LIBMFX)
+    if (CSettings::GetInstance().GetBool(CSettings::SETTING_VIDEOPLAYER_SUPPORTMVC) && hint.codec == AV_CODEC_ID_H264)
+    {
+      if (hint.codec_tag == MKTAG('M', 'V', 'C', '1') || hint.codec_tag == MKTAG('A', 'M', 'V', 'C'))
+      {
+        std::string value = StringUtils::Format("%d", info.max_buffer_size);
+        options.m_keys.push_back(CDVDCodecOption("surfaces", value));
+        pCodec = OpenCodec(new CMFXCodec(processInfo), hint, options);
+      }
+    }
 #endif
     if (pCodec)
       return pCodec;

@@ -91,6 +91,7 @@ public:
   int GetVideoBitrate();
   std::string GetStereoMode();
   void SetSpeed(int iSpeed);
+  bool SupportsExtention() const override { return m_pVideoCodec && m_pVideoCodec->SupportsExtention(); }
 
   // classes
   CDVDOverlayContainer* m_pOverlayContainer;
@@ -134,6 +135,9 @@ protected:
   std::atomic_bool m_rewindStalled;
   bool m_paused;
   IDVDStreamPlayer::ESyncState m_syncState;
+  std::string m_codecname;
+  int m_width;
+  int m_height;
   std::atomic_bool m_bAbortOutput;
 
   BitstreamStats m_videoStats;

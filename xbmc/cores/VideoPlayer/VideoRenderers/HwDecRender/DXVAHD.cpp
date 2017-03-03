@@ -28,6 +28,7 @@
 #include <dxva2api.h>
 #include <windows.h>
 #include "DXVAHD.h"
+#include "DVDCodecs/Video/MFXCodec.h"
 #include "cores/VideoPlayer/VideoRenderers/RenderManager.h"
 #include "cores/VideoPlayer/VideoRenderers/RenderFlags.h"
 #include "settings/AdvancedSettings.h"
@@ -264,17 +265,31 @@ bool CProcessorHD::ConfigureProcessor(unsigned int format, unsigned int extended
     m_textureFormat = (DXGI_FORMAT)extended_format;
     m_eViewType = PROCESSOR_VIEW_TYPE_DECODER;
   }
+  else if (format == RENDER_FMT_MSDK_MVC && extended_format == RENDER_FMT_DXVA)
+  {
+    m_textureFormat = DXGI_FORMAT_NV12;
+    m_eViewType = PROCESSOR_VIEW_TYPE_EXTERNAL;
+  }
   else
   {
-    m_textureFormat = DXGI_FORMAT_NV12; // default
-
-    if (format == RENDER_FMT_YUV420P)
+    switch (format)
+    {
+    case RENDER_FMT_YUV420P:
+    case RENDER_FMT_NV12:
+    case RENDER_FMT_MSDK_MVC:
       m_textureFormat = DXGI_FORMAT_NV12;
-    if (format == RENDER_FMT_YUV420P10)
+      break;
+    case RENDER_FMT_YUV420P10:
       m_textureFormat = DXGI_FORMAT_P010;
-    if (format == RENDER_FMT_YUV420P16)
+      break;
+    case RENDER_FMT_YUV420P16:
       m_textureFormat = DXGI_FORMAT_P016;
-
+      break;
+    default:
+      CLog::Log(LOGERROR, "%s - Unsupported input format (%d).", __FUNCTION__, format);
+      return false;
+      break;
+    }
     m_eViewType = PROCESSOR_VIEW_TYPE_PROCESSOR;
   }
 
@@ -369,16 +384,17 @@ bool CProcessorHD::CreateSurfaces()
   size_t idx;
   ID3D11Device* pD3DDevice = g_Windowing.Get3D11Device();
 
-  // we cannot use texture array (like in decoder) for USAGE_DYNAMIC, so create separete textures
   CD3D11_TEXTURE2D_DESC texDesc(m_textureFormat, FFALIGN(m_width, 16), FFALIGN(m_height, 16), 1, 1, D3D11_BIND_DECODER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
   D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC pivd = { 0, D3D11_VPIV_DIMENSION_TEXTURE2D };
   pivd.Texture2D.ArraySlice = 0;
   pivd.Texture2D.MipSlice = 0;
 
   ID3D11VideoProcessorInputView* views[32] = { 0 };
-  CLog::Log(LOGDEBUG, "%s - Creating %d processor surfaces with format %d.", __FUNCTION__, m_size, m_textureFormat);
-
-  for (idx = 0; idx < m_size; idx++)
+  size_t size = m_size;
+  if (m_renderFormat == RENDER_FMT_MSDK_MVC)
+    size *= 2;
+  CLog::Log(LOGDEBUG, "%s - Creating %d processor surfaces with format %d.", __FUNCTION__, size, m_textureFormat);
+  for (idx = 0; idx < size; idx++)
   {
     ID3D11Texture2D* pTexture = nullptr;
     hr = pD3DDevice->CreateTexture2D(&texDesc, nullptr, &pTexture);
@@ -390,12 +406,11 @@ bool CProcessorHD::CreateSurfaces()
     if (FAILED(hr))
       break;
   }
-
-  if (idx != m_size)
+  if (idx != size)
   {
     // something goes wrong
     CLog::Log(LOGERROR, "%s: Failed to create processor surfaces.", __FUNCTION__);
-    for (unsigned idx = 0; idx < m_size; idx++)
+    for (unsigned idx = 0; idx < size; idx++)
     {
       SAFE_RELEASE(views[idx]);
     }
@@ -405,7 +420,7 @@ bool CProcessorHD::CreateSurfaces()
   m_context = new CSurfaceContext();
   for (unsigned int i = 0; i < m_size; i++)
   {
-    m_context->AddSurface(views[i]);
+    m_context->AddSurface(views[i], m_renderFormat == RENDER_FMT_MSDK_MVC ? views[m_size + i] : nullptr);
   }
 
   m_texDesc = texDesc;
@@ -417,7 +432,12 @@ CRenderPicture *CProcessorHD::Convert(DVDVideoPicture &picture)
   if ( picture.format != RENDER_FMT_YUV420P
     && picture.format != RENDER_FMT_YUV420P10
     && picture.format != RENDER_FMT_YUV420P16
-    && picture.format != RENDER_FMT_DXVA)
+    && picture.format != RENDER_FMT_DXVA
+    && picture.format != RENDER_FMT_NV12
+#ifdef HAVE_LIBMFX
+    && picture.format != RENDER_FMT_MSDK_MVC
+#endif // HAVE_LIBMFX
+    )
   {
     CLog::Log(LOGERROR, "%s: colorspace not supported by processor, skipping frame.", __FUNCTION__);
     return nullptr;
@@ -426,19 +446,56 @@ CRenderPicture *CProcessorHD::Convert(DVDVideoPicture &picture)
   if (picture.format == RENDER_FMT_DXVA)
     return picture.dxva->Acquire();
 
-  ID3D11View *pView = m_context->GetFree(nullptr);
+#ifdef HAVE_LIBMFX
+  // MVC with HW surfaces
+  if (picture.format == RENDER_FMT_MSDK_MVC && picture.extended_format == RENDER_FMT_DXVA)
+  {
+    mfxHDLPair baseHNDL = strcmp(picture.stereo_mode, "block_rl") ? picture.mvc->baseHNDL : picture.mvc->extHNDL,
+                extHNDL = strcmp(picture.stereo_mode, "block_rl") ? picture.mvc->extHNDL : picture.mvc->baseHNDL;
+
+    D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC pivd = { 0, D3D11_VPIV_DIMENSION_TEXTURE2D, { 0,  (UINT)baseHNDL.second } };
+
+    CRenderPicture *pPicture = new CRenderPicture(picture.mvc);
+    m_pVideoDevice->CreateVideoProcessorInputView(reinterpret_cast<ID3D11Texture2D*>(baseHNDL.first)
+                                                , m_pEnumerator, &pivd
+                                                , reinterpret_cast<ID3D11VideoProcessorInputView**>(&pPicture->view));
+
+    pivd.Texture2D.ArraySlice = (UINT)extHNDL.second;
+    m_pVideoDevice->CreateVideoProcessorInputView(reinterpret_cast<ID3D11Texture2D*>(extHNDL.first)
+                                                , m_pEnumerator, &pivd
+                                                , reinterpret_cast<ID3D11VideoProcessorInputView**>(&pPicture->viewEx));
+
+    picture.mvc->MarkRender();
+    return pPicture;
+  }
+#endif // HAVE_LIBMFX
+
+  ID3D11View *pView = m_context->GetFree(nullptr)
+           , *pViewEx = nullptr;
+  ID3D11Resource *pResource = nullptr
+               , *pResourceEx = nullptr;
+  ID3D11DeviceContext* pContext = g_Windowing.GetImmediateContext();
+
   if (!pView)
   {
     CLog::Log(LOGERROR, "%s: no free video surface", __FUNCTION__);
     return nullptr;
   }
+  if (picture.format == RENDER_FMT_MSDK_MVC)
+  {
+    pViewEx = m_context->GetExtended(pView);
+    if (!pViewEx)
+    {
+      CLog::Log(LOGERROR, "%s - no extended video surface.", __FUNCTION__);
+      return nullptr;
+    }
+  }
 
-  ID3D11Resource* pResource = nullptr;
   pView->GetResource(&pResource);
+  if (picture.format == RENDER_FMT_MSDK_MVC)
+    pViewEx->GetResource(&pResourceEx);
 
   D3D11_MAPPED_SUBRESOURCE rectangle;
-  ID3D11DeviceContext* pContext = g_Windowing.GetImmediateContext();
-
   if (FAILED(pContext->Map(pResource, 0, D3D11_MAP_WRITE_DISCARD, 0, &rectangle)))
   {
     CLog::Log(LOGERROR, "%s: could not lock rect", __FUNCTION__);
@@ -460,14 +517,49 @@ CRenderPicture *CProcessorHD::Convert(DVDVideoPicture &picture)
     convert_yuv420_p01x(picture.data, picture.iLineSize, picture.iHeight, picture.iWidth, dst, dstStride
                       , picture.format == RENDER_FMT_YUV420P10 ? 10 : 16);
   }
+  else if (picture.format == RENDER_FMT_NV12)
+  {
+    copy_nv12(picture.data, picture.iLineSize, picture.iHeight, picture.iWidth, dst, dstStride);
+  }
+#ifdef HAVE_LIBMFX
+  else if (picture.format == RENDER_FMT_MSDK_MVC)
+  {
+    MVCBuffer *baseView = strcmp(picture.stereo_mode, "block_rl") ? picture.mvc->baseView : picture.mvc->extraView,
+          *extendedView = strcmp(picture.stereo_mode, "block_rl") ? picture.mvc->extraView : picture.mvc->baseView;
+
+    uint8_t*  src[] = { baseView->surface.Data.Y, baseView->surface.Data.UV };
+    int srcStride[] = { baseView->surface.Data.PitchLow, baseView->surface.Data.PitchLow };
+
+    copy_nv12(src, srcStride, picture.iHeight, picture.iWidth, dst, dstStride);
+    
+    // copy extended frame
+    D3D11_MAPPED_SUBRESOURCE rectangleEx;
+    if (SUCCEEDED(pContext->Map(pResourceEx, 0, D3D11_MAP_WRITE_DISCARD, 0, &rectangleEx)))
+    {
+      pData = static_cast<uint8_t*>(rectangleEx.pData);
+      dst[0] = pData;
+      dst[1] = pData + m_texDesc.Height * rectangleEx.RowPitch;
+      src[0] = extendedView->surface.Data.Y;
+      src[1] = extendedView->surface.Data.UV;
+      srcStride[0] = extendedView->surface.Data.PitchLow;
+      srcStride[1] = extendedView->surface.Data.PitchLow;
+
+      copy_nv12(src, srcStride, picture.iHeight, picture.iWidth, dst, dstStride);
+
+      pContext->Unmap(pResourceEx, 0);
+    }
+  }
+#endif
   pContext->Unmap(pResource, 0);
   SAFE_RELEASE(pResource);
+  SAFE_RELEASE(pResourceEx);
 
   m_context->ClearReference(pView);
   m_context->MarkRender(pView);
 
   CRenderPicture *pic = new CRenderPicture(m_context);
   pic->view           = pView;
+  pic->viewEx         = pViewEx;
   return pic;
 }
 
@@ -497,7 +589,7 @@ bool CProcessorHD::ApplyFilter(D3D11_VIDEO_PROCESSOR_FILTER filter, int value, i
 ID3D11VideoProcessorInputView* CProcessorHD::GetInputView(ID3D11View* view) 
 {
   ID3D11VideoProcessorInputView* inputView = nullptr;
-  if (m_eViewType == PROCESSOR_VIEW_TYPE_PROCESSOR)
+  if (m_eViewType == PROCESSOR_VIEW_TYPE_PROCESSOR || m_eViewType == PROCESSOR_VIEW_TYPE_EXTERNAL)
   {
     inputView = reinterpret_cast<ID3D11VideoProcessorInputView*>(view);
     inputView->AddRef(); // it will be released later

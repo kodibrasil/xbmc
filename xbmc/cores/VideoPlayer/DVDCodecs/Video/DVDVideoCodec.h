@@ -51,7 +51,7 @@ class CDVDMediaCodecInfo;
 class CDVDVideoCodecIMXBuffer;
 class CMMALBuffer;
 class CDVDAmlogicInfo;
-
+class CMVCPicture;
 
 // should be entirely filled by all codecs
 struct DVDVideoPicture
@@ -67,6 +67,9 @@ struct DVDVideoPicture
     };
     struct {
       DXVA::CRenderPicture* dxva;
+    };
+    struct {
+      CMVCPicture* mvc;
     };
     struct {
       VDPAU::CVdpauRenderPicture* vdpau;
@@ -310,6 +313,11 @@ public:
    * Decoder request to re-open
    */
   virtual void Reopen() {};
+
+  /**
+  * Indicates that the decoder supports extention streams.
+  */
+  virtual bool SupportsExtention() { return false; }
 
 protected:
   CProcessInfo &m_processInfo;

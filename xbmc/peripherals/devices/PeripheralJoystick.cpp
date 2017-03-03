@@ -80,6 +80,10 @@ bool CPeripheralJoystick::InitialiseFeature(const PeripheralFeature feature)
     {
       bSuccess = true; // Nothing to do
     }
+    else if (feature == FEATURE_POWER_OFF)
+    {
+      bSuccess = true; // Nothing to do
+    }
   }
 
   return bSuccess;
@@ -218,17 +222,23 @@ bool CPeripheralJoystick::OnHatMotion(unsigned int hatIndex, HAT_STATE state)
 
 bool CPeripheralJoystick::OnAxisMotion(unsigned int axisIndex, float position)
 {
-  CSingleLock lock(m_handlerMutex);
+  // Get axis properties
+  int center = 0;
+  unsigned int range = 1;
+  if (m_buttonMap)
+    m_buttonMap->GetAxisProperties(axisIndex, center, range);
 
   // Apply deadzone filtering
-  if (m_deadzoneFilter)
+  if (center == 0 && m_deadzoneFilter)
     position = m_deadzoneFilter->FilterAxis(axisIndex, position);
+
+  CSingleLock lock(m_handlerMutex);
 
   // Process promiscuous handlers
   for (std::vector<DriverHandler>::iterator it = m_driverHandlers.begin(); it != m_driverHandlers.end(); ++it)
   {
     if (it->bPromiscuous)
-      it->handler->OnAxisMotion(axisIndex, position);
+      it->handler->OnAxisMotion(axisIndex, position, center, range);
   }
 
   bool bHandled = false;
@@ -238,11 +248,11 @@ bool CPeripheralJoystick::OnAxisMotion(unsigned int axisIndex, float position)
   {
     if (!it->bPromiscuous)
     {
-      bHandled |= it->handler->OnAxisMotion(axisIndex, position);
+      bHandled |= it->handler->OnAxisMotion(axisIndex, position, center, range);
 
       // If axis is centered, force bHandled to false to notify all handlers.
       // This avoids "sticking".
-      if (position == 0.0f)
+      if (position == static_cast<float>(center))
         bHandled = false;
 
       // Once an axis is handled, we're done
@@ -284,5 +294,15 @@ void CPeripheralJoystick::SetMotorCount(unsigned int motorCount)
   if (m_motorCount == 0)
     m_features.erase(std::remove(m_features.begin(), m_features.end(), FEATURE_RUMBLE), m_features.end());
   else if (std::find(m_features.begin(), m_features.end(), FEATURE_RUMBLE) == m_features.end())
+    m_features.push_back(FEATURE_RUMBLE);
+}
+
+void CPeripheralJoystick::SetSupportsPowerOff(bool bSupportsPowerOff)
+{
+  m_supportsPowerOff = bSupportsPowerOff;
+
+  if (!m_supportsPowerOff)
+    m_features.erase(std::remove(m_features.begin(), m_features.end(), FEATURE_POWER_OFF), m_features.end());
+  else if (std::find(m_features.begin(), m_features.end(), FEATURE_POWER_OFF) == m_features.end())
     m_features.push_back(FEATURE_RUMBLE);
 }

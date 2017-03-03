@@ -46,11 +46,8 @@ class CBaseTexture;
 class CYUV2RGBShader;
 class CConvolutionShader;
 
-class DllAvUtil;
-class DllAvCodec;
-class DllSwScale;
-
 struct DVDVideoPicture;
+struct MVCBuffer;
 
 struct DRAWRECT
 {
@@ -125,9 +122,11 @@ struct YUVBuffer : SVideoBuffer
   bool IsReadyToRender() override;
 
   SVideoPlane planes[MAX_PLANES];
+  SVideoPlane stereo[MAX_PLANES];
 
 private:
   bool CopyFromDXVA(ID3D11VideoDecoderOutputView* pView);
+  bool CopyFromMVC(MVCBuffer* baseView, MVCBuffer* extraView);
   void PerformCopy();
 
   unsigned int     m_width;
@@ -203,6 +202,9 @@ protected:
   void UpdatePSVideoFilter();
   bool CreateIntermediateRenderTarget(unsigned int width, unsigned int height, bool dynamic);
   bool CopyDXVA2YUVBuffer(ID3D11VideoDecoderOutputView* pView, YUVBuffer *pBuf);
+  ID3D11View* SelectDXVAView(DXVA::CRenderPicture* pic);
+  void InitDXVAProcessor();
+  bool UseExtendedMVCView();
 
   int  m_iYV12RenderBuffer;
   int  m_NumYV12Buffers;

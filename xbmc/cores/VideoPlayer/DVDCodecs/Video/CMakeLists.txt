@@ -63,4 +63,10 @@ if(CORE_SYSTEM_NAME STREQUAL android)
   list(APPEND HEADERS DVDVideoCodecAndroidMediaCodec.h)
 endif()
 
+if(MFX_FOUND)
+  list(APPEND SOURCES MFXCodec.cpp)
+  list(APPEND HEADERS MFXCodec.h)
+  add_subdirectory(mfx)
+endif()
+
 core_add_library(dvdvideocodecs)

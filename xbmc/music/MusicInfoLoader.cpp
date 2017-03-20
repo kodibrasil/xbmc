@@ -19,6 +19,7 @@
  */
 
 #include "MusicInfoLoader.h"
+#include "ServiceBroker.h"
 #include "MusicDatabase.h"
 #include "music/tags/MusicInfoTagLoaderFactory.h"
 #include "filesystem/MusicDatabaseDirectory/DirectoryNode.h"
@@ -82,7 +83,8 @@ void CMusicInfoLoader::OnLoaderStart()
 
 bool CMusicInfoLoader::LoadAdditionalTagInfo(CFileItem* pItem)
 {
-  if (!pItem || pItem->m_bIsFolder || pItem->IsPlayList() || pItem->IsNFO() || pItem->IsInternetStream())
+  if (!pItem || (pItem->m_bIsFolder && !pItem->IsAudio()) ||
+      pItem->IsPlayList() || pItem->IsNFO() || pItem->IsInternetStream())
     return false;
 
   if (pItem->GetProperty("hasfullmusictag") == "true")
@@ -134,7 +136,8 @@ bool CMusicInfoLoader::LoadItem(CFileItem* pItem)
 
 bool CMusicInfoLoader::LoadItemCached(CFileItem* pItem)
 {
-  if (pItem->m_bIsFolder || pItem->IsPlayList() || pItem->IsNFO() || pItem->IsInternetStream())
+  if ((pItem->m_bIsFolder && !pItem->IsAudio()) ||
+       pItem->IsPlayList() || pItem->IsNFO() || pItem->IsInternetStream())
     return false;
 
   // Get thumb for item
@@ -148,7 +151,8 @@ bool CMusicInfoLoader::LoadItemLookup(CFileItem* pItem)
   if (m_pProgressCallback && !pItem->m_bIsFolder)
     m_pProgressCallback->SetProgressAdvance();
 
-  if (pItem->m_bIsFolder || pItem->IsPlayList() || pItem->IsNFO() || pItem->IsInternetStream())
+  if ((pItem->m_bIsFolder && !pItem->IsAudio()) || pItem->IsPlayList() ||
+       pItem->IsNFO() || pItem->IsInternetStream())
     return false;
 
   if (!pItem->HasMusicInfoTag() || !pItem->GetMusicInfoTag()->Loaded())
@@ -193,7 +197,7 @@ bool CMusicInfoLoader::LoadItemLookup(CFileItem* pItem)
             pItem->SetArt("thumb", song.strThumb);
         }
       }
-      else if (CSettings::GetInstance().GetBool(CSettings::SETTING_MUSICFILES_USETAGS) || pItem->IsCDDA())
+      else if (CServiceBroker::GetSettings().GetBool(CSettings::SETTING_MUSICFILES_USETAGS) || pItem->IsCDDA())
       { // Nothing found, load tag from file,
         // always try to load cddb info
         // get correct tag parser

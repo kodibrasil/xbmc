@@ -31,13 +31,15 @@
 #include "Util.h"
 #include "Application.h"
 #include "PlayListPlayer.h"
+#include "ServiceBroker.h"
 #include "interfaces/AnnouncementManager.h"
 #include "addons/BinaryAddonCache.h"
 #include "interfaces/python/XBPython.h"
 #include "pvr/PVRManager.h"
 
-#if defined(TARGET_WINDOWS)
+#if defined(TARGET_WINDOWS) || defined(TARGET_WIN10)
 #include "platform/win32/WIN32Util.h"
+#include "platform/win32/CharsetConverter.h"
 #endif
 
 #include <cstdio>
@@ -52,7 +54,7 @@ void TestBasicEnvironment::SetUp()
   if (!g_application.m_ServiceManager->Init1())
     exit(1);
 
-  /* NOTE: The below is done to fix memleak warning about unitialized variable
+  /* NOTE: The below is done to fix memleak warning about uninitialized variable
    * in xbmcutil::GlobalsSingleton<CAdvancedSettings>::getInstance().
    */
   g_advancedSettings.Initialize();
@@ -77,23 +79,24 @@ void TestBasicEnvironment::SetUp()
    * that the initialization of these components won't be needed.
    */
   g_powerManager.Initialize();
-  CSettings::GetInstance().Initialize();
+  CServiceBroker::GetSettings().Initialize();
 
   /* Create a temporary directory and set it to be used throughout the
    * test suite run.
    */
 #ifdef TARGET_WINDOWS
-  std::string xbmcTempPath;
+  using KODI::PLATFORM::WINDOWS::FromW;
+  std::wstring xbmcTempPath;
   TCHAR lpTempPathBuffer[MAX_PATH];
   if (!GetTempPath(MAX_PATH, lpTempPathBuffer))
     SetUpError();
   xbmcTempPath = lpTempPathBuffer;
-  if (!GetTempFileName(xbmcTempPath.c_str(), "xbmctempdir", 0, lpTempPathBuffer))
+  if (!GetTempFileName(xbmcTempPath.c_str(), L"xbmctempdir", 0, lpTempPathBuffer))
     SetUpError();
   DeleteFile(lpTempPathBuffer);
   if (!CreateDirectory(lpTempPathBuffer, NULL))
     SetUpError();
-  CSpecialProtocol::SetTempPath(lpTempPathBuffer);
+  CSpecialProtocol::SetTempPath(FromW(lpTempPathBuffer));
 #else
   char buf[MAX_PATH];
   char *tmp;
@@ -125,7 +128,7 @@ void TestBasicEnvironment::TearDown()
 {
   std::string xbmcTempPath = CSpecialProtocol::TranslatePath("special://temp/");
   XFILE::CDirectory::Remove(xbmcTempPath);
-  CSettings::GetInstance().Uninitialize();
+  CServiceBroker::GetSettings().Uninitialize();
   g_application.m_ServiceManager->Deinit();
 }
 

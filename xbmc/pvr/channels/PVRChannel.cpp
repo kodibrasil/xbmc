@@ -144,7 +144,7 @@ void CPVRChannel::Serialize(CVariant& value) const
 bool CPVRChannel::Delete(void)
 {
   bool bReturn = false;
-  CPVRDatabase *database = GetPVRDatabase();
+  const CPVRDatabasePtr database(g_PVRManager.GetTVDatabase());
   if (!database)
     return bReturn;
 
@@ -218,7 +218,8 @@ bool CPVRChannel::Persist()
       return true;
   }
 
-  if (CPVRDatabase *database = GetPVRDatabase())
+  const CPVRDatabasePtr database(g_PVRManager.GetTVDatabase());
+  if (database)
   {
     bool bReturn = database->Persist(*this) && database->CommitInsertQueries();
     CSingleLock lock(m_critSection);
@@ -368,8 +369,27 @@ bool CPVRChannel::SetLastWatched(time_t iLastWatched)
       m_iLastWatched = iLastWatched;
   }
 
-  if (CPVRDatabase *database = GetPVRDatabase())
+  const CPVRDatabasePtr database(g_PVRManager.GetTVDatabase());
+  if (database)
     return database->UpdateLastWatched(*this);
+
+  return false;
+}
+
+bool CPVRChannel::SetWasPlayingOnLastQuit(bool bSet)
+{
+  const CPVRDatabasePtr database(g_PVRManager.GetTVDatabase());
+  if (database)
+    return database->SetWasPlayingOnLastQuit(*this, bSet);
+
+  return false;
+}
+
+bool CPVRChannel::SetWasPlayingOnLastQuit(bool bSet, bool& bWasPlaying)
+{
+  const CPVRDatabasePtr database(g_PVRManager.GetTVDatabase());
+  if (database)
+    return database->SetWasPlayingOnLastQuit(*this, bSet, bWasPlaying);
 
   return false;
 }

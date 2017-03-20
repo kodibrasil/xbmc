@@ -73,6 +73,8 @@ typedef std::shared_ptr<const IEvent> EventPtr;
 
 class CMediaSource;
 
+class CBookmark;
+
 enum EFileFolderType {
   EFILEFOLDER_TYPE_ALWAYS     = 1<<0,
   EFILEFOLDER_TYPE_ONCLICK    = 1<<1,
@@ -174,6 +176,18 @@ public:
    */
   bool IsAudio() const;
 
+  /*!
+   \brief Check whether an item is 'deleted' (for example, a trashed pvr recording).
+   \return true if item is 'deleted', false otherwise.
+   */
+  bool IsDeleted() const;
+
+  /*!
+   \brief Check whether an item is an audio book item.
+   \return true if item is audiobook, false otherwise.
+   */
+  bool IsAudioBook() const;
+
   bool IsGame() const;
   bool IsCUESheet() const;
   bool IsInternetStream(const bool bStrictCheck = false) const;
@@ -235,8 +249,8 @@ public:
   void SetFileSizeLabel();
   virtual void SetLabel(const std::string &strLabel);
   int GetVideoContentType() const; /* return VIDEODB_CONTENT_TYPE, but don't want to include videodb in this header */
-  bool IsLabelPreformated() const { return m_bLabelPreformated; }
-  void SetLabelPreformated(bool bYesNo) { m_bLabelPreformated=bYesNo; }
+  bool IsLabelPreformatted() const { return m_bLabelPreformatted; }
+  void SetLabelPreformatted(bool bYesNo) { m_bLabelPreformatted=bYesNo; }
   bool SortsOnTop() const { return m_specialSort == SortSpecialOnTop; }
   bool SortsOnBottom() const { return m_specialSort == SortSpecialOnBottom; }
   void SetSpecialSort(SortSpecial sort) { m_specialSort = sort; }
@@ -253,17 +267,11 @@ public:
     return m_musicInfoTag;
   }
 
-  inline bool HasVideoInfoTag() const
-  {
-    return m_videoInfoTag != NULL;
-  }
+  bool HasVideoInfoTag() const;
 
   CVideoInfoTag* GetVideoInfoTag();
 
-  inline const CVideoInfoTag* GetVideoInfoTag() const
-  {
-    return m_videoInfoTag;
-  }
+  const CVideoInfoTag* GetVideoInfoTag() const;
 
   inline bool HasEPGInfoTag() const
   {
@@ -326,6 +334,12 @@ public:
   }
 
   /*!
+   \brief return the item to play. will be almost 'this', but can be different (e.g. "Play recording" from PVR EPG grid window)
+   \return the item to play
+   */
+  CFileItem GetItemToPlay() const;
+
+  /*!
    \brief Test if this item has a valid resume point set.
    \return True if this item has a resume point and it is set, false otherwise.
    */
@@ -336,6 +350,14 @@ public:
    \return The time in seconds from the start to resume playing from.
    */
   double GetCurrentResumeTime() const;
+
+  /*!
+   \brief Return the current resume time and part.
+   \param startOffset will be filled with the resume time offset in seconds if item has a resume point set, is unchanged otherwise
+   \param partNumber will be filled with the part number if item has a resume point set, is unchanged otherwise
+   \return True if the item has a resume point set, false otherwise.
+   */
+  bool GetCurrentResumeTimeAndPartNumber(int& startOffset, int& partNumber) const;
 
   inline bool HasPictureInfoTag() const
   {
@@ -535,12 +557,18 @@ private:
    */
   void Initialize();
 
+  /*!
+   \brief Return the current resume point for this item.
+   \return The resume point.
+   */
+  CBookmark GetResumePoint() const;
+
   std::string m_strPath;            ///< complete path to item
 
   SortSpecial m_specialSort;
   bool m_bIsParentFolder;
   bool m_bCanQueue;
-  bool m_bLabelPreformated;
+  bool m_bLabelPreformatted;
   std::string m_mimetype;
   std::string m_extrainfo;
   bool m_doContentLookup;
@@ -730,6 +758,13 @@ public:
   const std::string &GetContent() const { return m_content; };
 
   void ClearSortState();
+
+  VECFILEITEMS::const_iterator begin() { return m_items.cbegin(); }
+  VECFILEITEMS::const_iterator end() { return m_items.cend(); }
+  VECFILEITEMS::const_iterator begin() const { return m_items.begin(); }
+  VECFILEITEMS::const_iterator end() const { return m_items.end(); }
+  VECFILEITEMS::const_iterator cbegin() const { return m_items.begin(); }
+  VECFILEITEMS::const_iterator cend() const { return m_items.end(); }
 private:
   void Sort(FILEITEMLISTCOMPARISONFUNC func);
   void FillSortFields(FILEITEMFILLFUNC func);

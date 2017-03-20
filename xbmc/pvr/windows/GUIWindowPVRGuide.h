@@ -22,6 +22,7 @@
 #include <atomic>
 #include <memory>
 #include "threads/Thread.h"
+#include "pvr/PVRChannelNumberInputHandler.h"
 #include "GUIWindowPVRBase.h"
 
 class CSetting;
@@ -35,7 +36,7 @@ namespace PVR
 {
   class CPVRRefreshTimelineItemsThread;
 
-  class CGUIWindowPVRGuide : public CGUIWindowPVRBase
+  class CGUIWindowPVRGuide : public CGUIWindowPVRBase, public CPVRChannelNumberInputHandler
   {
   public:
     CGUIWindowPVRGuide(bool bRadio);
@@ -50,8 +51,12 @@ namespace PVR
     virtual void UpdateButtons(void) override;
     virtual void Notify(const Observable &obs, const ObservableMessage msg) override;
     virtual void SetInvalid() override;
+    bool Update(const std::string &strDirectory, bool updateFilterPath = true) override;
 
     bool RefreshTimelineItems();
+
+    // CPVRChannelNumberInputHandler implementation
+    void OnInputDone() override;
 
   protected:
     virtual void UpdateSelectedItemPath() override;
@@ -71,8 +76,6 @@ namespace PVR
     bool OnContextButtonEnd(CFileItem *item, CONTEXT_BUTTON button);
     bool OnContextButtonNow(CFileItem *item, CONTEXT_BUTTON button);
 
-    bool InputChannelNumber(int input);
-
     void StartRefreshTimelineItemsThread();
     void StopRefreshTimelineItemsThread();
 
@@ -81,6 +84,8 @@ namespace PVR
 
     CPVRChannelGroupPtr m_cachedChannelGroup;
     std::unique_ptr<CFileItemList> m_newTimeline;
+
+    bool m_bChannelSelectionRestored;
   };
 
   class CPVRRefreshTimelineItemsThread : public CThread

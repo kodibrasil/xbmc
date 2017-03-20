@@ -28,6 +28,7 @@
 #include <assert.h>
 #include <vector>
 
+using namespace KODI;
 using namespace JOYSTICK;
 using namespace PERIPHERALS;
 
@@ -81,7 +82,7 @@ bool CAddonButtonMap::Load(void)
     CSingleLock lock(m_mutex);
     m_features = std::move(features);
     m_driverMap = std::move(driverMap);
-    m_ignoredPrimitives = std::move(CPeripheralAddonTranslator::TranslatePrimitives(ignoredPrimitives));
+    m_ignoredPrimitives = CPeripheralAddonTranslator::TranslatePrimitives(ignoredPrimitives);
   }
 
   return true;
@@ -215,9 +216,9 @@ void CAddonButtonMap::AddAnalogStick(const FeatureName& feature,
 }
 
 bool CAddonButtonMap::GetAccelerometer(const FeatureName& feature,
-                                               CDriverPrimitive& positiveX,
-                                               CDriverPrimitive& positiveY,
-                                               CDriverPrimitive& positiveZ)
+                                       CDriverPrimitive& positiveX,
+                                       CDriverPrimitive& positiveY,
+                                       CDriverPrimitive& positiveZ)
 {
   bool retVal(false);
 
@@ -241,9 +242,9 @@ bool CAddonButtonMap::GetAccelerometer(const FeatureName& feature,
 }
 
 void CAddonButtonMap::AddAccelerometer(const FeatureName& feature,
-                                               const CDriverPrimitive& positiveX,
-                                               const CDriverPrimitive& positiveY,
-                                               const CDriverPrimitive& positiveZ)
+                                       const CDriverPrimitive& positiveX,
+                                       const CDriverPrimitive& positiveY,
+                                       const CDriverPrimitive& positiveZ)
 {
   using namespace JOYSTICK;
 
@@ -266,6 +267,28 @@ void CAddonButtonMap::SetIgnoredPrimitives(const std::vector<JOYSTICK::CDriverPr
 bool CAddonButtonMap::IsIgnored(const JOYSTICK::CDriverPrimitive& primitive)
 {
   return std::find(m_ignoredPrimitives.begin(), m_ignoredPrimitives.end(), primitive) != m_ignoredPrimitives.end();
+}
+
+bool CAddonButtonMap::GetAxisProperties(unsigned int axisIndex, int& center, unsigned int& range)
+{
+  CSingleLock lock(m_mutex);
+
+  for (auto it : m_driverMap)
+  {
+    const CDriverPrimitive& primitive = it.first;
+
+    if (primitive.Type() != PRIMITIVE_TYPE::SEMIAXIS)
+      continue;
+
+    if (primitive.Index() != axisIndex)
+      continue;
+
+    center = primitive.Center();
+    range = primitive.Range();
+    return true;
+  }
+
+  return false;
 }
 
 void CAddonButtonMap::SaveButtonMap()
@@ -326,12 +349,12 @@ CAddonButtonMap::DriverMap CAddonButtonMap::CreateLookupTable(const FeatureMap& 
           driverMap[translatedPrimitive] = it->first;
 
           // Map opposite semiaxis
-          CDriverPrimitive oppositePrimitive = CDriverPrimitive(translatedPrimitive.Index(), translatedPrimitive.SemiAxisDirection() * -1);
+          CDriverPrimitive oppositePrimitive = CDriverPrimitive(translatedPrimitive.Index(), 0, translatedPrimitive.SemiAxisDirection() * -1, 1);
           driverMap[oppositePrimitive] = it->first;
         }
         break;
       }
-        
+
       default:
         break;
     }

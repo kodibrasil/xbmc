@@ -21,6 +21,7 @@
 #include <math.h>
 
 #include "Application.h"
+#include "ServiceBroker.h"
 #include "InputManager.h"
 #include "input/keyboard/IKeyboardHandler.h"
 #include "input/mouse/generic/MouseInputHandling.h"
@@ -69,7 +70,8 @@
 using EVENTSERVER::CEventServer;
 #endif
 
-using namespace KODI::MESSAGING;
+using namespace KODI;
+using namespace MESSAGING;
 using PERIPHERALS::CPeripherals;
 
 CInputManager::CInputManager() :
@@ -99,7 +101,7 @@ void CInputManager::InitializeInputs()
   m_Keyboard.Initialize();
 
   m_Mouse.Initialize();
-  m_Mouse.SetEnabled(CSettings::GetInstance().GetBool(CSettings::SETTING_INPUT_ENABLEMOUSE));
+  m_Mouse.SetEnabled(CServiceBroker::GetSettings().GetBool(CSettings::SETTING_INPUT_ENABLEMOUSE));
 }
 
 void CInputManager::SetEnabledJoystick(bool enabled /* = true */)
@@ -367,7 +369,7 @@ bool CInputManager::OnEvent(XBMC_Event& newEvent)
       // Do not repeat long presses
       break;
     }
-    if (!CButtonTranslator::GetInstance().HasLonpressMapping(g_windowManager.GetActiveWindowID(), key))
+    if (!CButtonTranslator::GetInstance().HasLongpressMapping(g_windowManager.GetActiveWindowID(), key))
     {
       m_LastKey.Reset();
       OnKey(key);

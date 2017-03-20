@@ -37,7 +37,7 @@ namespace EPG
   {
   public:
     CGUIEPGGridContainer(int parentID, int controlID, float posX, float posY, float width, float height,
-                         int scrollTime, int preloadItems, int minutesPerPage,
+                         ORIENTATION orientation, int scrollTime, int preloadItems, int minutesPerPage,
                          int rulerUnit, const CTextureInfo& progressIndicatorTexture);
     CGUIEPGGridContainer(const CGUIEPGGridContainer &other);
 
@@ -82,16 +82,26 @@ namespace EPG
     void GoToEnd();
     void GoToNow();
     void SetTimelineItems(const std::unique_ptr<CFileItemList> &items, const CDateTime &gridStart, const CDateTime &gridEnd);
-    void SetChannel(const PVR::CPVRChannelPtr &channel);
-    void SetChannel(const std::string &channel);
+    /*!
+     * @brief Set the control's selection to the given channel and set the control's view port to show the channel.
+     * @param channel the channel.
+     * @return true if the selection was set to the given channel, false otherwise.
+     */
+    bool SetChannel(const PVR::CPVRChannelPtr &channel);
+    /*!
+     * @brief Set the control's selection to the given channel and set the control's view port to show the channel.
+     * @param channel the channel's path.
+     * @return true if the selection was set to the given channel, false otherwise.
+     */
+    bool SetChannel(const std::string &channel);
     void ResetCoordinates();
 
   protected:
     bool OnClick(int actionID);
     bool SelectItemFromPoint(const CPoint &point, bool justGrid = true);
 
-    void SetChannel(int channel, bool bFindClosestItem = true);
-    void SetBlock(int block);
+    void SetChannel(int channel);
+    void SetBlock(int block, bool bUpdateBlockTravelAxis = true);
     void ChannelScroll(int amount);
     void ProgrammesScroll(int amount);
     void ValidateOffset();
@@ -100,9 +110,7 @@ namespace EPG
     GridItem *GetItem(int channel);
     GridItem *GetNextItem(int channel);
     GridItem *GetPrevItem(int channel);
-    GridItem *GetClosestItem(int channel);
 
-    int GetItemSize(GridItem *item);
     int GetBlock(const CGUIListItemPtr &item, int channel);
     int GetRealBlock(const CGUIListItemPtr &item, int channel);
     void MoveToRow(int row);
@@ -120,26 +128,32 @@ namespace EPG
 
     void ProcessChannels(unsigned int currentTime, CDirtyRegionList &dirtyregions);
     void ProcessRuler(unsigned int currentTime, CDirtyRegionList &dirtyregions);
+    void ProcessRulerDate(unsigned int currentTime, CDirtyRegionList &dirtyregions);
     void ProcessProgrammeGrid(unsigned int currentTime, CDirtyRegionList &dirtyregions);
     void ProcessProgressIndicator(unsigned int currentTime, CDirtyRegionList &dirtyregions);
     void RenderChannels();
+    void RenderRulerDate();
     void RenderRuler();
     void RenderProgrammeGrid();
     void RenderProgressIndicator();
 
     CPoint m_renderOffset; ///< \brief render offset of the first item in the list \sa SetRenderOffset
 
+    ORIENTATION m_orientation;
+
     std::vector<CGUIListItemLayout> m_channelLayouts;
     std::vector<CGUIListItemLayout> m_focusedChannelLayouts;
     std::vector<CGUIListItemLayout> m_focusedProgrammeLayouts;
     std::vector<CGUIListItemLayout> m_programmeLayouts;
     std::vector<CGUIListItemLayout> m_rulerLayouts;
+    std::vector<CGUIListItemLayout> m_rulerDateLayouts;
 
     CGUIListItemLayout *m_channelLayout;
     CGUIListItemLayout *m_focusedChannelLayout;
     CGUIListItemLayout *m_programmeLayout;
     CGUIListItemLayout *m_focusedProgrammeLayout;
     CGUIListItemLayout *m_rulerLayout;
+    CGUIListItemLayout *m_rulerDateLayout;
 
     int m_pageControl;
 
@@ -149,11 +163,18 @@ namespace EPG
   private:
     void HandleChannels(bool bRender, unsigned int currentTime, CDirtyRegionList &dirtyregions);
     void HandleRuler(bool bRender, unsigned int currentTime, CDirtyRegionList &dirtyregions);
+    void HandleRulerDate(bool bRender, unsigned int currentTime, CDirtyRegionList &dirtyregions);
     void HandleProgrammeGrid(bool bRender, unsigned int currentTime, CDirtyRegionList &dirtyregions);
+
+    float GetCurrentTimePositionOnPage() const;
+    float GetProgressIndicatorWidth() const;
+    float GetProgressIndicatorHeight() const;
 
     void UpdateItems();
 
     EPG::CEpgInfoTagPtr GetSelectedEpgInfoTag() const;
+
+    unsigned int GetPageNowOffset() const;
 
     int m_rulerUnit; //! number of blocks that makes up one element of the ruler
     int m_channelsPerPage;
@@ -163,10 +184,13 @@ namespace EPG
     int m_blocksPerPage;
     int m_blockCursor;
     int m_blockOffset;
+    int m_blockTravelAxis;
     int m_cacheChannelItems;
     int m_cacheProgrammeItems;
     int m_cacheRulerItems;
 
+    float m_rulerDateHeight; //! height of ruler date item
+    float m_rulerDateWidth; //! width of ruler date item
     float m_rulerPosX;      //! X position of first ruler item
     float m_rulerPosY;      //! Y position of first ruler item
     float m_rulerHeight;    //! height of the scrolling timeline above the ruler items

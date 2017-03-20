@@ -26,6 +26,7 @@
 #include "ContextMenuManager.h"
 #include "FileItem.h"
 #include "GUIPassword.h"
+#include "ServiceBroker.h"
 #include "addons/AddonManager.h"
 #include "addons/Skin.h"
 #include "cores/AudioEngine/Engines/ActiveAE/AudioDSPAddons/ActiveAEDSP.h"
@@ -214,9 +215,9 @@ void CGUIWindowLoginScreen::Update()
       strLabel = StringUtils::Format(g_localizeStrings.Get(20112).c_str(), profile->getDate().c_str());
     item->SetLabel2(strLabel);
     item->SetArt("thumb", profile->getThumb());
-    if (profile->getThumb().empty() || profile->getThumb() == "-")
+    if (profile->getThumb().empty())
       item->SetArt("thumb", "DefaultUser.png");
-    item->SetLabelPreformated(true);
+    item->SetLabelPreformatted(true);
     m_vecItems->Add(item);
   }
   m_viewControl.SetItems(*m_vecItems);
@@ -242,7 +243,7 @@ bool CGUIWindowLoginScreen::OnPopupMenu(int iItem)
   if (choice == 2)
   {
     if (g_passwordManager.CheckLock(CProfilesManager::GetInstance().GetMasterProfile().getLockMode(),CProfilesManager::GetInstance().GetMasterProfile().getLockCode(),20075))
-      g_passwordManager.iMasterLockRetriesLeft = CSettings::GetInstance().GetInt(CSettings::SETTING_MASTERLOCK_MAXRETRIES);
+      g_passwordManager.iMasterLockRetriesLeft = CServiceBroker::GetSettings().GetInt(CSettings::SETTING_MASTERLOCK_MAXRETRIES);
     else // be inconvenient
       CApplicationMessenger::GetInstance().PostMsg(TMSG_SHUTDOWN);
 
@@ -272,11 +273,13 @@ CFileItemPtr CGUIWindowLoginScreen::GetCurrentListItem(int offset)
 
 void CGUIWindowLoginScreen::LoadProfile(unsigned int profile)
 {
+  CServiceBroker::GetContextMenuManager().Deinit();
+
   // stop service addons and give it some time before we start it again
   ADDON::CAddonMgr::GetInstance().StopServices(true);
 
   // stop PVR related services
-  g_application.StopPVRManager();
+  CServiceBroker::GetPVRManager().Unload();
 
   // stop audio DSP services with a blocking message
   CServiceBroker::GetADSP().Deactivate();
@@ -322,8 +325,11 @@ void CGUIWindowLoginScreen::LoadProfile(unsigned int profile)
   JSONRPC::CJSONRPC::Initialize();
 #endif
 
+  // Restart context menu manager
+  CServiceBroker::GetContextMenuManager().Init();
+
   // restart PVR services
-  g_application.ReinitPVRManager();
+  CServiceBroker::GetPVRManager().Reinit();
 
   // start services which should run on login
   ADDON::CAddonMgr::GetInstance().StartServices(false);

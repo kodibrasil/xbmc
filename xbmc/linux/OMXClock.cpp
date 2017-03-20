@@ -18,15 +18,14 @@
  *
  */
 
-#if (defined HAVE_CONFIG_H) && (!defined TARGET_WINDOWS)
-  #include "config.h"
-#elif defined(TARGET_WINDOWS)
+#if defined(TARGET_WINDOWS)
 #include "system.h"
 #endif
 
 #if defined(HAVE_OMXLIB)
 
-#include "video/VideoReferenceClock.h"
+#include "ServiceBroker.h"
+#include "cores/VideoPlayer/VideoReferenceClock.h"
 #include "settings/Settings.h"
 
 #include "OMXClock.h"
@@ -512,7 +511,7 @@ void OMXClock::OMXSetSpeedAdjust(double adjust, bool lock /* = true */)
   if(lock)
     Lock();
   // we only support resampling (and hence clock adjustment) in this mode
-  if (CSettings::GetInstance().GetBool(CSettings::SETTING_VIDEOPLAYER_USEDISPLAYASCLOCK))
+  if (CServiceBroker::GetSettings().GetBool(CSettings::SETTING_VIDEOPLAYER_USEDISPLAYASCLOCK))
   {
     m_speedAdjust = adjust;
     OMXSetSpeed(m_omx_speed, false, true);

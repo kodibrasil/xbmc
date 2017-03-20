@@ -32,11 +32,13 @@
 #include "guilib/WindowIDs.h"
 #include "GUIPassword.h"
 #include "input/Key.h"
+#include "ServiceBroker.h"
 #include "settings/MediaSourceSettings.h"
 #include "settings/Settings.h"
 #include "URL.h"
 #include "Util.h"
 #include "utils/StringUtils.h"
+#include "utils/URIUtils.h"
 
 #include <algorithm>
 
@@ -97,7 +99,7 @@ bool CGUIWindowGames::OnClickMsg(int controlId, int actionId)
   case ACTION_DELETE_ITEM:
   {
     // Is delete allowed?
-    if (CSettings::GetInstance().GetBool(CSettings::SETTING_FILELISTS_ALLOWFILEDELETION))
+    if (CServiceBroker::GetSettings().GetBool(CSettings::SETTING_FILELISTS_ALLOWFILEDELETION))
     {
       OnDeleteItem(iItem);
       return true;
@@ -193,10 +195,7 @@ void CGUIWindowGames::GetContextButtons(int itemNumber, CContextButtons &buttons
         buttons.Add(CONTEXT_BUTTON_PLAY_ITEM, 208); // Play
       }
 
-      if (!m_vecItems->IsPlugin() && item->HasAddonInfo())
-        buttons.Add(CONTEXT_BUTTON_INFO, 24003); // Add-on information
-
-      if (CSettings::GetInstance().GetBool("filelists.allowfiledeletion") && !item->IsReadOnly())
+      if (CServiceBroker::GetSettings().GetBool(CSettings::SETTING_FILELISTS_ALLOWFILEDELETION) && !item->IsReadOnly())
       {
         buttons.Add(CONTEXT_BUTTON_DELETE, 117);
         buttons.Add(CONTEXT_BUTTON_RENAME, 118);
@@ -254,7 +253,11 @@ bool CGUIWindowGames::GetDirectory(const std::string &strDirectory, CFileItemLis
   // Set label
   std::string label;
   if (items.GetLabel().empty())
-    m_rootDir.IsSource(items.GetPath(), CMediaSourceSettings::GetInstance().GetSources("games"), &label);
+  {
+    std::string source;
+    if (m_rootDir.IsSource(items.GetPath(), CMediaSourceSettings::GetInstance().GetSources("games"), &source))
+      label = std::move(source);
+  }
 
   if (!label.empty())
     items.SetLabel(label);

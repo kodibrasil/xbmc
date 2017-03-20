@@ -22,13 +22,15 @@
 #include "GameClient.h"
 #include "games/controllers/Controller.h"
 #include "input/joysticks/IInputReceiver.h"
+#include "utils/log.h"
 
 #include <algorithm>
 #include <assert.h>
 
+using namespace KODI;
 using namespace GAME;
 
-CGameClientInput::CGameClientInput(CGameClient* gameClient, int port, const ControllerPtr& controller, const GameClient *dllStruct) :
+CGameClientInput::CGameClientInput(CGameClient* gameClient, int port, const ControllerPtr& controller, const KodiToAddonFuncTable_Game *dllStruct) :
   m_gameClient(gameClient),
   m_port(port),
   m_controller(controller),

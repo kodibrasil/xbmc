@@ -19,6 +19,7 @@
  */
 
 #include "PlayerController.h"
+#include "ServiceBroker.h"
 #include "dialogs/GUIDialogSlider.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/MediaSettings.h"
@@ -251,7 +252,7 @@ bool CPlayerController::OnAction(const CAction &action)
       {
         CMediaSettings::GetInstance().GetCurrentVideoSettings().m_CustomPixelRatio += 0.01f;
         if (CMediaSettings::GetInstance().GetCurrentVideoSettings().m_CustomPixelRatio > 2.f)
-          CMediaSettings::GetInstance().GetCurrentVideoSettings().m_CustomZoomAmount = 2.f;
+          CMediaSettings::GetInstance().GetCurrentVideoSettings().m_CustomPixelRatio = 2.f;
         CMediaSettings::GetInstance().GetCurrentVideoSettings().m_ViewMode = ViewModeCustom;
         g_application.m_pPlayer->SetRenderViewMode(ViewModeCustom);
         ShowSlider(action.GetID(), 217, CMediaSettings::GetInstance().GetCurrentVideoSettings().m_CustomPixelRatio, 0.5f, 0.1f, 2.0f);
@@ -261,7 +262,7 @@ bool CPlayerController::OnAction(const CAction &action)
       case ACTION_DECREASE_PAR:
       {
         CMediaSettings::GetInstance().GetCurrentVideoSettings().m_CustomPixelRatio -= 0.01f;
-        if (CMediaSettings::GetInstance().GetCurrentVideoSettings().m_CustomZoomAmount < 0.5f)
+        if (CMediaSettings::GetInstance().GetCurrentVideoSettings().m_CustomPixelRatio < 0.5f)
           CMediaSettings::GetInstance().GetCurrentVideoSettings().m_CustomPixelRatio = 0.5f;
         CMediaSettings::GetInstance().GetCurrentVideoSettings().m_ViewMode = ViewModeCustom;
         g_application.m_pPlayer->SetRenderViewMode(ViewModeCustom);
@@ -294,7 +295,7 @@ bool CPlayerController::OnAction(const CAction &action)
       case ACTION_SUBTITLE_VSHIFT_UP:
       {
         RESOLUTION_INFO res_info = g_graphicsContext.GetResInfo();
-        int subalign = CSettings::GetInstance().GetInt(CSettings::SETTING_SUBTITLES_ALIGN);
+        int subalign = CServiceBroker::GetSettings().GetInt(CSettings::SETTING_SUBTITLES_ALIGN);
         if ((subalign == SUBTITLE_ALIGN_BOTTOM_OUTSIDE) || (subalign == SUBTITLE_ALIGN_TOP_INSIDE))
         {
           res_info.iSubtitles ++;
@@ -321,7 +322,7 @@ bool CPlayerController::OnAction(const CAction &action)
       case ACTION_SUBTITLE_VSHIFT_DOWN:
       {
         RESOLUTION_INFO res_info =  g_graphicsContext.GetResInfo();
-        int subalign = CSettings::GetInstance().GetInt(CSettings::SETTING_SUBTITLES_ALIGN);
+        int subalign = CServiceBroker::GetSettings().GetInt(CSettings::SETTING_SUBTITLES_ALIGN);
         if ((subalign == SUBTITLE_ALIGN_BOTTOM_OUTSIDE) || (subalign == SUBTITLE_ALIGN_TOP_INSIDE))
         {
           res_info.iSubtitles--;
@@ -348,7 +349,7 @@ bool CPlayerController::OnAction(const CAction &action)
       case ACTION_SUBTITLE_ALIGN:
       {
         RESOLUTION_INFO res_info = g_graphicsContext.GetResInfo();
-        int subalign = CSettings::GetInstance().GetInt(CSettings::SETTING_SUBTITLES_ALIGN);
+        int subalign = CServiceBroker::GetSettings().GetInt(CSettings::SETTING_SUBTITLES_ALIGN);
 
         subalign++;
         if (subalign > SUBTITLE_ALIGN_TOP_OUTSIDE)
@@ -356,7 +357,7 @@ bool CPlayerController::OnAction(const CAction &action)
 
         res_info.iSubtitles = res_info.iHeight - 1;
 
-        CSettings::GetInstance().SetInt(CSettings::SETTING_SUBTITLES_ALIGN, subalign);
+        CServiceBroker::GetSettings().SetInt(CSettings::SETTING_SUBTITLES_ALIGN, subalign);
         CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Info,
                                               g_localizeStrings.Get(21460),
                                               g_localizeStrings.Get(21461 + subalign), 

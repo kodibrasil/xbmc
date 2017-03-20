@@ -22,6 +22,7 @@
 #ifdef HAS_EGL
 
 #include "WinSystemEGL.h"
+#include "ServiceBroker.h"
 #include "filesystem/SpecialProtocol.h"
 #include "guilib/GraphicContext.h"
 #include "settings/DisplaySettings.h"
@@ -31,6 +32,15 @@
 #include "settings/DisplaySettings.h"
 #include "guilib/DispResource.h"
 #include "threads/SingleLock.h"
+
+#if defined(TARGET_RASPBERRY_PI)
+#include "VideoSyncPi.h"
+#elif defined(TARGET_ANDROID)
+#include "VideoSyncAndroid.h"
+#elif defined(HAS_LIBAMCODEC)
+#include "VideoSyncAML.h"
+#endif
+
 #ifdef HAS_IMXVPU
 // This has to go into another header file
 #include "cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecIMX.h"
@@ -287,7 +297,7 @@ bool CWinSystemEGL::CreateNewWindow(const std::string& name, bool fullScreen, RE
     return true;
   }
 
-  int delay = CSettings::GetInstance().GetInt("videoscreen.delayrefreshchange");
+  int delay = CServiceBroker::GetSettings().GetInt("videoscreen.delayrefreshchange");
   if (delay > 0)
   {
     m_delayDispReset = true;
@@ -554,5 +564,22 @@ bool CWinSystemEGL::ClampToGUIDisplayLimits(int &width, int &height)
   height = height > m_nHeight ? m_nHeight : height;
   return true;
 }
+
+std::unique_ptr<CVideoSync> CWinSystemEGL::GetVideoSync(void *clock)
+{
+#if defined(TARGET_RASPBERRY_PI)
+  std::unique_ptr<CVideoSync> pVSync(new CVideoSyncPi(clock));
+  return pVSync;
+#elif defined(TARGET_ANDROID)
+  std::unique_ptr<CVideoSync> pVSync(new CVideoSyncAndroid(clock));
+  return pVSync;
+#elif defined(HAS_LIBAMCODEC)
+  std::unique_ptr<CVideoSync> pVSync(new CVideoSyncAML(clock));
+  return pVSync;
+#else
+  return nullptr;
+#endif
+}
+
 
 #endif

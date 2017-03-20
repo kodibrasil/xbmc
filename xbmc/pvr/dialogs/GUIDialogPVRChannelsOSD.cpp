@@ -42,7 +42,8 @@ using namespace KODI::MESSAGING;
 #define CONTROL_LIST                  11
 
 CGUIDialogPVRChannelsOSD::CGUIDialogPVRChannelsOSD() :
-    CGUIDialog(WINDOW_DIALOG_PVR_OSD_CHANNELS, "DialogPVRChannelsOSD.xml")
+    CGUIDialog(WINDOW_DIALOG_PVR_OSD_CHANNELS, "DialogPVRChannelsOSD.xml"),
+    CPVRChannelNumberInputHandler(1000)
 {
   m_vecItems = new CFileItemList;
 }
@@ -160,6 +161,20 @@ bool CGUIDialogPVRChannelsOSD::OnAction(const CAction &action)
       RestoreControlStates();
       return true;
     }
+    case REMOTE_0:
+    case REMOTE_1:
+    case REMOTE_2:
+    case REMOTE_3:
+    case REMOTE_4:
+    case REMOTE_5:
+    case REMOTE_6:
+    case REMOTE_7:
+    case REMOTE_8:
+    case REMOTE_9:
+    {
+      AppendChannelNumberDigit(action.GetID() - REMOTE_0);
+      return true;
+    }
   }
 
   return CGUIDialog::OnAction(action);
@@ -255,7 +270,7 @@ void CGUIDialogPVRChannelsOSD::GotoChannel(int item)
     return;
 
   Close();
-  CPVRGUIActions::GetInstance().SwitchToChannel(m_vecItems->Get(item), false /* bPlayMinimized */, true /* bCheckResume */);
+  CPVRGUIActions::GetInstance().SwitchToChannel(m_vecItems->Get(item), true /* bCheckResume */);
   m_group = GetPlayingGroup();
 }
 
@@ -306,4 +321,22 @@ std::string CGUIDialogPVRChannelsOSD::GetLastSelectedItemPath(int iGroupID) cons
   if (it != m_groupSelectedItemPaths.end())
     return it->second;
   return "";
+}
+
+void CGUIDialogPVRChannelsOSD::OnInputDone()
+{
+  const int iChannelNumber = GetChannelNumber();
+  if (iChannelNumber >= 0)
+  {
+    int itemIndex = 0;
+    for (const CFileItemPtr channel : m_vecItems->GetList())
+    {
+      if (channel->GetPVRChannelInfoTag()->ChannelNumber() == iChannelNumber)
+      {
+        m_viewControl.SetSelectedItem(itemIndex);
+        return;
+      }
+      ++itemIndex;
+    }
+  }
 }

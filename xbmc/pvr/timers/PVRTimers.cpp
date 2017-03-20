@@ -24,20 +24,18 @@
 #include <cstdlib>
 #include <utility>
 
-#include "dialogs/GUIDialogKaiToast.h"
-#include "dialogs/GUIDialogOK.h"
+#include "ServiceBroker.h"
 #include "epg/EpgContainer.h"
-#include "events/EventLog.h"
-#include "events/NotificationEvent.h"
 #include "FileItem.h"
 #include "pvr/addons/PVRClients.h"
 #include "pvr/channels/PVRChannelGroupsContainer.h"
+#include "pvr/PVRJobs.h"
 #include "pvr/PVRManager.h"
 #include "settings/Settings.h"
 #include "threads/SingleLock.h"
 #include "utils/log.h"
 #include "utils/StringUtils.h"
-#include "utils/Variant.h"
+#include "utils/URIUtils.h"
 
 using namespace PVR;
 using namespace EPG;
@@ -166,7 +164,7 @@ bool CPVRTimers::UpdateEntries(const CPVRTimers &timers, const std::vector<int> 
           bChanged = true;
           existingTimer->ResetChildState();
 
-          if (bStateChanged && g_PVRManager.IsStarted())
+          if (bStateChanged)
           {
             std::string strMessage;
             existingTimer->GetNotificationText(strMessage);
@@ -202,12 +200,9 @@ bool CPVRTimers::UpdateEntries(const CPVRTimers &timers, const std::vector<int> 
         bChanged = true;
         bAddedOrDeleted = true;
 
-        if (g_PVRManager.IsStarted())
-        {
-          std::string strMessage;
-          newTimer->GetNotificationText(strMessage);
-          timerNotifications.push_back(std::make_pair(newTimer->m_iClientId, strMessage));
-        }
+         std::string strMessage;
+         newTimer->GetNotificationText(strMessage);
+         timerNotifications.push_back(std::make_pair(newTimer->m_iClientId, strMessage));
 
         CLog::Log(LOGDEBUG,"PVRTimers - %s - added timer %d on client %d",
             __FUNCTION__, (*timerIt)->m_iClientIndex, (*timerIt)->m_iClientId);
@@ -246,8 +241,7 @@ bool CPVRTimers::UpdateEntries(const CPVRTimers &timers, const std::vector<int> 
         CLog::Log(LOGDEBUG,"PVRTimers - %s - deleted timer %d on client %d",
             __FUNCTION__, timer->m_iClientIndex, timer->m_iClientId);
 
-        if (g_PVRManager.IsStarted())
-          timerNotifications.push_back(std::make_pair(timer->m_iClientId, timer->GetDeletedNotificationText()));
+        timerNotifications.push_back(std::make_pair(timer->m_iClientId, timer->GetDeletedNotificationText()));
 
         ClearEpgTagTimer(timer);
 
@@ -323,24 +317,32 @@ bool CPVRTimers::UpdateEntries(const CPVRTimers &timers, const std::vector<int> 
   if (bChanged)
   {
     UpdateChannels();
-    g_PVRManager.SetChanged();
     lock.Leave();
 
+    g_PVRManager.SetChanged();
     g_PVRManager.NotifyObservers(bAddedOrDeleted ? ObservableMessageTimersReset : ObservableMessageTimers);
 
-    /* queue notifications / fill eventlog */
-    for (const auto &entry : timerNotifications)
+    if (!timerNotifications.empty() && g_PVRManager.IsStarted())
     {
-      if (CSettings::GetInstance().GetBool(CSettings::SETTING_PVRRECORD_TIMERNOTIFICATIONS))
-        CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Info, g_localizeStrings.Get(19166), entry.second);
+      CPVREventlogJob *job = new CPVREventlogJob;
 
-      std::string strName;
-      g_PVRClients->GetClientAddonName(entry.first, strName);
+      /* queue notifications / fill eventlog */
+      for (const auto &entry : timerNotifications)
+      {
+        std::string strName;
+        g_PVRClients->GetClientAddonName(entry.first, strName);
 
-      std::string strIcon;
-      g_PVRClients->GetClientAddonIcon(entry.first, strIcon);
+        std::string strIcon;
+        g_PVRClients->GetClientAddonIcon(entry.first, strIcon);
 
-      CEventLog::GetInstance().Add(EventPtr(new CNotificationEvent(strName, entry.second, strIcon, EventLevel::Information)));
+        job->AddEvent(CServiceBroker::GetSettings().GetBool(CSettings::SETTING_PVRRECORD_TIMERNOTIFICATIONS),
+                      false, // info, no error
+                      strName,
+                      entry.second,
+                      strIcon);
+      }
+
+      CJobManager::GetInstance().AddJob(job, nullptr);
     }
   }
 
@@ -555,14 +557,14 @@ bool CPVRTimers::GetRootDirectory(const CPVRTimersPath &path, CFileItemList &ite
 {
   CFileItemPtr item(new CFileItem(CPVRTimersPath::PATH_ADDTIMER, false));
   item->SetLabel(g_localizeStrings.Get(19026)); // "Add timer..."
-  item->SetLabelPreformated(true);
+  item->SetLabelPreformatted(true);
   item->SetSpecialSort(SortSpecialOnTop);
   items.Add(item);
 
   bool bRadio = path.IsRadio();
   bool bRules = path.IsRules();
 
-  bool bHideDisabled = CSettings::GetInstance().GetBool(CSettings::SETTING_PVRTIMERS_HIDEDISABLEDTIMERS);
+  bool bHideDisabled = CServiceBroker::GetSettings().GetBool(CSettings::SETTING_PVRTIMERS_HIDEDISABLEDTIMERS);
 
   CSingleLock lock(m_critSection);
   for (const auto &tagsEntry : m_tags)
@@ -590,7 +592,7 @@ bool CPVRTimers::GetSubDirectory(const CPVRTimersPath &path, CFileItemList &item
   unsigned int iParentId = path.GetParentId();
   int          iClientId = path.GetClientId();
 
-  bool bHideDisabled = CSettings::GetInstance().GetBool(CSettings::SETTING_PVRTIMERS_HIDEDISABLEDTIMERS);
+  bool bHideDisabled = CServiceBroker::GetSettings().GetBool(CSettings::SETTING_PVRTIMERS_HIDEDISABLEDTIMERS);
 
   CFileItemPtr item;
 
@@ -642,6 +644,7 @@ bool CPVRTimers::GetDirectory(const std::string& strPath, CFileItemList &items) 
 bool CPVRTimers::DeleteTimersOnChannel(const CPVRChannelPtr &channel, bool bDeleteTimerRules /* = true */, bool bCurrentlyActiveOnly /* = false */)
 {
   bool bReturn = false;
+  bool bChanged = false;
   {
     CSingleLock lock(m_critSection);
 
@@ -657,11 +660,14 @@ bool CPVRTimers::DeleteTimersOnChannel(const CPVRChannelPtr &channel, bool bDele
         {
           CLog::Log(LOGDEBUG,"PVRTimers - %s - deleted timer %d on client %d", __FUNCTION__, (*timerIt)->m_iClientIndex, (*timerIt)->m_iClientId);
           bReturn = (*timerIt)->DeleteFromClient(true) || bReturn;
-          g_PVRManager.SetChanged();
+          bChanged = true;
         }
       }
     }
   }
+
+  if (bChanged)
+    g_PVRManager.SetChanged();
 
   g_PVRManager.NotifyObservers(ObservableMessageTimersReset);
 
@@ -672,22 +678,6 @@ bool CPVRTimers::DeleteTimersOnChannel(const CPVRChannelPtr &channel, bool bDele
 
 bool CPVRTimers::AddTimer(const CPVRTimerInfoTagPtr &item)
 {
-  if (!item->m_channel && item->GetTimerType() && !item->GetTimerType()->IsEpgBasedTimerRule())
-  {
-    CLog::Log(LOGERROR, "PVRTimers - %s - no channel given", __FUNCTION__);
-    CGUIDialogOK::ShowAndGetInput(CVariant{19033}, CVariant{19109}); // Couldn't save timer
-    return false;
-  }
-
-  if (!g_PVRClients->SupportsTimers(item->m_iClientId))
-  {
-    CGUIDialogOK::ShowAndGetInput(CVariant{19033}, CVariant{19215});
-    return false;
-  }
-
-  if (!g_PVRManager.CheckParentalLock(item->m_channel))
-    return false;
-
   return item->AddToClient();
 }
 
@@ -843,7 +833,7 @@ bool CPVRTimers::HasRecordingTimerForRecording(const CPVRRecording &recording) c
           timersEntry->m_iClientId == recording.ClientID() &&
           timersEntry->ChannelTag()->UniqueID() == recording.ChannelUid() &&
           timersEntry->StartAsUTC() <= recording.RecordingTimeAsUTC() &&
-          timersEntry->EndAsUTC() >= (recording.RecordingTimeAsUTC() + recording.m_duration))
+          timersEntry->EndAsUTC() >= recording.EndTimeAsUTC())
       {
         return true;
       }
@@ -876,7 +866,7 @@ CPVRTimerInfoTagPtr CPVRTimers::GetTimerRule(const CPVRTimerInfoTagPtr &timer) c
   return CPVRTimerInfoTagPtr();
 }
 
-CFileItemPtr CPVRTimers::GetTimerRule(const CFileItem *item) const
+CFileItemPtr CPVRTimers::GetTimerRule(const CFileItemPtr &item) const
 {
   CPVRTimerInfoTagPtr timer;
   if (item && item->HasEPGInfoTag())
@@ -885,8 +875,11 @@ CFileItemPtr CPVRTimers::GetTimerRule(const CFileItem *item) const
     timer = item->GetPVRTimerInfoTag();
 
   if (timer)
-    return CFileItemPtr(new CFileItem(GetTimerRule(timer)));
-
+  {
+    timer = GetTimerRule(timer);
+    if (timer)
+      return CFileItemPtr(new CFileItem(timer));
+  }
   return CFileItemPtr();
 }
 
@@ -898,10 +891,10 @@ void CPVRTimers::Notify(const Observable &obs, const ObservableMessage msg)
 
 CDateTime CPVRTimers::GetNextEventTime(void) const
 {
-  const bool dailywakup = CSettings::GetInstance().GetBool(CSettings::SETTING_PVRPOWERMANAGEMENT_DAILYWAKEUP);
+  const bool dailywakup = CServiceBroker::GetSettings().GetBool(CSettings::SETTING_PVRPOWERMANAGEMENT_DAILYWAKEUP);
   const CDateTime now = CDateTime::GetUTCDateTime();
-  const CDateTimeSpan prewakeup(0, 0, CSettings::GetInstance().GetInt(CSettings::SETTING_PVRPOWERMANAGEMENT_PREWAKEUP), 0);
-  const CDateTimeSpan idle(0, 0, CSettings::GetInstance().GetInt(CSettings::SETTING_PVRPOWERMANAGEMENT_BACKENDIDLETIME), 0);
+  const CDateTimeSpan prewakeup(0, 0, CServiceBroker::GetSettings().GetInt(CSettings::SETTING_PVRPOWERMANAGEMENT_PREWAKEUP), 0);
+  const CDateTimeSpan idle(0, 0, CServiceBroker::GetSettings().GetInt(CSettings::SETTING_PVRPOWERMANAGEMENT_BACKENDIDLETIME), 0);
 
   CDateTime wakeuptime;
 
@@ -920,7 +913,7 @@ CDateTime CPVRTimers::GetNextEventTime(void) const
   if (dailywakup)
   {
     CDateTime dailywakeuptime;
-    dailywakeuptime.SetFromDBTime(CSettings::GetInstance().GetString(CSettings::SETTING_PVRPOWERMANAGEMENT_DAILYWAKEUPTIME));
+    dailywakeuptime.SetFromDBTime(CServiceBroker::GetSettings().GetString(CSettings::SETTING_PVRPOWERMANAGEMENT_DAILYWAKEUPTIME));
     dailywakeuptime = dailywakeuptime.GetAsUTCDateTime();
 
     dailywakeuptime.SetDateTime(

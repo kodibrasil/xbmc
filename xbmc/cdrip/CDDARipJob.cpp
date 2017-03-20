@@ -22,6 +22,7 @@
 #include "Encoder.h"
 #include "EncoderFFmpeg.h"
 #include "FileItem.h"
+#include "ServiceBroker.h"
 #include "utils/log.h"
 #include "utils/SystemInfo.h"
 #include "Util.h"
@@ -36,6 +37,10 @@
 #include "storage/MediaManager.h"
 #include "addons/AddonManager.h"
 #include "addons/AudioEncoder.h"
+
+#if defined(TARGET_WINDOWS)
+#include "platform/win32/CharsetConverter.h"
+#endif
 
 using namespace ADDON;
 using namespace MUSIC_INFO;
@@ -180,8 +185,8 @@ int CCDDARipJob::RipChunk(CFile& reader, CEncoder* encoder, int& percent)
 CEncoder* CCDDARipJob::SetupEncoder(CFile& reader)
 {
   CEncoder* encoder = NULL;
-  if (CSettings::GetInstance().GetString(CSettings::SETTING_AUDIOCDS_ENCODER) == "audioencoder.xbmc.builtin.aac" ||
-           CSettings::GetInstance().GetString(CSettings::SETTING_AUDIOCDS_ENCODER) == "audioencoder.xbmc.builtin.wma")
+  if (CServiceBroker::GetSettings().GetString(CSettings::SETTING_AUDIOCDS_ENCODER) == "audioencoder.xbmc.builtin.aac" ||
+           CServiceBroker::GetSettings().GetString(CSettings::SETTING_AUDIOCDS_ENCODER) == "audioencoder.xbmc.builtin.wma")
   {
     std::shared_ptr<IEncoder> enc(new CEncoderFFmpeg());
     encoder = new CEncoder(enc);
@@ -189,7 +194,7 @@ CEncoder* CCDDARipJob::SetupEncoder(CFile& reader)
   else
   {
     AddonPtr addon;
-    CAddonMgr::GetInstance().GetAddon(CSettings::GetInstance().GetString(CSettings::SETTING_AUDIOCDS_ENCODER), addon);
+    CAddonMgr::GetInstance().GetAddon(CServiceBroker::GetSettings().GetString(CSettings::SETTING_AUDIOCDS_ENCODER), addon);
     if (addon)
     {
       std::shared_ptr<CAudioEncoder> aud =  std::static_pointer_cast<CAudioEncoder>(addon);
@@ -227,8 +232,12 @@ CEncoder* CCDDARipJob::SetupEncoder(CFile& reader)
 std::string CCDDARipJob::SetupTempFile()
 {
   char tmp[MAX_PATH];
-#ifndef TARGET_POSIX
-  GetTempFileName(CSpecialProtocol::TranslatePath("special://temp/").c_str(), "riptrack", 0, tmp);
+#if defined(TARGET_WINDOWS)
+  using namespace KODI::PLATFORM::WINDOWS;
+  wchar_t tmpW[MAX_PATH];
+  GetTempFileName(ToW(CSpecialProtocol::TranslatePath("special://temp/")).c_str(), L"riptrack", 0, tmpW);
+  auto tmpString = FromW(tmpW);
+  strncpy_s(tmp, tmpString.length(), tmpString.c_str(), MAX_PATH);
 #else
   int fd;
   strncpy(tmp, CSpecialProtocol::TranslatePath("special://temp/riptrackXXXXXX").c_str(), MAX_PATH);

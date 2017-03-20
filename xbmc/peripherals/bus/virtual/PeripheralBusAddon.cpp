@@ -31,6 +31,7 @@
 #include <algorithm>
 #include <memory>
 
+using namespace KODI;
 using namespace PERIPHERALS;
 
 CPeripheralBusAddon::CPeripheralBusAddon(CPeripherals *manager) :
@@ -55,6 +56,9 @@ CPeripheralBusAddon::~CPeripheralBusAddon()
   Clear();
 
   // destroy any (loaded) addons
+  for (const auto& addon : m_addons)
+    addon->Destroy();
+
   m_failedAddons.clear();
   m_addons.clear();
 }
@@ -300,6 +304,17 @@ PeripheralPtr CPeripheralBusAddon::GetByPath(const std::string &strPath) const
   return result;
 }
 
+bool CPeripheralBusAddon::SupportsFeature(PeripheralFeature feature) const
+{
+  bool bSupportsFeature = false;
+
+  CSingleLock lock(m_critSection);
+  for (const auto& addon : m_addons)
+    bSupportsFeature |= addon->SupportsFeature(feature);
+
+  return bSupportsFeature;
+}
+
 int CPeripheralBusAddon::GetPeripheralsWithFeature(PeripheralVector &results, const PeripheralFeature feature) const
 {
   int iReturn(0);
@@ -494,7 +509,7 @@ void CPeripheralBusAddon::UpdateAddons(void)
 bool CPeripheralBusAddon::PromptEnableAddons(const ADDON::VECADDONS& disabledAddons)
 {
   using namespace ADDON;
-  using namespace KODI::MESSAGING::HELPERS;
+  using namespace MESSAGING::HELPERS;
 
   // True if the user confirms enabling the disabled peripheral add-on
   bool bAccepted = false;

@@ -34,6 +34,7 @@
 #include "GUITexture.h"
 #include "utils/Variant.h"
 #include "input/Key.h"
+#include "utils/log.h"
 #include "utils/StringUtils.h"
 #include "utils/SeekHandler.h"
 
@@ -130,7 +131,7 @@
 #include "pvr/dialogs/GUIDialogPVRChannelsOSD.h"
 #include "pvr/dialogs/GUIDialogPVRGroupManager.h"
 #include "pvr/dialogs/GUIDialogPVRGuideInfo.h"
-#include "pvr/dialogs/GUIDialogPVRGuideOSD.h"
+#include "pvr/dialogs/GUIDialogPVRChannelGuide.h"
 #include "pvr/dialogs/GUIDialogPVRGuideSearch.h"
 #include "pvr/dialogs/GUIDialogPVRRadioRDSInfo.h"
 #include "pvr/dialogs/GUIDialogPVRRecordingInfo.h"
@@ -145,7 +146,7 @@
 #include "settings/dialogs/GUIDialogAudioDSPSettings.h"
 
 #include "peripherals/dialogs/GUIDialogPeripheralSettings.h"
-#include "addons/binary/interfaces/AddonInterfaces.h"
+#include "addons/interfaces/AddonInterfaces.h"
 
 /* Game related include files */
 #include "games/controllers/windows/GUIControllerWindow.h"
@@ -279,7 +280,7 @@ void CGUIWindowManager::CreateWindows()
   Add(new CGUIDialogPVRChannelManager);
   Add(new CGUIDialogPVRGuideSearch);
   Add(new CGUIDialogPVRChannelsOSD);
-  Add(new CGUIDialogPVRGuideOSD);
+  Add(new CGUIDialogPVRChannelGuide);
 
   Add(new ActiveAE::CGUIDialogAudioDSPManager);
   Add(new ActiveAE::CGUIDialogAudioDSPSettings);
@@ -379,7 +380,7 @@ bool CGUIWindowManager::DestroyWindows()
     Delete(WINDOW_DIALOG_PVR_RADIO_RDS_INFO);
     Delete(WINDOW_DIALOG_PVR_UPDATE_PROGRESS);
     Delete(WINDOW_DIALOG_PVR_OSD_CHANNELS);
-    Delete(WINDOW_DIALOG_PVR_OSD_GUIDE);
+    Delete(WINDOW_DIALOG_PVR_CHANNEL_GUIDE);
     Delete(WINDOW_DIALOG_OSD_TELETEXT);
 
     Delete(WINDOW_DIALOG_AUDIO_DSP_MANAGER);
@@ -994,6 +995,8 @@ bool CGUIWindowManager::OnAction(const CAction &action) const
           break;
         return false;
       }
+      CLog::Log(LOGWARNING, "CGUIWindowManager - %s - ignoring action %i, because topmost modal dialog closing animation is running",
+                __FUNCTION__, action.GetID());
       return true; // do nothing with the action until the anim is finished
     }
     lock.Enter();

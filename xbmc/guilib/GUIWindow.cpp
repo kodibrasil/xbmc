@@ -180,7 +180,8 @@ bool CGUIWindow::Load(TiXmlElement* pRootElement)
   CGUIControlFactory::GetInfoColor(pRootElement, "backgroundcolor", m_clearBackground, GetID());
   CGUIControlFactory::GetActions(pRootElement, "onload", m_loadActions);
   CGUIControlFactory::GetActions(pRootElement, "onunload", m_unloadActions);
-  CGUIControlFactory::GetHitRect(pRootElement, m_hitRect);
+  CRect parentRect(0, 0, static_cast<float>(m_coordsRes.iWidth), static_cast<float>(m_coordsRes.iHeight));
+  CGUIControlFactory::GetHitRect(pRootElement, m_hitRect, parentRect);
 
   TiXmlElement *pChild = pRootElement->FirstChildElement();
   while (pChild)
@@ -229,8 +230,8 @@ bool CGUIWindow::Load(TiXmlElement* pRootElement)
       while (originElement)
       {
         COrigin origin;
-        originElement->QueryFloatAttribute("x", &origin.x);
-        originElement->QueryFloatAttribute("y", &origin.y);
+        origin.x = CGUIControlFactory::ParsePosition(originElement->Attribute("x"), static_cast<float>(m_coordsRes.iWidth));
+        origin.y = CGUIControlFactory::ParsePosition(originElement->Attribute("y"), static_cast<float>(m_coordsRes.iHeight));
         if (originElement->FirstChild())
           origin.condition = g_infoManager.Register(originElement->FirstChild()->Value(), GetID());
         m_origins.push_back(origin);
@@ -239,8 +240,8 @@ bool CGUIWindow::Load(TiXmlElement* pRootElement)
     }
     else if (strValue == "camera")
     { // z is fixed
-      pChild->QueryFloatAttribute("x", &m_camera.x);
-      pChild->QueryFloatAttribute("y", &m_camera.y);
+      m_camera.x = CGUIControlFactory::ParsePosition(pChild->Attribute("x"), static_cast<float>(m_coordsRes.iWidth));
+      m_camera.y = CGUIControlFactory::ParsePosition(pChild->Attribute("y"), static_cast<float>(m_coordsRes.iHeight));
       m_hasCamera = true;
     }
     else if (strValue == "depth" && pChild->FirstChild())

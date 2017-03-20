@@ -64,12 +64,13 @@
 #include "utils/StringUtils.h"
 #include "utils/XBMCTinyXML.h"
 #include "utils/XMLUtils.h"
+#include "ServiceBroker.h"
 
 #if defined(HAVE_LIBCEC)
 #include "bus/virtual/PeripheralBusCEC.h"
 #endif
 
-
+using namespace KODI;
 using namespace JOYSTICK;
 using namespace PERIPHERALS;
 using namespace XFILE;
@@ -120,19 +121,19 @@ void CPeripherals::Initialise()
 #endif
   busses.push_back(std::make_shared<CPeripheralBusApplication>(this));
 
+  {
+    CSingleLock bussesLock(m_critSectionBusses);
+    m_busses = busses;
+  }
+
   /* initialise all known busses and run an initial scan for devices */
   for (auto& bus : busses)
     bus->Initialise();
 
-  {
-    CSingleLock bussesLock(m_critSectionBusses);
-    m_busses = std::move(busses);
-  }
-
   m_eventScanner.Start();
 
   m_bInitialised = true;
-  KODI::MESSAGING::CApplicationMessenger::GetInstance().RegisterReceiver(this);
+  MESSAGING::CApplicationMessenger::GetInstance().RegisterReceiver(this);
 }
 
 void CPeripherals::Clear()
@@ -147,6 +148,9 @@ void CPeripherals::Clear()
     busses = m_busses;
     m_busses.clear();
   }
+
+  for (const auto& bus : busses)
+    bus->Clear();
   busses.clear();
 
   {
@@ -249,6 +253,17 @@ PeripheralBusPtr CPeripherals::GetBusWithDevice(const std::string &strLocation) 
     return *bus;
 
   return nullptr;
+}
+
+bool CPeripherals::SupportsFeature(PeripheralFeature feature) const
+{
+  bool bSupportsFeature = false;
+
+  CSingleLock lock(m_critSectionBusses);
+  for (const auto& bus : m_busses)
+    bSupportsFeature |= bus->SupportsFeature(feature);
+
+  return bSupportsFeature;
 }
 
 int CPeripherals::GetPeripheralsWithFeature(PeripheralVector &results, const PeripheralFeature feature, PeripheralBusType busType /* = PERIPHERAL_BUS_UNKNOWN */) const
@@ -366,6 +381,8 @@ void CPeripherals::OnDeviceAdded(const CPeripheralBus &bus, const CPeripheral &p
 {
   OnDeviceChanged();
 
+  //! @todo Improve device notifications in v18
+#if 0
   bool bNotify = true;
 
   // don't show a notification for devices detected during the initial scan
@@ -378,12 +395,15 @@ void CPeripherals::OnDeviceAdded(const CPeripheralBus &bus, const CPeripheral &p
 
   if (bNotify)
     CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Info, g_localizeStrings.Get(35005), peripheral.DeviceName());
+#endif
 }
 
 void CPeripherals::OnDeviceDeleted(const CPeripheralBus &bus, const CPeripheral &peripheral)
 {
   OnDeviceChanged();
 
+  //! @todo Improve device notifications in v18
+#if 0
   bool bNotify = true;
 
   // don't show a notification for emulated peripherals
@@ -392,6 +412,7 @@ void CPeripherals::OnDeviceDeleted(const CPeripheralBus &bus, const CPeripheral 
 
   if (bNotify)
     CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Info, g_localizeStrings.Get(35006), peripheral.DeviceName());
+#endif
 }
 
 void CPeripherals::OnDeviceChanged()
@@ -760,6 +781,9 @@ bool CPeripherals::GetNextKeypress(float frameTime, CKey &key)
 
 void CPeripherals::OnUserNotification()
 {
+  if (!CServiceBroker::GetSettings().GetBool(CSettings::SETTING_INPUT_RUMBLENOTIFY))
+    return;
+
   PeripheralVector peripherals;
   GetPeripheralsWithFeature(peripherals, FEATURE_RUMBLE);
 
@@ -958,7 +982,7 @@ void CPeripherals::OnSettingAction(const CSetting *setting)
     TestFeature(FEATURE_RUMBLE);
 }
 
-void CPeripherals::OnApplicationMessage(KODI::MESSAGING::ThreadMessage* pMsg)
+void CPeripherals::OnApplicationMessage(MESSAGING::ThreadMessage* pMsg)
 {
   switch (pMsg->dwMessage)
   {

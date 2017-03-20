@@ -23,6 +23,7 @@
 #include <functional>
 #include <set>
 #include "AddonsDirectory.h"
+#include "ServiceBroker.h"
 #include "addons/AddonDatabase.h"
 #include "addons/AddonSystemSettings.h"
 #include "interfaces/generic/ScriptInvocationManager.h"
@@ -152,7 +153,7 @@ static bool IsGameAddon(const AddonPtr& addon)
          IsGameSupportAddon(addon);
 }
 
-static bool IsDependecyType(TYPE type)
+static bool IsDependencyType(TYPE type)
 {
   return dependencyTypes.find(type) != dependencyTypes.end();
 }
@@ -350,7 +351,7 @@ static void GenerateMainCategoryListing(const CURL& path, const VECADDONS& addon
   for (unsigned int i = ADDON_UNKNOWN + 1; i < ADDON_MAX - 1; ++i)
   {
     const TYPE type = (TYPE)i;
-    if (!IsInfoProviderType(type) && !IsLookAndFeelType(type) && !IsDependecyType(type) && !IsGameType(type))
+    if (!IsInfoProviderType(type) && !IsLookAndFeelType(type) && !IsDependencyType(type) && !IsGameType(type))
       uncategorized.insert(static_cast<TYPE>(i));
   }
   GenerateTypeListing(path, uncategorized, addons, items);
@@ -638,7 +639,7 @@ static void RootDirectory(CFileItemList& items)
     item->SetIconImage("DefaultNetwork.png");
     items.Add(item);
   }
-  if (CSettings::GetInstance().GetInt(CSettings::SETTING_ADDONS_AUTOUPDATES) == ADDON::AUTO_UPDATES_ON
+  if (CServiceBroker::GetSettings().GetInt(CSettings::SETTING_ADDONS_AUTOUPDATES) == ADDON::AUTO_UPDATES_ON
       && HasRecentlyUpdatedAddons())
   {
     CFileItemPtr item(new CFileItem("addons://recently_updated/", true));
@@ -703,6 +704,8 @@ bool CAddonsDirectory::GetDirectory(const CURL& url, CFileItemList &items)
       type = ADDON_PVRDLL;
     else if (path.GetFileName() == "kodi.adsp")
       type = ADDON_ADSPDLL;
+    else if (path.GetFileName() == "kodi.vfs")
+      type = ADDON_VFS;
     else
       type = ADDON_UNKNOWN;
 

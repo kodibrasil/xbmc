@@ -9,11 +9,11 @@ DEPENDS = \
 	libgcrypt bzip2 liblzo2 libzip freetype2 fontconfig \
 	openssl gmp nettle gnutls curl \
 	libjpeg-turbo libpng fribidi libass \
-	librtmp libxml2 yajl libmicrohttpd mysql libffi \
-	python27 libshairplay \
+	libxml2 yajl libmicrohttpd mysql libffi \
+	python27 libshairplay libfmt \
 	libplist libcec libbluray tinyxml dummy-libxbmc \
-	libamplayer libssh taglib libusb libnfs \
-	pythonmodule-pil pythonmodule-setuptools \
+	libssh taglib libusb libnfs \
+	pythonmodule-pil pythonmodule-pycryptodome pythonmodule-setuptools \
 	libxslt ffmpeg platform crossguid \
         libdvdread libdvdnav libdvdcss p8-platform
 
@@ -42,7 +42,7 @@ endif
 
 ifeq ($(OS),android)
   EXCLUDED_DEPENDS = libcec libusb
-  DEPENDS += mdnsresponder libuuid
+  DEPENDS += mdnsresponder libuuid libandroidjni
   CROSSGUID_DEPS = libuuid
 endif
 
@@ -83,7 +83,6 @@ libgcrypt: libgpg-error
 fontconfig: freetype2 expat $(ICONV)
 curl: openssl
 libass: fontconfig libpng freetype2 expat $(ICONV)
-librtmp: openssl
 libmicrohttpd: gnutls libgcrypt libgpg-error
 python27: expat gettext libxml2 sqlite3 openssl libffi
 libcdio: $(ICONV)
@@ -96,6 +95,7 @@ libpng: $(ZLIB)
 openssl: $(ZLIB)
 gnutls: nettle $(ZLIB)
 nettle: gmp
+pythonmodule-pycryptodome: python27 pythonmodule-setuptools
 pythonmodule-pil: $(ZLIB) libjpeg-turbo libpng freetype2 python27 pythonmodule-setuptools
 pythonmodule-setuptools: python27
 libsdl2: $(LINUX_SYSTEM_LIBS)

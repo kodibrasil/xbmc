@@ -170,6 +170,12 @@ namespace EPG
     int GetDuration(void) const;
 
     /*!
+     * @brief Check whether this event is parental locked.
+     * @return True if whether this event is parental locked, false otherwise.
+     */
+    bool IsParentalLocked() const;
+
+    /*!
      * @brief Get the title of this event.
      * @param bOverrideParental True to override parental control, false check it.
      * @return The title.
@@ -388,7 +394,7 @@ namespace EPG
     /*!
      * @brief Update the information in this tag with the info in the given tag.
      * @param tag The new info.
-     * @param bUpdateBroadcastId If set to false, the tag BroadcastId (locally unique) will not be chacked/updated
+     * @param bUpdateBroadcastId If set to false, the tag BroadcastId (locally unique) will not be checked/updated
      * @return True if something changed, false otherwise.
      */
     bool Update(const CEpgInfoTag &tag, bool bUpdateBroadcastId = true);

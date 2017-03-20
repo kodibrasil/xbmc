@@ -21,11 +21,13 @@
 #include "DVDFactoryInputStream.h"
 #include "DVDInputStreamPVRManager.h"
 #include "DVDDemuxers/DVDDemuxPacket.h"
+#include "ServiceBroker.h"
 #include "URL.h"
 #include "pvr/PVRManager.h"
 #include "pvr/channels/PVRChannel.h"
 #include "utils/log.h"
 #include "utils/StringUtils.h"
+#include "utils/URIUtils.h"
 #include "pvr/addons/PVRClients.h"
 #include "pvr/channels/PVRChannelGroupsContainer.h"
 #include "pvr/recordings/PVRRecordingsPath.h"
@@ -185,7 +187,7 @@ bool CDVDInputStreamPVRManager::Open()
     }
   }
 
-  ResetScanTimeout((unsigned int) CSettings::GetInstance().GetInt(CSettings::SETTING_PVRPLAYBACK_SCANTIME) * 1000);
+  ResetScanTimeout((unsigned int) CServiceBroker::GetSettings().GetInt(CSettings::SETTING_PVRPLAYBACK_SCANTIME) * 1000);
   CLog::Log(LOGDEBUG, "CDVDInputStreamPVRManager::Open - stream opened: %s", CURL::GetRedacted(transFile).c_str());
 
   m_StreamProps->iStreamCount = 0;
@@ -670,7 +672,7 @@ void CDVDInputStreamPVRManager::UpdateStreamMap()
       dStream = streamSubtitle;
     }
     else if (stream.iCodecType == XBMC_CODEC_TYPE_RDS &&
-      CSettings::GetInstance().GetBool("pvrplayback.enableradiords"))
+      CServiceBroker::GetSettings().GetBool("pvrplayback.enableradiords"))
     {
       std::shared_ptr<CDemuxStreamRadioRDS> streamRadioRDS;
 

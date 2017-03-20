@@ -26,9 +26,10 @@
 #include "input/Key.h"
 #include "utils/log.h"
 
+using namespace KODI;
 using namespace GAME;
 
-CGameClientMouse::CGameClientMouse(const CGameClient* gameClient, const GameClient* dllStruct) :
+CGameClientMouse::CGameClientMouse(const CGameClient* gameClient, const KodiToAddonFuncTable_Game* dllStruct) :
   m_gameClient(gameClient),
   m_dllStruct(dllStruct),
   m_controllerId(CInputManager::GetInstance().RegisterMouseHandler(this))
